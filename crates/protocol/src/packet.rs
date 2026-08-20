@@ -1,7 +1,7 @@
 pub const MAX_DATAGRAM_SIZE: usize = 64 * 1024;
 
 #[repr(u8)]
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum PacketKind {
     SpawnEntity,
 }
@@ -29,8 +29,18 @@ pub struct Packet {
     payload: String,
 }
 
-impl From<Packet> for Vec<u8> {
-    fn from(value: Packet) -> Self {
+impl Packet {
+    pub fn new(kind: PacketKind, payload: String) -> Self {
+        Self {
+            len: 3 + payload.len() as u16,
+            kind,
+            payload,
+        }
+    }
+}
+
+impl From<&Packet> for Vec<u8> {
+    fn from(value: &Packet) -> Self {
         let payload = value.payload.as_bytes();
 
         let mut bytes = Vec::with_capacity(3 + payload.len());

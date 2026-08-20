@@ -6,5 +6,9 @@ edition = "2024"
 [dependencies]
 protocol = { path = "../protocol"}
 game = { path = "../game"}
+
 tokio = { version = "1", features = ["full"] }
 anyhow = "1.0.104"
+
+serde = { version = "1", features = ["derive"] }
+bincode = "1"
