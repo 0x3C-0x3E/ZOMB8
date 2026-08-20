@@ -1,26 +1,15 @@
+use num_enum::TryFromPrimitive;
 use serde::Serialize;
 
 pub const MAX_DATAGRAM_SIZE: usize = 64 * 256;
 
 #[repr(u8)]
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, TryFromPrimitive)]
 pub enum PacketKind {
     SpawnEntity,
     Ping,
     SetPlayerId,
-}
-
-impl TryFrom<u8> for PacketKind {
-    type Error = ();
-
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
-        match value {
-            0 => Ok(PacketKind::SpawnEntity),
-            1 => Ok(PacketKind::Ping),
-            2 => Ok(PacketKind::SetPlayerId),
-            _ => Err(()),
-        }
-    }
+    Snapshot,
 }
 
 impl From<PacketKind> for u8 {
@@ -33,7 +22,7 @@ pub trait PacketPayload: Serialize {
     const KIND: PacketKind;
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Packet {
     pub len: u16,
     pub kind: PacketKind,

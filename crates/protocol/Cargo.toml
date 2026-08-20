@@ -7,3 +7,4 @@ edition = "2024"
 serde = {version = "1", features = ["derive"]}
 glam = { version = "0.30", features = ["serde"] }
 bincode = "1"
+num_enum = "0.7"
