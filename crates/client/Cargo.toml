@@ -11,6 +11,8 @@ macroquad = "0.4.16"
 glam = { version = "0.30", features = ["serde"] }
 hecs = {version = "0.11.0", features = ["serde"]}
 
+tokio = { version = "1", features = ["full"] }
+
 serde = { version = "1", features = ["derive"] }
 anyhow = "1.0.104"
 bincode = "1"

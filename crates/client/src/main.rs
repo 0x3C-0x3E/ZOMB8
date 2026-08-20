@@ -1,6 +1,10 @@
 #![allow(clippy::new_without_default)]
 
-use std::net::{Ipv6Addr, SocketAddrV6, UdpSocket};
+use std::{
+    net::{Ipv6Addr, SocketAddrV6},
+    sync::mpsc::{self, Receiver, Sender},
+    thread,
+};
 
 use game::{
     ecs::systems::rendering::rendering_system,
@@ -8,10 +12,11 @@ use game::{
 };
 use macroquad::prelude::*;
 use protocol::{
-    packet::{MAX_DATAGRAM_SIZE, Packet, PacketKind},
+    packet::{MAX_DATAGRAM_SIZE, Packet},
     ping::PacketPing,
     spawn_entity::PacketSpawnEntity,
 };
+use tokio::net::UdpSocket;
 
 use crate::spawn_network_entity::spawn_network_entity;
 
@@ -41,6 +46,29 @@ fn handle_packet(state: &mut State, packet: Packet) {
     }
 }
 
+#[tokio::main]
+async fn client_network_loop(
+    out_send: Sender<Packet>,
+    in_recv: Receiver<Packet>,
+) -> anyhow::Result<()> {
+    let addr = SocketAddrV6::new(Ipv6Addr::UNSPECIFIED, 0, 0, 0);
+    let socket = UdpSocket::bind(addr).await?;
+    socket.connect("[::1]:6969").await?;
+
+    let payload = PacketPing::new();
+    let packet = Packet::from_payload(payload).unwrap();
+
+    let buffer: Vec<u8> = (&packet).into();
+    let _ = socket.send(&buffer).await.unwrap();
+
+    let mut buf = vec![0u8; MAX_DATAGRAM_SIZE];
+    loop {
+        let len = socket.recv(&mut buf).await?;
+        let recv_packet = Packet::try_from(&buf[..len]).unwrap();
+        out_send.send(recv_packet).unwrap();
+    }
+}
+
 #[macroquad::main(window_conf)]
 async fn main() -> anyhow::Result<()> {
     set_default_filter_mode(FilterMode::Nearest);
@@ -52,21 +80,15 @@ async fn main() -> anyhow::Result<()> {
         .load_texture("assets/img/tileset.png", "tileset")
         .await;
 
-    let addr = SocketAddrV6::new(Ipv6Addr::UNSPECIFIED, 0, 0, 0);
-    let socket = UdpSocket::bind(addr)?;
-    socket.connect("[::1]:6969")?;
+    let (out_send, out_recv) = mpsc::channel::<Packet>();
+    let (in_send, in_recv) = mpsc::channel::<Packet>();
 
-    let payload = PacketPing::new();
-    let packet = Packet::from_payload(payload).unwrap();
+    let _network_thread = thread::spawn(move || client_network_loop(out_send, in_recv));
 
-    let buffer: Vec<u8> = (&packet).into();
-    let _ = socket.send(&buffer);
-
-    let mut buf = vec![0u8; MAX_DATAGRAM_SIZE];
     loop {
-        socket.recv(&mut buf)?;
-        let recv_packet = Packet::try_from(&buf[..]).unwrap();
-        handle_packet(&mut state, recv_packet);
+        if let Ok(packet) = out_recv.try_recv() {
+            handle_packet(&mut state, packet);
+        }
 
         rendering_system(&mut state, &texture_manager);
         next_frame().await;

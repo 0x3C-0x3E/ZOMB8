@@ -70,9 +70,12 @@ impl TryFrom<&[u8]> for Packet {
         let kind = PacketKind::try_from(u8::from_le_bytes([value[2]]));
         if let Ok(kind) = kind {
             let len = u16::from_le_bytes([value[0], value[1]]);
-            if value.len() != len.into() {
-                return Err(());
-            }
+
+            assert_eq!(
+                len as usize,
+                value.len(),
+                "slice len did not match reported len"
+            );
 
             Ok(Self {
                 len,
