@@ -1,7 +1,7 @@
 #![allow(clippy::new_without_default)]
 
 use game::{
-    ecs::{entities::tile::Tile, systems::rendering::rendering_system, transform::Position},
+    ecs::systems::rendering::rendering_system,
     game::{state::State, texture_manager::TextureManager},
 };
 use macroquad::prelude::*;

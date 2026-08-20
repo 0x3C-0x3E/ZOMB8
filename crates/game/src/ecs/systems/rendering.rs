@@ -1,8 +1,5 @@
 use crate::{
-    ecs::components::{
-        sprite::Sprite,
-        transform::{LastLookDirection, Position},
-    },
+    ecs::components::{sprite::Sprite, transform::Position},
     game::{state::State, texture_manager::TextureManager},
 };
 use macroquad::prelude::*;
@@ -43,20 +40,13 @@ pub fn rendering_system(state: &mut State, texture_manager: &TextureManager) {
 
     clear_background(Color::from_hex(0x696353));
 
-    for (e, pos, sprite) in state.world.query::<(Entity, &Position, &Sprite)>().iter() {
-        let flip = if let Some(dir) = state.world.entity(e).unwrap().get::<&LastLookDirection>() {
-            dir.0
-        } else {
-            false
-        };
-
+    for (_e, pos, sprite) in state.world.query::<(Entity, &Position, &Sprite)>().iter() {
         let params = DrawTextureParams {
             dest_size: Some(Vec2 {
                 x: sprite.rect.w * camera.scale,
                 y: sprite.rect.h * camera.scale,
             }),
             source: Some(sprite.rect),
-            flip_x: flip,
             ..Default::default()
         };
 
