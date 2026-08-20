@@ -7,3 +7,4 @@ edition = "2024"
 protocol = { path = "../protocol"}
 game = { path = "../game"}
 tokio = { version = "1", features = ["full"] }
+anyhow = "1.0.104"
