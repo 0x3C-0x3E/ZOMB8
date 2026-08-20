@@ -8,8 +8,8 @@ use crate::{
 
 #[derive(Serialize, Deserialize)]
 pub struct PacketSnapshot {
-    tick: u64,
-    players: Vec<(ProtocolNetworkId, Vec2)>,
+    pub tick: u64,
+    pub players: Vec<(ProtocolNetworkId, Vec2)>,
 }
 
 impl PacketPayload for PacketSnapshot {

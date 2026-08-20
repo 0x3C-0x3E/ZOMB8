@@ -33,6 +33,9 @@ async fn main() -> anyhow::Result<()> {
 
         physics_system(&mut server.state, 1.0 / TPS as f32);
 
+        server.send_snapshot().await;
+
+        server.tick += 1;
         sleep(Duration::from_millis((1000 / TPS).into()));
     }
 }

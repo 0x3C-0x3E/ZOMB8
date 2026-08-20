@@ -7,6 +7,8 @@ edition = "2024"
 protocol = { path = "../protocol"}
 game = { path = "../game"}
 
+glam = { version = "0.30", features = ["serde"] }
+
 tokio = { version = "1", features = ["full"] }
 anyhow = "1.0.104"
 

@@ -1,8 +1,13 @@
-use game::{ecs::network_id::NetworkId, game::state::State};
+use game::{
+    ecs::{entities::player::Player, network_id::NetworkId, transform::Position},
+    game::state::State,
+};
 use protocol::{
     network_id::ProtocolNetworkId,
     packet::Packet,
-    packets::{set_player_id::PacketSetPlayerId, spawn_entity::PacketSpawnEntity},
+    packets::{
+        set_player_id::PacketSetPlayerId, snapshot::PacketSnapshot, spawn_entity::PacketSpawnEntity,
+    },
 };
 
 use crate::spawn_network_entity::spawn_network_entity;
@@ -38,6 +43,29 @@ impl Client {
                     bincode::deserialize(&packet.payload).unwrap();
                 println!("this client has id: {:?}", packet_set_player_id.id);
                 self.set_client_id(packet_set_player_id.id);
+            }
+            PacketKind::Snapshot => {
+                let packet_snapshot: PacketSnapshot =
+                    bincode::deserialize(&packet.payload).unwrap();
+                for (id, new_pos) in packet_snapshot.players {
+                    if id == self.client_id {
+                        continue;
+                    }
+
+                    let found = self
+                        .state
+                        .world
+                        .query_mut::<(&NetworkId, &mut Position)>()
+                        .with::<&Player>()
+                        .into_iter()
+                        .find(|(e_id, _)| **e_id == id)
+                        .map(|(_, pos)| pos);
+                    if let Some(pos) = found {
+                        pos.update_vec2(new_pos);
+                    } else {
+                        Player::spawn(&mut self.state.world, Position::from(new_pos), id);
+                    }
+                }
             }
             _ => panic!("unhandled packet kind '{:?}'", packet.kind),
         }

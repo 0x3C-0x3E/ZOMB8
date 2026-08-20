@@ -4,7 +4,7 @@ use crate::client::Client;
 use crate::network_thread::client_network_loop;
 use game::{
     ecs::systems::{input::input_system, physics::physics_system, rendering::rendering_system},
-    game::{state::State, texture_manager::TextureManager},
+    game::texture_manager::TextureManager,
 };
 use macroquad::prelude::*;
 use protocol::{packet::Packet, packets::ping::PacketPing};

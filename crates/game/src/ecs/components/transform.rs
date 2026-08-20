@@ -19,6 +19,11 @@ impl Position {
     pub fn vec2(self) -> Vec2 {
         Vec2::new(self.x, self.y)
     }
+
+    pub fn update_vec2(&mut self, vec2: Vec2) {
+        self.x = vec2.x;
+        self.y = vec2.y;
+    }
 }
 
 impl From<Vec2> for Position {

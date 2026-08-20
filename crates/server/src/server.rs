@@ -6,14 +6,16 @@ use std::{
 };
 
 use game::{
-    ecs::{entities::player::Player, transform::Position},
+    ecs::{entities::player::Player, network_id::NetworkId, transform::Position},
     game::state::State,
 };
+use glam::Vec2;
 use protocol::{
     packet::Packet,
     packets::{
         ping::PacketPing,
         set_player_id::PacketSetPlayerId,
+        snapshot::PacketSnapshot,
         spawn_entity::{EntityKind, PacketSpawnEntity},
     },
 };
@@ -26,6 +28,8 @@ pub const TPS: u32 = 2;
 pub struct Server {
     pub allocator: NetworkIdAllocator,
     pub state: State,
+
+    pub tick: u64,
 
     pub network_thread: JoinHandle<anyhow::Result<()>>,
     pub clients: HashMap<SocketAddr, Instant>,
@@ -45,6 +49,7 @@ impl Server {
         Ok(Self {
             allocator: NetworkIdAllocator::new(),
             state: State::new(),
+            tick: 0,
             clients,
             network_thread,
             out_recv,
@@ -96,6 +101,25 @@ impl Server {
 
         let _ = self.send_to(&packet, sender_addr).await;
         Ok(())
+    }
+
+    pub async fn send_snapshot(&mut self) {
+        let players: Vec<(NetworkId, Vec2)> = self
+            .state
+            .world
+            .query_mut::<(&NetworkId, &Position)>()
+            .with::<&Player>()
+            .into_iter()
+            .map(|(n, pos)| (*n, (*pos).into()))
+            .collect();
+
+        println!("players: {:?}", players);
+        let payload = PacketSnapshot::new(self.tick, players);
+        let packet = Packet::from_payload(payload).unwrap();
+
+        println!("snapshot: {:?}", packet);
+
+        let _ = self.send_to_all(&packet).await;
     }
 
     pub fn handle_packet(&mut self, packet: Packet) {
