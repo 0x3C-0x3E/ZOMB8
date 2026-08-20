@@ -61,8 +61,11 @@ name = "client"
 version = "0.1.0"
 dependencies = [
  "game",
+ "glam 0.30.10",
+ "hecs",
  "macroquad",
  "protocol",
+ "serde",
 ]
 
 [[package]]
@@ -150,6 +153,7 @@ dependencies = [
 name = "game"
 version = "0.1.0"
 dependencies = [
+ "glam 0.30.10",
  "hecs",
  "macroquad",
  "protocol",
@@ -161,6 +165,21 @@ name = "glam"
 version = "0.27.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9e05e7e6723e3455f4818c7b26e855439f7546cf617ef669d1adedb8669e5cb9"
+
+[[package]]
+name = "glam"
+version = "0.30.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "19fc433e8437a212d1b6f1e68c7824af3aed907da60afa994e7f542d18d12aa9"
+dependencies = [
+ "serde_core",
+]
+
+[[package]]
+name = "glam"
+version = "0.33.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c426daf70099baff33fac0ba85151c42424861c56828cef9ba02dacb78eb6b26"
 
 [[package]]
 name = "hashbrown"
@@ -235,7 +254,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1cbd54d99d4d3ac59deed7ee4927bbbf4eb33a55635530af3be9395a55746090"
 dependencies = [
  "fontdue",
- "glam",
+ "glam 0.27.0",
  "image",
  "macroquad_macro",
  "miniquad",
@@ -369,6 +388,7 @@ dependencies = [
 name = "protocol"
 version = "0.1.0"
 dependencies = [
+ "glam 0.33.5",
  "serde",
 ]
 

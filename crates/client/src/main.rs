@@ -1,11 +1,12 @@
 #![allow(clippy::new_without_default)]
-use std::thread::spawn;
 
 use game::{
     ecs::{entities::tile::Tile, systems::rendering::rendering_system, transform::Position},
     game::{state::State, texture_manager::TextureManager},
 };
 use macroquad::prelude::*;
+
+mod spawn_network_entity;
 
 fn window_conf() -> Conf {
     Conf {

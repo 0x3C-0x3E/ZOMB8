@@ -12,9 +12,5 @@ async fn main() {
     let mut allocator = NetworkIdAllocator::new();
 
     let mut state = State::new();
-    let _ = Tile::spawn(
-        &mut state.world,
-        Position { x: 8.0, y: 0.0 },
-        allocator.allocate(),
-    );
+    let _ = Tile::spawn(&mut state.world, Position::zero(), allocator.allocate());
 }

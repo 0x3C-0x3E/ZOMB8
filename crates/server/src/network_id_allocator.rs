@@ -10,7 +10,7 @@ impl NetworkIdAllocator {
     }
 
     pub fn allocate(&mut self) -> NetworkId {
-        let id = NetworkId(self.next);
+        let id = NetworkId { 0: self.next };
         self.next += 1;
         id
     }
