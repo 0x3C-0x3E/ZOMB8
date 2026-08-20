@@ -1,11 +1,7 @@
 use macroquad::prelude::*;
 
 use crate::{
-    ecs::{
-        components::transform::{Position, Velocity},
-        entities::player::Player,
-        network_id::NetworkId,
-    },
+    ecs::{components::transform::Velocity, entities::player::Player, network_id::NetworkId},
     game::state::State,
 };
 
