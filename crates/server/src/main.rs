@@ -26,6 +26,9 @@ use crate::network_id_allocator::NetworkIdAllocator;
 mod network_id_allocator;
 
 pub struct Server {
+    pub allocator: NetworkIdAllocator,
+    pub state: State,
+
     pub network_thread: JoinHandle<anyhow::Result<()>>,
     pub clients: HashMap<SocketAddr, Instant>,
 
@@ -42,6 +45,8 @@ impl Server {
 
         let network_thread = tokio::spawn(server_network_loop(out_send, in_recv));
         Ok(Self {
+            allocator: NetworkIdAllocator::new(),
+            state: State::new(),
             clients,
             network_thread,
             out_recv,
@@ -75,6 +80,24 @@ impl Server {
     pub fn check_for_disconnects(&mut self) {
         self.clients
             .retain(|_, last_seen| last_seen.elapsed() < Duration::from_secs(60));
+    }
+
+    pub async fn create_new_player(&mut self, sender_addr: SocketAddr) -> anyhow::Result<()> {
+        let client_id = self.allocator.allocate();
+        let client_player_pos = Position::new(0.0 + client_id.0 as f32 * 8.0, 20.0);
+        let _ = Player::spawn(&mut self.state.world, client_player_pos, client_id);
+
+        let payload =
+            PacketSpawnEntity::new(client_id, EntityKind::Player, client_player_pos.into());
+        let packet = Packet::from_payload(payload).unwrap();
+
+        let _ = self.send_to_all(&packet).await;
+
+        let payload = PacketSetPlayerId::new(client_id);
+        let packet = Packet::from_payload(payload).unwrap();
+
+        let _ = self.send_to(&packet, sender_addr).await;
+        Ok(())
     }
 }
 
@@ -117,16 +140,6 @@ async fn server_network_loop(
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let mut allocator = NetworkIdAllocator::new();
-
-    let mut state = State::new();
-
-    let tile_id = allocator.allocate();
-    let _ = Tile::spawn(&mut state.world, Position::zero(), tile_id);
-
-    let payload = PacketSpawnEntity::new(tile_id, EntityKind::Tile, Position::zero().into());
-    let tile_packet = Packet::from_payload(payload).unwrap();
-
     let mut server = Server::new().await?;
 
     loop {
@@ -138,29 +151,13 @@ async fn main() -> anyhow::Result<()> {
         }
         while let Ok((sender_addr, packet)) = server.out_recv.try_recv() {
             if server.check_insert_client(sender_addr) {
-                // if is new client
-                let _ = server.send_to(&tile_packet, sender_addr).await;
-
-                let client_id = allocator.allocate();
-                let client_player_pos = Position::new(90.0 + client_id.0 as f32 * 8.0, 20.0);
-                let _ = Player::spawn(&mut state.world, client_player_pos, client_id);
-
-                let payload =
-                    PacketSpawnEntity::new(client_id, EntityKind::Player, client_player_pos.into());
-                let packet = Packet::from_payload(payload).unwrap();
-
-                let _ = server.send_to_all(&packet).await;
-
-                let payload = PacketSetPlayerId::new(client_id);
-                let packet = Packet::from_payload(payload).unwrap();
-
-                let _ = server.send_to(&packet, sender_addr).await;
+                let _ = server.create_new_player(sender_addr).await;
             }
 
             server.check_for_disconnects();
 
             server.touch_client(sender_addr);
-            handle_packet(&mut state, packet);
+            handle_packet(&mut server.state, packet);
         }
 
         // other stuff
