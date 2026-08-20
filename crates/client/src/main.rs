@@ -1,10 +1,6 @@
 #![allow(clippy::new_without_default)]
 
-use std::{
-    net::{Ipv6Addr, SocketAddrV6},
-    sync::mpsc::{self, Receiver, Sender},
-    thread,
-};
+use std::net::{Ipv6Addr, SocketAddrV6};
 
 use game::{
     ecs::systems::rendering::rendering_system,
@@ -16,7 +12,10 @@ use protocol::{
     ping::PacketPing,
     spawn_entity::PacketSpawnEntity,
 };
-use tokio::net::UdpSocket;
+use tokio::{
+    net::UdpSocket,
+    sync::mpsc::{Receiver, Sender},
+};
 
 use crate::spawn_network_entity::spawn_network_entity;
 
@@ -46,10 +45,9 @@ fn handle_packet(state: &mut State, packet: Packet) {
     }
 }
 
-#[tokio::main]
 async fn client_network_loop(
     out_send: Sender<Packet>,
-    in_recv: Receiver<Packet>,
+    mut in_recv: Receiver<Packet>,
 ) -> anyhow::Result<()> {
     let addr = SocketAddrV6::new(Ipv6Addr::UNSPECIFIED, 0, 0, 0);
     let socket = UdpSocket::bind(addr).await?;
@@ -63,9 +61,20 @@ async fn client_network_loop(
 
     let mut buf = vec![0u8; MAX_DATAGRAM_SIZE];
     loop {
-        let len = socket.recv(&mut buf).await?;
-        let recv_packet = Packet::try_from(&buf[..len]).unwrap();
-        out_send.send(recv_packet).unwrap();
+        tokio::select! {
+            result = socket.recv(&mut buf) => {
+                let len = result?;
+                let recv_packet = Packet::try_from(&buf[..len]).unwrap();
+                out_send.send(recv_packet).await.unwrap();
+            },
+
+            Some(packet) = in_recv.recv() => {
+                let buffer: Vec<u8> = (&packet).into();
+                socket.send(&buffer).await?;
+            }
+
+            else => break Ok(()),
+        }
     }
 }
 
@@ -80,13 +89,17 @@ async fn main() -> anyhow::Result<()> {
         .load_texture("assets/img/tileset.png", "tileset")
         .await;
 
-    let (out_send, out_recv) = mpsc::channel::<Packet>();
-    let (in_send, in_recv) = mpsc::channel::<Packet>();
+    let (out_send, mut out_recv) = tokio::sync::mpsc::channel::<Packet>(100);
+    let (in_send, in_recv) = tokio::sync::mpsc::channel::<Packet>(100);
 
-    let _network_thread = thread::spawn(move || client_network_loop(out_send, in_recv));
+    let _network_thread = std::thread::spawn(move || {
+        let rt = tokio::runtime::Runtime::new().unwrap();
+
+        rt.block_on(client_network_loop(out_send, in_recv))
+    });
 
     loop {
-        if let Ok(packet) = out_recv.try_recv() {
+        while let Ok(packet) = out_recv.try_recv() {
             handle_packet(&mut state, packet);
         }
 
