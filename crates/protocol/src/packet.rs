@@ -1,4 +1,4 @@
-pub const MAX_DATAGRAM_SIZE: usize = 64 * 1024;
+pub const MAX_DATAGRAM_SIZE: usize = 64 * 256;
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy)]
@@ -23,14 +23,15 @@ impl TryFrom<u8> for PacketKind {
     }
 }
 
+#[derive(Debug)]
 pub struct Packet {
-    len: u16, // just to doublecheck
-    kind: PacketKind,
-    payload: String,
+    pub len: u16, // just to doublecheck
+    pub kind: PacketKind,
+    pub payload: Vec<u8>,
 }
 
 impl Packet {
-    pub fn new(kind: PacketKind, payload: String) -> Self {
+    pub fn new(kind: PacketKind, payload: Vec<u8>) -> Self {
         Self {
             len: 3 + payload.len() as u16,
             kind,
@@ -41,7 +42,7 @@ impl Packet {
 
 impl From<&Packet> for Vec<u8> {
     fn from(value: &Packet) -> Self {
-        let payload = value.payload.as_bytes();
+        let payload = value.payload.iter().as_slice();
 
         let mut bytes = Vec::with_capacity(3 + payload.len());
 
@@ -59,10 +60,11 @@ impl TryFrom<&[u8]> for Packet {
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
         let kind = PacketKind::try_from(u8::from_le_bytes([value[2]]));
         if let Ok(kind) = kind {
+            let len = u16::from_le_bytes([value[0], value[1]]);
             Ok(Self {
-                len: u16::from_le_bytes([value[0], value[1]]),
+                len,
                 kind,
-                payload: String::from_utf8_lossy(&value[3..]).to_string(),
+                payload: Vec::from(&value[3..len as usize]),
             })
         } else {
             Err(())

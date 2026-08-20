@@ -68,10 +68,7 @@ async fn main() -> anyhow::Result<()> {
 
     let payload = PacketSpawnEntity::new(network_id, EntityKind::Tile, Position::zero().into());
     let payload = bincode::serialize(&payload)?;
-    let packet = Packet::new(
-        PacketKind::SpawnEntity,
-        String::from_utf8_lossy(&payload).to_string(),
-    );
+    let packet = Packet::new(PacketKind::SpawnEntity, payload);
 
     let mut buf = vec![0u8; MAX_DATAGRAM_SIZE];
 

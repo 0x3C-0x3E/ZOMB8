@@ -6,7 +6,11 @@ edition = "2024"
 [dependencies]
 protocol = { path = "../protocol"}
 game = { path = "../game"}
+
 macroquad = "0.4.16"
-hecs = {version = "0.11.0", features = ["serde"]}
-serde = { version = "1", features = ["derive"] }
 glam = { version = "0.30", features = ["serde"] }
+hecs = {version = "0.11.0", features = ["serde"]}
+
+serde = { version = "1", features = ["derive"] }
+anyhow = "1.0.104"
+bincode = "1"
