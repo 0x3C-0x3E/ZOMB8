@@ -6,13 +6,17 @@ use std::{
 };
 
 use game::{
-    ecs::{entities::player::Player, network_id::NetworkId, transform::Position},
+    ecs::{
+        entities::player::Player, network_id::NetworkId, systems::input::input_system,
+        transform::Position,
+    },
     game::state::State,
 };
 use glam::Vec2;
 use protocol::{
     packet::Packet,
     packets::{
+        input::PacketInput,
         ping::PacketPing,
         set_player_id::PacketSetPlayerId,
         snapshot::PacketSnapshot,
@@ -128,6 +132,23 @@ impl Server {
         match packet.kind {
             PacketKind::Ping => {
                 let _packet_ping: PacketPing = bincode::deserialize(&packet.payload).unwrap();
+            }
+            PacketKind::Input => {
+                let packet_input: PacketInput = bincode::deserialize(&packet.payload).unwrap();
+                let found = self
+                    .state
+                    .world
+                    .query_mut::<&NetworkId>()
+                    .with::<&Player>()
+                    .into_iter()
+                    .find(|id| **id == packet_input.client_id);
+                if found.is_some() {
+                    input_system(
+                        &mut self.state,
+                        packet_input.client_id,
+                        &packet_input.input_map,
+                    );
+                }
             }
 
             _ => {

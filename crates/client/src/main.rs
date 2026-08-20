@@ -3,11 +3,18 @@
 use crate::client::Client;
 use crate::network_thread::client_network_loop;
 use game::{
-    ecs::systems::{input::input_system, physics::physics_system, rendering::rendering_system},
+    ecs::systems::{
+        input::{get_input_map, input_system},
+        physics::physics_system,
+        rendering::rendering_system,
+    },
     game::texture_manager::TextureManager,
 };
 use macroquad::prelude::*;
-use protocol::{packet::Packet, packets::ping::PacketPing};
+use protocol::{
+    packet::Packet,
+    packets::{input::PacketInput, ping::PacketPing},
+};
 
 mod client;
 mod network_thread;
@@ -63,8 +70,13 @@ async fn main() -> anyhow::Result<()> {
             client.handle_packet(packet);
         }
 
-        input_system(&mut client.state, client.client_id);
+        let input_map = get_input_map();
+        input_system(&mut client.state, client.client_id, &input_map);
         physics_system(&mut client.state, get_frame_time());
+
+        let payload = PacketInput::new(client.client_id, input_map);
+        let packet = Packet::from_payload(payload).unwrap();
+        in_send.send(packet).await?;
 
         rendering_system(&mut client.state, &texture_manager);
         next_frame().await;

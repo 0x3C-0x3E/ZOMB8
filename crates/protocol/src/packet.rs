@@ -10,6 +10,7 @@ pub enum PacketKind {
     Ping,
     SetPlayerId,
     Snapshot,
+    Input,
 }
 
 impl From<PacketKind> for u8 {

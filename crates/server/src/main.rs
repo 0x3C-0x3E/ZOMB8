@@ -1,7 +1,7 @@
 use crate::server::TPS;
 use std::{thread::sleep, time::Duration};
 
-use game::ecs::systems::physics::physics_system;
+use game::ecs::systems::{input::input_system, physics::physics_system};
 
 use crate::server::Server;
 

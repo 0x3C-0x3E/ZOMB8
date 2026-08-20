@@ -60,6 +60,7 @@ impl Client {
                         .into_iter()
                         .find(|(e_id, _)| **e_id == id)
                         .map(|(_, pos)| pos);
+
                     if let Some(pos) = found {
                         pos.update_vec2(new_pos);
                     } else {
