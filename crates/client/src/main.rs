@@ -3,7 +3,7 @@
 use crate::client::Client;
 use crate::network_thread::client_network_loop;
 use game::{
-    ecs::systems::rendering::rendering_system,
+    ecs::systems::{input::input_system, physics::physics_system, rendering::rendering_system},
     game::{state::State, texture_manager::TextureManager},
 };
 use macroquad::prelude::*;
@@ -58,6 +58,9 @@ async fn main() -> anyhow::Result<()> {
         while let Ok(packet) = out_recv.try_recv() {
             client.handle_packet(packet);
         }
+
+        input_system(&mut client.state, client.client_id);
+        physics_system(&mut client.state, get_frame_time());
 
         rendering_system(&mut client.state, &texture_manager);
         next_frame().await;
