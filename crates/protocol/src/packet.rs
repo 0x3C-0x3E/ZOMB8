@@ -6,6 +6,12 @@ pub enum PacketKind {
     SpawnEntity,
 }
 
+impl From<PacketKind> for u8 {
+    fn from(value: PacketKind) -> Self {
+        value as u8
+    }
+}
+
 impl TryFrom<u8> for PacketKind {
     type Error = ();
 
@@ -21,6 +27,20 @@ pub struct Packet {
     len: u16, // just to doublecheck
     kind: PacketKind,
     payload: String,
+}
+
+impl From<Packet> for Vec<u8> {
+    fn from(value: Packet) -> Self {
+        let payload = value.payload.as_bytes();
+
+        let mut bytes = Vec::with_capacity(3 + payload.len());
+
+        bytes.extend_from_slice(&value.len.to_le_bytes());
+        bytes.push(value.kind.into());
+        bytes.extend_from_slice(payload);
+
+        bytes
+    }
 }
 
 impl TryFrom<&[u8]> for Packet {
