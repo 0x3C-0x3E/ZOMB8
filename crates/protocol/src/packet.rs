@@ -7,12 +7,7 @@ pub const MAX_DATAGRAM_SIZE: usize = 64 * 256;
 pub enum PacketKind {
     SpawnEntity,
     Ping,
-}
-
-impl From<PacketKind> for u8 {
-    fn from(value: PacketKind) -> Self {
-        value as u8
-    }
+    SetPlayerId,
 }
 
 impl TryFrom<u8> for PacketKind {
@@ -22,8 +17,15 @@ impl TryFrom<u8> for PacketKind {
         match value {
             0 => Ok(PacketKind::SpawnEntity),
             1 => Ok(PacketKind::Ping),
+            2 => Ok(PacketKind::SetPlayerId),
             _ => Err(()),
         }
+    }
+}
+
+impl From<PacketKind> for u8 {
+    fn from(value: PacketKind) -> Self {
+        value as u8
     }
 }
 

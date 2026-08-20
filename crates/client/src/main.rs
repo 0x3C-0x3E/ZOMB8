@@ -9,8 +9,8 @@ use game::{
 use macroquad::prelude::*;
 use protocol::{
     packet::{MAX_DATAGRAM_SIZE, Packet},
-    ping::PacketPing,
-    spawn_entity::PacketSpawnEntity,
+    packets::ping::PacketPing,
+    packets::spawn_entity::PacketSpawnEntity,
 };
 use tokio::{
     net::UdpSocket,
@@ -20,6 +20,8 @@ use tokio::{
 use crate::spawn_network_entity::spawn_network_entity;
 
 mod spawn_network_entity;
+
+mod client;
 
 fn window_conf() -> Conf {
     Conf {
@@ -89,16 +91,25 @@ async fn main() -> anyhow::Result<()> {
         .load_texture("assets/img/tileset.png", "tileset")
         .await;
 
+    texture_manager
+        .load_texture("assets/img/player.png", "player")
+        .await;
+
     let (out_send, mut out_recv) = tokio::sync::mpsc::channel::<Packet>(100);
     let (in_send, in_recv) = tokio::sync::mpsc::channel::<Packet>(100);
 
-    let _network_thread = std::thread::spawn(move || {
+    let network_thread = std::thread::spawn(move || -> anyhow::Result<()> {
         let rt = tokio::runtime::Runtime::new().unwrap();
 
-        rt.block_on(client_network_loop(out_send, in_recv))
+        rt.block_on(client_network_loop(out_send, in_recv))?;
+        Ok(())
     });
 
     loop {
+        if network_thread.is_finished() {
+            panic!("network thread exited with {:?}", network_thread.join());
+        }
+
         while let Ok(packet) = out_recv.try_recv() {
             handle_packet(&mut state, packet);
         }

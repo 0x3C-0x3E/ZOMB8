@@ -5,13 +5,16 @@ use std::{
 };
 
 use game::{
-    ecs::{entities::tile::Tile, transform::Position},
+    ecs::{
+        entities::{player::Player, tile::Tile},
+        transform::Position,
+    },
     game::state::State,
 };
 use protocol::{
     packet::{MAX_DATAGRAM_SIZE, Packet},
-    ping::PacketPing,
-    spawn_entity::{EntityKind, PacketSpawnEntity},
+    packets::ping::PacketPing,
+    packets::spawn_entity::{EntityKind, PacketSpawnEntity},
 };
 use tokio::net::UdpSocket;
 
@@ -62,12 +65,13 @@ pub fn handle_packet(_state: &mut State, packet: Packet) {
     println!("kind: {:?}", packet);
     use protocol::packet::PacketKind;
     match packet.kind {
-        PacketKind::SpawnEntity => {
-            println!("recv spawn entity packet -> this cannot be sent to a server");
-        }
         PacketKind::Ping => {
             let packet_ping: PacketPing = bincode::deserialize(&packet.payload).unwrap();
             println!("recv ping: {}", packet_ping.now);
+        }
+
+        _ => {
+            println!("unhandled packet kind '{:?}'!", packet.kind)
         }
     }
 }
@@ -82,7 +86,7 @@ async fn main() -> anyhow::Result<()> {
     let _ = Tile::spawn(&mut state.world, Position::zero(), network_id);
 
     let payload = PacketSpawnEntity::new(network_id, EntityKind::Tile, Position::zero().into());
-    let spawn_packet = Packet::from_payload(payload).unwrap();
+    let tile_packet = Packet::from_payload(payload).unwrap();
 
     let mut buf = vec![0u8; MAX_DATAGRAM_SIZE];
 
@@ -92,7 +96,17 @@ async fn main() -> anyhow::Result<()> {
         let (len, sender_addr) = server.socket.recv_from(&mut buf).await?;
         if server.check_insert_client(sender_addr) {
             // if is new client
-            let _ = server.send_to(&spawn_packet, sender_addr).await;
+            let _ = server.send_to(&tile_packet, sender_addr).await;
+
+            let client_id = allocator.allocate();
+            let client_player_pos = Position::new(90.0, 20.0);
+            let _ = Player::spawn(&mut state.world, Position::new(90.0, 20.0), client_id);
+
+            let payload =
+                PacketSpawnEntity::new(network_id, EntityKind::Player, client_player_pos.into());
+            let packet = Packet::from_payload(payload).unwrap();
+
+            let _ = server.send_to(&packet, sender_addr).await;
         }
 
         server.check_for_disconnects();
