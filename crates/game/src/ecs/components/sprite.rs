@@ -1,4 +1,3 @@
-use crate::game::state::TextureManager;
 use macroquad::prelude::*;
 
 use serde::{Deserialize, Serialize};
@@ -49,11 +48,5 @@ impl Sprite {
 
     pub fn set_id(&mut self, id: &str) {
         self.id = id.to_string();
-    }
-
-    pub fn get_texture<'a>(&self, texture_manager: &'a TextureManager) -> &'a Texture2D {
-        texture_manager
-            .get_texture(&self.id)
-            .unwrap_or_else(|| panic!("invalid sprite: {}", self.id))
     }
 }

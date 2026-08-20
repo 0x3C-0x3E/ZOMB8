@@ -3,7 +3,7 @@ use crate::{
         sprite::Sprite,
         transform::{LastLookDirection, Position},
     },
-    game::state::State,
+    game::{state::State, texture_manager::TextureManager},
 };
 use macroquad::prelude::*;
 
@@ -31,7 +31,13 @@ impl RenderingState {
     }
 }
 
-pub fn rendering_system(state: &mut State) {
+impl Default for RenderingState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+pub fn rendering_system(state: &mut State, texture_manager: &TextureManager) {
     let rd_state = &state.rendering_state;
     let camera = &rd_state.camera;
 
@@ -55,7 +61,9 @@ pub fn rendering_system(state: &mut State) {
         };
 
         draw_texture_ex(
-            sprite.get_texture(&state.texture_manager),
+            texture_manager
+                .get_texture(&sprite.id)
+                .expect("invalid texture"),
             ((pos.x - camera.pos.x) * camera.scale) as i32 as f32,
             ((pos.y - camera.pos.y) * camera.scale) as i32 as f32,
             WHITE,

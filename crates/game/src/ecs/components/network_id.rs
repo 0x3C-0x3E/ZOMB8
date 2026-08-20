@@ -1,3 +1,3 @@
 use serde::{Deserialize, Serialize};
 #[derive(Debug, Default, Serialize, Deserialize, PartialEq, Clone, Copy)]
-pub struct NetwordId(pub u32);
+pub struct NetworkId(pub u32);
