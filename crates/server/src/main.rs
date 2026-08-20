@@ -13,8 +13,11 @@ use game::{
 };
 use protocol::{
     packet::{MAX_DATAGRAM_SIZE, Packet},
-    packets::ping::PacketPing,
-    packets::spawn_entity::{EntityKind, PacketSpawnEntity},
+    packets::{
+        ping::PacketPing,
+        set_player_id::PacketSetPlayerId,
+        spawn_entity::{EntityKind, PacketSpawnEntity},
+    },
 };
 use tokio::net::UdpSocket;
 
@@ -34,8 +37,8 @@ impl Server {
         Ok(Self { socket, clients })
     }
 
-    pub async fn send_to_all(&mut self, packet: Packet) {
-        let buffer: Vec<u8> = (&packet).into();
+    pub async fn send_to_all(&mut self, packet: &Packet) {
+        let buffer: Vec<u8> = packet.into();
         for client in self.clients.keys() {
             let _ = self.socket.send_to(&buffer, client).await;
         }
@@ -82,10 +85,10 @@ async fn main() -> anyhow::Result<()> {
 
     let mut state = State::new();
 
-    let network_id = allocator.allocate();
-    let _ = Tile::spawn(&mut state.world, Position::zero(), network_id);
+    let tile_id = allocator.allocate();
+    let _ = Tile::spawn(&mut state.world, Position::zero(), tile_id);
 
-    let payload = PacketSpawnEntity::new(network_id, EntityKind::Tile, Position::zero().into());
+    let payload = PacketSpawnEntity::new(tile_id, EntityKind::Tile, Position::zero().into());
     let tile_packet = Packet::from_payload(payload).unwrap();
 
     let mut buf = vec![0u8; MAX_DATAGRAM_SIZE];
@@ -99,11 +102,16 @@ async fn main() -> anyhow::Result<()> {
             let _ = server.send_to(&tile_packet, sender_addr).await;
 
             let client_id = allocator.allocate();
-            let client_player_pos = Position::new(90.0, 20.0);
-            let _ = Player::spawn(&mut state.world, Position::new(90.0, 20.0), client_id);
+            let client_player_pos = Position::new(90.0 + client_id.0 as f32 * 8.0, 20.0);
+            let _ = Player::spawn(&mut state.world, client_player_pos, client_id);
 
             let payload =
-                PacketSpawnEntity::new(network_id, EntityKind::Player, client_player_pos.into());
+                PacketSpawnEntity::new(client_id, EntityKind::Player, client_player_pos.into());
+            let packet = Packet::from_payload(payload).unwrap();
+
+            let _ = server.send_to_all(&packet).await;
+
+            let payload = PacketSetPlayerId::new(client_id);
             let packet = Packet::from_payload(payload).unwrap();
 
             let _ = server.send_to(&packet, sender_addr).await;

@@ -6,15 +6,15 @@ use crate::{
 };
 
 #[derive(Serialize, Deserialize)]
-pub struct PacketPing {
+pub struct PacketSetPlayerId {
     pub id: ProtocolNetworkId,
 }
 
-impl PacketPayload for PacketPing {
+impl PacketPayload for PacketSetPlayerId {
     const KIND: PacketKind = PacketKind::SetPlayerId;
 }
 
-impl PacketPing {
+impl PacketSetPlayerId {
     pub fn new(id: ProtocolNetworkId) -> Self {
         Self { id }
     }
