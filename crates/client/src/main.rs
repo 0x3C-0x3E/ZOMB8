@@ -7,7 +7,7 @@ use game::{
     game::{state::State, texture_manager::TextureManager},
 };
 use macroquad::prelude::*;
-use protocol::packet::Packet;
+use protocol::{packet::Packet, packets::ping::PacketPing};
 
 mod client;
 mod network_thread;
@@ -49,6 +49,10 @@ async fn main() -> anyhow::Result<()> {
         rt.block_on(client_network_loop(out_send, in_recv))?;
         Ok(())
     });
+
+    let payload = PacketPing::new();
+    let packet = Packet::from_payload(payload).unwrap();
+    let _ = in_send.send(packet).await;
 
     loop {
         if network_thread.is_finished() {

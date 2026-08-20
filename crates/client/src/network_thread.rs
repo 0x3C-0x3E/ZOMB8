@@ -1,10 +1,7 @@
 use std::net::{Ipv6Addr, SocketAddrV6};
 
 use macroquad::prelude::*;
-use protocol::{
-    packet::{MAX_DATAGRAM_SIZE, Packet},
-    packets::ping::PacketPing,
-};
+use protocol::packet::{MAX_DATAGRAM_SIZE, Packet};
 use tokio::{
     net::UdpSocket,
     sync::mpsc::{Receiver, Sender},
@@ -17,12 +14,6 @@ pub async fn client_network_loop(
     let addr = SocketAddrV6::new(Ipv6Addr::UNSPECIFIED, 0, 0, 0);
     let socket = UdpSocket::bind(addr).await?;
     socket.connect("[::1]:6969").await?;
-
-    let payload = PacketPing::new();
-    let packet = Packet::from_payload(payload).unwrap();
-
-    let buffer: Vec<u8> = (&packet).into();
-    let _ = socket.send(&buffer).await.unwrap();
 
     let mut buf = vec![0u8; MAX_DATAGRAM_SIZE];
     loop {

@@ -1,12 +1,14 @@
 use std::{
     collections::HashMap,
     net::SocketAddr,
+    thread::sleep,
     time::{Duration, Instant},
 };
 
 use game::{
     ecs::{
         entities::{player::Player, tile::Tile},
+        systems::physics::physics_system,
         transform::Position,
     },
     game::state::State,
@@ -24,6 +26,8 @@ use tokio::{net::UdpSocket, sync::mpsc::Receiver, sync::mpsc::Sender, task::Join
 use crate::network_id_allocator::NetworkIdAllocator;
 
 mod network_id_allocator;
+
+const TPS: u32 = 2;
 
 pub struct Server {
     pub allocator: NetworkIdAllocator,
@@ -106,8 +110,7 @@ pub fn handle_packet(_state: &mut State, packet: Packet) {
     use protocol::packet::PacketKind;
     match packet.kind {
         PacketKind::Ping => {
-            let packet_ping: PacketPing = bincode::deserialize(&packet.payload).unwrap();
-            println!("recv ping: {}", packet_ping.now);
+            let _packet_ping: PacketPing = bincode::deserialize(&packet.payload).unwrap();
         }
 
         _ => {
@@ -160,6 +163,8 @@ async fn main() -> anyhow::Result<()> {
             handle_packet(&mut server.state, packet);
         }
 
-        // other stuff
+        physics_system(&mut server.state, 1.0 / TPS as f32);
+
+        sleep(Duration::from_millis((1000 / TPS).into()));
     }
 }
