@@ -1,7 +1,10 @@
 use glam::Vec2;
 use serde::{Deserialize, Serialize};
 
-use crate::network_id::ProtocolNetworkId;
+use crate::{
+    network_id::ProtocolNetworkId,
+    packet::{PacketKind, PacketPayload},
+};
 
 #[derive(Serialize, Deserialize)]
 pub enum EntityKind {
@@ -14,6 +17,10 @@ pub struct PacketSpawnEntity {
     pub network_id: ProtocolNetworkId,
     pub kind: EntityKind,
     pub pos: Vec2,
+}
+
+impl PacketPayload for PacketSpawnEntity {
+    const KIND: PacketKind = PacketKind::SpawnEntity;
 }
 
 impl PacketSpawnEntity {

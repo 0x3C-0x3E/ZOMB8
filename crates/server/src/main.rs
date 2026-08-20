@@ -9,7 +9,8 @@ use game::{
     game::state::State,
 };
 use protocol::{
-    packet::{MAX_DATAGRAM_SIZE, Packet, PacketKind},
+    packet::{MAX_DATAGRAM_SIZE, Packet},
+    ping::PacketPing,
     spawn_entity::{EntityKind, PacketSpawnEntity},
 };
 use tokio::net::UdpSocket;
@@ -57,6 +58,20 @@ impl Server {
     }
 }
 
+pub fn handle_packet(_state: &mut State, packet: Packet) {
+    println!("kind: {:?}", packet);
+    use protocol::packet::PacketKind;
+    match packet.kind {
+        PacketKind::SpawnEntity => {
+            println!("recv spawn entity packet -> this cannot be sent to a server");
+        }
+        PacketKind::Ping => {
+            let packet_ping: PacketPing = bincode::deserialize(&packet.payload).unwrap();
+            println!("recv ping: {}", packet_ping.now);
+        }
+    }
+}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let mut allocator = NetworkIdAllocator::new();
@@ -67,8 +82,7 @@ async fn main() -> anyhow::Result<()> {
     let _ = Tile::spawn(&mut state.world, Position::zero(), network_id);
 
     let payload = PacketSpawnEntity::new(network_id, EntityKind::Tile, Position::zero().into());
-    let payload = bincode::serialize(&payload)?;
-    let packet = Packet::new(PacketKind::SpawnEntity, payload);
+    let spawn_packet = Packet::from_payload(payload).unwrap();
 
     let mut buf = vec![0u8; MAX_DATAGRAM_SIZE];
 
@@ -76,13 +90,14 @@ async fn main() -> anyhow::Result<()> {
 
     loop {
         let (len, sender_addr) = server.socket.recv_from(&mut buf).await?;
-        println!("{len} bytes recv from {sender_addr}");
         if server.check_insert_client(sender_addr) {
-            let _ = server.send_to(&packet, sender_addr).await;
+            // if is new client
+            let _ = server.send_to(&spawn_packet, sender_addr).await;
         }
 
         server.check_for_disconnects();
 
-        let _recv_packet = Packet::try_from(&buf[..]).unwrap(); // TODO: fix this
+        let recv_packet = Packet::try_from(&buf[..len]).unwrap();
+        handle_packet(&mut state, recv_packet);
     }
 }

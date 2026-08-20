@@ -1,9 +1,12 @@
+use serde::Serialize;
+
 pub const MAX_DATAGRAM_SIZE: usize = 64 * 256;
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy)]
 pub enum PacketKind {
     SpawnEntity,
+    Ping,
 }
 
 impl From<PacketKind> for u8 {
@@ -18,25 +21,31 @@ impl TryFrom<u8> for PacketKind {
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         match value {
             0 => Ok(PacketKind::SpawnEntity),
+            1 => Ok(PacketKind::Ping),
             _ => Err(()),
         }
     }
 }
 
+pub trait PacketPayload: Serialize {
+    const KIND: PacketKind;
+}
+
 #[derive(Debug)]
 pub struct Packet {
-    pub len: u16, // just to doublecheck
+    pub len: u16,
     pub kind: PacketKind,
     pub payload: Vec<u8>,
 }
 
 impl Packet {
-    pub fn new(kind: PacketKind, payload: Vec<u8>) -> Self {
-        Self {
+    pub fn from_payload<T: PacketPayload>(payload: T) -> Result<Self, bincode::Error> {
+        let payload = bincode::serialize(&payload)?;
+        Ok(Self {
             len: 3 + payload.len() as u16,
-            kind,
+            kind: T::KIND,
             payload,
-        }
+        })
     }
 }
 
@@ -61,10 +70,14 @@ impl TryFrom<&[u8]> for Packet {
         let kind = PacketKind::try_from(u8::from_le_bytes([value[2]]));
         if let Ok(kind) = kind {
             let len = u16::from_le_bytes([value[0], value[1]]);
+            if value.len() != len.into() {
+                return Err(());
+            }
+
             Ok(Self {
                 len,
                 kind,
-                payload: Vec::from(&value[3..len as usize]),
+                payload: Vec::from(&value[3..value.len()]),
             })
         } else {
             Err(())

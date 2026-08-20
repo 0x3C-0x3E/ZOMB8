@@ -1,9 +1,6 @@
 #![allow(clippy::new_without_default)]
 
-use std::{
-    any::Any,
-    net::{Ipv6Addr, SocketAddrV6, UdpSocket},
-};
+use std::net::{Ipv6Addr, SocketAddrV6, UdpSocket};
 
 use game::{
     ecs::systems::rendering::rendering_system,
@@ -11,7 +8,8 @@ use game::{
 };
 use macroquad::prelude::*;
 use protocol::{
-    packet::{MAX_DATAGRAM_SIZE, Packet},
+    packet::{MAX_DATAGRAM_SIZE, Packet, PacketKind},
+    ping::PacketPing,
     spawn_entity::PacketSpawnEntity,
 };
 
@@ -39,6 +37,7 @@ fn handle_packet(state: &mut State, packet: Packet) {
                 bincode::deserialize(&packet.payload).unwrap();
             spawn_network_entity(&mut state.world, packet_spawn_entity);
         }
+        _ => panic!("unhandled packet kind '{:?}'", packet.kind),
     }
 }
 
@@ -57,7 +56,11 @@ async fn main() -> anyhow::Result<()> {
     let socket = UdpSocket::bind(addr)?;
     socket.connect("[::1]:6969")?;
 
-    socket.send(b"hi")?;
+    let payload = PacketPing::new();
+    let packet = Packet::from_payload(payload).unwrap();
+
+    let buffer: Vec<u8> = (&packet).into();
+    let _ = socket.send(&buffer);
 
     let mut buf = vec![0u8; MAX_DATAGRAM_SIZE];
     loop {
