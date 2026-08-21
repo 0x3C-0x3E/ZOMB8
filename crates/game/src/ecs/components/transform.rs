@@ -50,6 +50,11 @@ impl RenderPosition {
         self.y = last.y + (current.y - last.y) * alpha;
     }
 
+    pub fn set(&mut self, pos: &Position) {
+        self.x = pos.x;
+        self.y = pos.y;
+    }
+
     pub fn from_pos(pos: Position) -> Self {
         Self { x: pos.x, y: pos.x }
     }

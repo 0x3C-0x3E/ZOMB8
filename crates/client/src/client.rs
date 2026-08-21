@@ -33,6 +33,7 @@ pub struct Client {
     pub last_sent_map: Option<InputMap>,
 
     pub last_snapshots: Vec<PacketSnapshot>,
+    pub interp_timer: f32,
 }
 
 impl Client {
@@ -47,6 +48,7 @@ impl Client {
             last_sent_map: None,
 
             last_snapshots: vec![],
+            interp_timer: 0.0,
         }
     }
 
@@ -62,6 +64,11 @@ impl Client {
             .query_mut::<(&mut RenderPosition, &Position, &NetworkId)>()
             .with::<&Player>()
         {
+            if *id == self.client_id {
+                render_pos.set(pos);
+                continue;
+            }
+
             if let Some(prev_snapshot) = prev_snapshot
                 && let Some(prev_pos) = prev_snapshot
                     .players

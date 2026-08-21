@@ -14,6 +14,7 @@ use protocol::{TPS, packets::snapshot::PacketSnapshot};
 pub const FIXED_DT: f32 = 1.0 / TPS as f32;
 
 pub fn snapshot_handler(client: &mut Client, packet_snapshot: PacketSnapshot) {
+    client.interp_timer = 0.0;
     for (id, new_state) in packet_snapshot.players {
         let found = client
             .state
