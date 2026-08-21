@@ -2,11 +2,16 @@ use crate::client::Client;
 use game::ecs::{
     entities::player::Player,
     network_id::NetworkId,
-    systems::{input::input_system, physics::physics_system_for_entity},
+    systems::{
+        input::{input_system, input_system_for_player},
+        physics::physics_system_for_entity,
+    },
     transform::{Position, Velocity},
 };
 use hecs::Entity;
 use protocol::{TPS, packets::snapshot::PacketSnapshot};
+
+pub const FIXED_DT: f32 = 1.0 / TPS as f32;
 
 pub fn snapshot_handler(client: &mut Client, packet_snapshot: PacketSnapshot) {
     for (id, new_state) in packet_snapshot.players {
@@ -29,12 +34,12 @@ pub fn snapshot_handler(client: &mut Client, packet_snapshot: PacketSnapshot) {
                     .retain(|(seq, _)| *seq > packet_snapshot.last_ack_seq);
 
                 for (_, map) in client.last_maps.iter() {
-                    input_system(&mut client.state, client.client_id, map);
-                    physics_system_for_entity(&mut pos, &mut vel, 1.0 / TPS as f32);
+                    input_system_for_player(&mut vel, map);
+                    physics_system_for_entity(&mut pos, &mut vel, FIXED_DT);
                 }
             }
             let mut old_pos = client.state.world.get::<&mut Position>(e).unwrap();
-            // let mut old_vel = self.state.world.get::<&mut Velocity>(e).unwrap();
+            // let mut old_vel = client.state.world.get::<&mut Velocity>(e).unwrap();
             *old_pos = pos;
             // *old_vel = vel;
         } else {

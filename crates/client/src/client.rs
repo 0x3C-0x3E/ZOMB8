@@ -23,6 +23,7 @@ pub struct Client {
     pub input_send: watch::Sender<Packet>,
     pub input_seq: u32,
     pub last_maps: Vec<(u32, InputMap)>,
+    pub last_sent_map: Option<InputMap>,
 }
 
 impl Client {
@@ -34,6 +35,7 @@ impl Client {
             input_send,
             input_seq: 0,
             last_maps: vec![],
+            last_sent_map: None,
         }
     }
 
@@ -42,17 +44,14 @@ impl Client {
     }
 
     pub fn check_for_new_input(&mut self, current_map: &InputMap) -> anyhow::Result<()> {
-        if self
-            .last_maps
-            .last()
-            .is_none_or(|last_map| *current_map != last_map.1)
-        {
+        let changed = self.last_sent_map.as_ref() != Some(current_map);
+        if changed {
             self.input_seq += 1;
+            self.last_maps.push((self.input_seq, current_map.clone()));
             let payload = PacketInput::new(self.client_id, self.input_seq, current_map.clone());
             let packet = Packet::from_payload(payload)?;
             self.input_send.send(packet)?;
-
-            self.last_maps.push((self.input_seq, current_map.clone()));
+            self.last_sent_map = Some(current_map.clone());
         }
 
         Ok(())

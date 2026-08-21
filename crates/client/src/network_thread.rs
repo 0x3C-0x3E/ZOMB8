@@ -49,7 +49,6 @@ pub async fn client_network_loop(
                 socket.send(&buffer).await?;
             },
             _  = tokio::time::sleep_until(ping_deadline) => {
-                println!("sent alive packet");
                 let payload = PacketPing::new();
                 if let Ok(packet) = Packet::from_payload(payload) {
                     let buffer: Vec<u8> = (&packet).into();

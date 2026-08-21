@@ -24,6 +24,26 @@ pub fn get_input_map() -> InputMap {
     input_map
 }
 
+pub fn input_system_for_player(vel: &mut Velocity, input_map: &InputMap) {
+    let mut dir = Vec2::new(0.0, 0.0);
+    if input_map.up {
+        dir.y -= 1.0;
+    }
+    if input_map.down {
+        dir.y += 1.0;
+    }
+    if input_map.left {
+        dir.x -= 1.0;
+    }
+    if input_map.right {
+        dir.x += 1.0;
+    }
+
+    dir = dir.normalize_or_zero();
+    vel.x = dir.x * 100.0;
+    vel.y = dir.y * 100.0;
+}
+
 pub fn input_system(state: &mut State, player_id: NetworkId, input_map: &InputMap) {
     for (id, vel) in state
         .world
@@ -34,22 +54,6 @@ pub fn input_system(state: &mut State, player_id: NetworkId, input_map: &InputMa
             continue;
         }
 
-        let mut dir = Vec2::new(0.0, 0.0);
-        if input_map.up {
-            dir.y -= 1.0;
-        }
-        if input_map.down {
-            dir.y += 1.0;
-        }
-        if input_map.left {
-            dir.x -= 1.0;
-        }
-        if input_map.right {
-            dir.x += 1.0;
-        }
-
-        dir = dir.normalize_or_zero();
-        vel.x = dir.x * 100.0;
-        vel.y = dir.y * 100.0;
+        input_system_for_player(vel, input_map);
     }
 }

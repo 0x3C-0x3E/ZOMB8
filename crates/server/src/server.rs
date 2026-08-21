@@ -101,7 +101,7 @@ impl Server {
 
         for addr in disconnected_clients {
             if let Some(id) = self.client_ids.remove(&addr) {
-                println!("removed client {:?}", id.0);
+                println!("client {:?} got disconnected", id.0);
 
                 let payload = PacketDespawnEntity::new(id);
                 let packet = Packet::from_payload(payload)?;
@@ -201,7 +201,7 @@ impl Server {
             }
 
             _ => {
-                println!("unhandled packet kind '{:?}'!", packet.kind)
+                println!("unhandled packet kind '{:?}'", packet.kind)
             }
         }
         Ok(())

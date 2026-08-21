@@ -1,7 +1,7 @@
 #![allow(clippy::new_without_default)]
 
-use crate::client::Client;
 use crate::network_thread::client_network_loop;
+use crate::{client::Client, snapshot_handler::FIXED_DT};
 use game::{
     ecs::systems::{
         input::{get_input_map, input_system},
@@ -73,7 +73,6 @@ async fn main() -> anyhow::Result<()> {
     }
 
     let mut accumulator = 0.0f32;
-    let fixed_dt = 1.0 / TPS as f32;
 
     loop {
         if network_thread.is_finished() {
@@ -85,13 +84,13 @@ async fn main() -> anyhow::Result<()> {
         }
 
         accumulator += get_frame_time();
-        while accumulator >= fixed_dt {
+        while accumulator >= FIXED_DT {
             let input_map = get_input_map();
             client.check_for_new_input(&input_map)?;
 
             input_system(&mut client.state, client.client_id, &input_map);
-            physics_system(&mut client.state, fixed_dt);
-            accumulator -= fixed_dt;
+            physics_system(&mut client.state, FIXED_DT);
+            accumulator -= FIXED_DT;
         }
 
         rendering_system(&mut client.state, &texture_manager);
