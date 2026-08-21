@@ -34,7 +34,7 @@ async fn main() -> anyhow::Result<()> {
 
         server.send_snapshot().await;
 
-        server.check_for_disconnects();
+        let _ = server.check_for_disconnects().await;
         server.tick += 1;
         tokio::time::sleep(Duration::from_secs_f64(1.0 / TPS as f64)).await;
     }

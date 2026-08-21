@@ -527,6 +527,7 @@ dependencies = [
  "bincode",
  "game",
  "glam 0.30.10",
+ "hecs",
  "protocol",
  "serde",
  "tokio",

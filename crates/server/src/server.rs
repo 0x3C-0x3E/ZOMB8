@@ -5,6 +5,8 @@ use std::{
     time::{Duration, Instant},
 };
 
+use hecs::Entity;
+
 use game::{
     ecs::{
         entities::player::Player,
@@ -14,10 +16,10 @@ use game::{
     },
     game::state::State,
 };
-use glam::Vec2;
 use protocol::{
     packet::Packet,
     packets::{
+        despawn_entity::PacketDespawnEntity,
         input::PacketInput,
         ping::PacketPing,
         set_player_id::PacketSetPlayerId,
@@ -89,18 +91,40 @@ impl Server {
         self.clients.insert(addr, Instant::now());
     }
 
-    pub fn check_for_disconnects(&mut self) {
-        let disconnected_clients = self
+    pub async fn check_for_disconnects(&mut self) -> anyhow::Result<()> {
+        let disconnected_clients: Vec<_> = self
             .clients
             .iter()
-            .filter(|(_, last_seen)| last_seen.elapsed() < Duration::from_secs(5));
+            .filter(|(_, last_seen)| last_seen.elapsed() > Duration::from_secs(5))
+            .map(|(addr, _)| *addr)
+            .collect();
 
-        for (addr, _) in disconnected_clients {
-            if let Some(id) = self.client_ids.get(addr) {
-                self.client_input_seq.remove(id);
-                self.client_ids.remove(addr);
+        for addr in disconnected_clients {
+            if let Some(id) = self.client_ids.remove(&addr) {
+                println!("removed client {:?}", id.0);
+
+                let payload = PacketDespawnEntity::new(id);
+                let packet = Packet::from_payload(payload)?;
+                let _ = self.send_to_all(&packet).await;
+
+                self.client_input_seq.remove(&id);
+
+                let found = self
+                    .state
+                    .world
+                    .query::<(Entity, &NetworkId)>()
+                    .into_iter()
+                    .find(|(_, e_id)| **e_id == id)
+                    .map(|(e, _)| e);
+
+                if let Some(e) = found {
+                    let _ = self.state.world.despawn(e);
+                }
             }
+            self.clients.remove(&addr);
         }
+
+        Ok(())
     }
 
     pub async fn create_new_player(&mut self, sender_addr: SocketAddr) -> anyhow::Result<()> {
