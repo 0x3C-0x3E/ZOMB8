@@ -1,4 +1,7 @@
-use crate::client::Client;
+use crate::{
+    client::Client,
+    spawn_despawn_handler::{spawn_network_entity, spawn_network_entity_from_state},
+};
 use game::ecs::{
     entities::player::Player,
     network_id::NetworkId,
@@ -38,7 +41,7 @@ pub fn snapshot_handler(client: &mut Client, packet_snapshot: PacketSnapshot) {
             let mut old_pos = client.state.world.get::<&mut Position>(e).unwrap();
             *old_pos = pos;
         } else {
-            Player::spawn(&mut client.state.world, Position::from(new_state.pos), id);
+            spawn_network_entity_from_state(&mut client.state.world, new_state, id);
         }
     }
 }

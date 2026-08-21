@@ -13,6 +13,8 @@ mod server;
 async fn main() -> anyhow::Result<()> {
     let mut server = Server::new().await?;
 
+    server.create_new_mole().await?;
+
     loop {
         if server.network_thread.is_finished() {
             match server.network_thread.await {

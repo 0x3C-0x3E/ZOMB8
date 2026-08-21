@@ -6,7 +6,7 @@ use crate::{
     packet::{PacketKind, PacketPayload},
 };
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum EntityKind {
     Tile,
     Player,

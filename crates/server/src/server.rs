@@ -9,8 +9,11 @@ use hecs::Entity;
 
 use game::{
     ecs::{
-        components::snapshot_sync::SnapshotSync, entities::player::Player, network_id::NetworkId,
-        systems::input::input_system, transform::Position,
+        components::snapshot_sync::SnapshotSync,
+        entities::{self, mole::Mole, player::Player},
+        network_id::NetworkId,
+        systems::input::input_system,
+        transform::Position,
     },
     game::state::State,
 };
@@ -22,7 +25,10 @@ use protocol::{
         ping::PacketPing,
         set_player_id::PacketSetPlayerId,
         snapshot::{EntityState, PacketSnapshot},
-        spawn_entity::{EntityKind, PacketSpawnEntity},
+        spawn_entity::{
+            EntityKind::{self},
+            PacketSpawnEntity,
+        },
     },
 };
 use tokio::{sync::mpsc::Receiver, sync::mpsc::Sender, task::JoinHandle};
@@ -144,21 +150,46 @@ impl Server {
         Ok(())
     }
 
+    pub async fn create_new_mole(&mut self) -> anyhow::Result<()> {
+        let id = self.allocator.allocate();
+        let pos = Position::new(40.0, 20.0);
+
+        let _ = Mole::spawn(&mut self.state.world, pos, id);
+
+        let payload = PacketSpawnEntity::new(id, EntityKind::Mole, pos.into());
+        let packet = Packet::from_payload(payload)?;
+        let _ = self.send_to_all(&packet).await;
+
+        Ok(())
+    }
+
     pub async fn send_snapshot(&mut self) {
-        let players: Vec<(NetworkId, EntityState)> = self
-            .state
-            .world
-            .query_mut::<(&NetworkId, &Position)>()
-            .with::<&SnapshotSync>()
-            .into_iter()
-            .map(|(n, pos)| (*n, EntityState::new((*pos).into())))
-            .collect();
+        let mut entities: Vec<(NetworkId, EntityState)> = Vec::new();
+        entities.extend(
+            self.state
+                .world
+                .query_mut::<(&NetworkId, &Position)>()
+                .with::<&SnapshotSync>()
+                .with::<&Player>()
+                .into_iter()
+                .map(|(n, pos)| (*n, EntityState::new(EntityKind::Player, (*pos).into()))),
+        );
+
+        entities.extend(
+            self.state
+                .world
+                .query_mut::<(&NetworkId, &Position)>()
+                .with::<&SnapshotSync>()
+                .with::<&Mole>()
+                .into_iter()
+                .map(|(n, pos)| (*n, EntityState::new(EntityKind::Mole, (*pos).into()))),
+        );
 
         for client in self.clients.keys() {
             let id = self.client_ids.get(client);
             if let Some(id) = id {
                 let last_ack_seq = self.client_input_seq.get(id).copied().unwrap_or(0);
-                let payload = PacketSnapshot::new(self.tick, last_ack_seq, players.clone());
+                let payload = PacketSnapshot::new(self.tick, last_ack_seq, entities.clone());
                 let packet = Packet::from_payload(payload).unwrap();
                 let _ = self.in_send.send((*client, packet)).await;
             }

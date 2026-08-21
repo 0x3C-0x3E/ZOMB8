@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     network_id::ProtocolNetworkId,
     packet::{PacketKind, PacketPayload},
+    packets::spawn_entity::EntityKind,
 };
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -31,13 +32,14 @@ impl PacketSnapshot {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct EntityState {
+    pub kind: EntityKind,
     pub pos: Vec2,
 }
 
 impl EntityState {
-    pub fn new(pos: Vec2) -> Self {
-        Self { pos }
+    pub fn new(kind: EntityKind, pos: Vec2) -> Self {
+        Self { kind, pos }
     }
 }

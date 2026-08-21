@@ -4,15 +4,29 @@ use game::ecs::{
     transform::Position,
 };
 use hecs::{Entity, World};
-use protocol::packets::{despawn_entity::PacketDespawnEntity, spawn_entity::PacketSpawnEntity};
+use protocol::packets::{
+    despawn_entity::PacketDespawnEntity, snapshot::EntityState, spawn_entity::PacketSpawnEntity,
+};
+
+pub fn spawn_network_entity_from_state(
+    world: &mut World,
+    state: EntityState,
+    network_id: NetworkId,
+) -> Entity {
+    use protocol::packets::spawn_entity::EntityKind;
+    match state.kind {
+        EntityKind::Tile => Tile::spawn(world, Position::from(state.pos), network_id),
+        EntityKind::Player => Player::spawn(world, Position::from(state.pos), network_id),
+        EntityKind::Mole => Mole::spawn(world, Position::from(state.pos), network_id),
+    }
+}
 
 pub fn spawn_network_entity(world: &mut World, packet: PacketSpawnEntity) -> Entity {
-    use protocol::packets::spawn_entity::EntityKind;
-    match packet.kind {
-        EntityKind::Tile => Tile::spawn(world, Position::from(packet.pos), packet.network_id),
-        EntityKind::Player => Player::spawn(world, Position::from(packet.pos), packet.network_id),
-        EntityKind::Mole => Mole::spawn(world, Position::from(packet.pos), packet.network_id),
-    }
+    let state = EntityState {
+        kind: packet.kind,
+        pos: packet.pos,
+    };
+    spawn_network_entity_from_state(world, state, packet.network_id)
 }
 
 pub fn despawn_network_entity(world: &mut World, packet: PacketDespawnEntity) {
