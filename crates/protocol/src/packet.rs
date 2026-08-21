@@ -7,6 +7,7 @@ pub const MAX_DATAGRAM_SIZE: usize = 64 * 256;
 #[derive(Debug, Clone, Copy, TryFromPrimitive)]
 pub enum PacketKind {
     SpawnEntity,
+    DespawnEntity,
     Ping,
     SetPlayerId,
     Snapshot,

@@ -38,7 +38,7 @@ impl From<Position> for Vec2 {
     }
 }
 
-#[derive(Debug, Default, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Default, Serialize, Deserialize, PartialEq, Clone, Copy)]
 pub struct Velocity {
     pub x: f32,
     pub y: f32,
@@ -55,6 +55,11 @@ impl Velocity {
 
     pub fn vec2(self) -> Vec2 {
         Vec2::new(self.x, self.y)
+    }
+
+    pub fn update_vec2(&mut self, vec2: Vec2) {
+        self.x = vec2.x;
+        self.y = vec2.y;
     }
 }
 

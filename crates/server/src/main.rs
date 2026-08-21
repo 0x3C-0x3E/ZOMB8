@@ -26,7 +26,7 @@ async fn main() -> anyhow::Result<()> {
             }
 
             server.touch_client(sender_addr);
-            server.handle_packet(packet);
+            let _ = server.handle_packet(packet);
         }
 
         let dt = 1.0 / TPS as f32;

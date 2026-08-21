@@ -1,3 +1,4 @@
+pub mod despawn_entity;
 pub mod input;
 pub mod ping;
 pub mod set_player_id;

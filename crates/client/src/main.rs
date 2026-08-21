@@ -23,7 +23,8 @@ use protocol::{
 
 mod client;
 mod network_thread;
-mod spawn_network_entity;
+mod snapshot_handler;
+mod spawn_despawn_handler;
 
 fn window_conf() -> Conf {
     Conf {
@@ -89,7 +90,7 @@ async fn main() -> anyhow::Result<()> {
             client.check_for_new_input(&input_map)?;
 
             input_system(&mut client.state, client.client_id, &input_map);
-            physics_system(&mut client.state, get_frame_time());
+            physics_system(&mut client.state, fixed_dt);
             accumulator -= fixed_dt;
         }
 

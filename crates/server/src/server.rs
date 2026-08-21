@@ -7,8 +7,10 @@ use std::{
 
 use game::{
     ecs::{
-        entities::player::Player, network_id::NetworkId, systems::input::input_system,
-        transform::Position,
+        entities::player::Player,
+        network_id::NetworkId,
+        systems::input::input_system,
+        transform::{Position, Velocity},
     },
     game::state::State,
 };
@@ -19,7 +21,7 @@ use protocol::{
         input::PacketInput,
         ping::PacketPing,
         set_player_id::PacketSetPlayerId,
-        snapshot::PacketSnapshot,
+        snapshot::{PacketSnapshot, PlayerState},
         spawn_entity::{EntityKind, PacketSpawnEntity},
     },
 };
@@ -88,8 +90,17 @@ impl Server {
     }
 
     pub fn check_for_disconnects(&mut self) {
-        self.clients
-            .retain(|_, last_seen| last_seen.elapsed() < Duration::from_secs(60));
+        let disconnected_clients = self
+            .clients
+            .iter()
+            .filter(|(_, last_seen)| last_seen.elapsed() < Duration::from_secs(5));
+
+        for (addr, _) in disconnected_clients {
+            if let Some(id) = self.client_ids.get(addr) {
+                self.client_input_seq.remove(id);
+                self.client_ids.remove(addr);
+            }
+        }
     }
 
     pub async fn create_new_player(&mut self, sender_addr: SocketAddr) -> anyhow::Result<()> {
@@ -112,13 +123,13 @@ impl Server {
     }
 
     pub async fn send_snapshot(&mut self) {
-        let players: Vec<(NetworkId, Vec2)> = self
+        let players: Vec<(NetworkId, PlayerState)> = self
             .state
             .world
-            .query_mut::<(&NetworkId, &Position)>()
+            .query_mut::<(&NetworkId, &Position, &Velocity)>()
             .with::<&Player>()
             .into_iter()
-            .map(|(n, pos)| (*n, (*pos).into()))
+            .map(|(n, pos, vel)| (*n, PlayerState::new((*pos).into(), (*vel).into())))
             .collect();
 
         for client in self.clients.keys() {

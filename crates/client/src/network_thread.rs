@@ -1,13 +1,20 @@
-use std::net::{Ipv6Addr, SocketAddrV6};
+use std::{
+    net::{Ipv6Addr, SocketAddrV6},
+    time::Duration,
+};
 
 use macroquad::prelude::*;
-use protocol::packet::{MAX_DATAGRAM_SIZE, Packet};
+use protocol::{
+    packet::{MAX_DATAGRAM_SIZE, Packet},
+    packets::ping::PacketPing,
+};
 use tokio::{
     net::UdpSocket,
     sync::{
         mpsc::{Receiver, Sender},
         watch,
     },
+    time::Instant,
 };
 
 pub async fn client_network_loop(
@@ -19,8 +26,11 @@ pub async fn client_network_loop(
     let socket = UdpSocket::bind(addr).await?;
     socket.connect("[::1]:6969").await?;
 
+    let mut last_sent = Instant::now();
+
     let mut buf = vec![0u8; MAX_DATAGRAM_SIZE];
     loop {
+        let ping_deadline = last_sent + Duration::from_secs(2);
         tokio::select! {
             result = socket.recv(&mut buf) => {
                 let len = result?;
@@ -29,16 +39,24 @@ pub async fn client_network_loop(
                     let _ = out_send.send(recv_packet).await;
                 }
             },
-
             Some(packet) = in_recv.recv() => {
                 let buffer: Vec<u8> = (&packet).into();
                 socket.send(&buffer).await?;
-            }
+            },
             _ = input_recv.changed() => {
                 let packet = input_recv.borrow_and_update().clone();
                 let buffer: Vec<u8> = (&packet).into();
                 socket.send(&buffer).await?;
-            }
+            },
+            _  = tokio::time::sleep_until(ping_deadline) => {
+                println!("sent alive packet");
+                let payload = PacketPing::new();
+                if let Ok(packet) = Packet::from_payload(payload) {
+                    let buffer: Vec<u8> = (&packet).into();
+                    socket.send(&buffer).await?;
+                    last_sent = Instant::now();
+                }
+            },
 
             else => break Ok(()),
         }

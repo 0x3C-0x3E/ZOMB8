@@ -1,17 +1,13 @@
-use game::{
-    ecs::{
-        entities::player::Player,
-        network_id::NetworkId,
-        systems::{input::input_system, physics::physics_system},
-        transform::Position,
-    },
-    game::state::State,
+use crate::{
+    snapshot_handler::snapshot_handler,
+    spawn_despawn_handler::{despawn_network_entity, spawn_network_entity},
 };
+use game::{ecs::network_id::NetworkId, game::state::State};
 use protocol::{
-    TPS,
     network_id::ProtocolNetworkId,
     packet::Packet,
     packets::{
+        despawn_entity::PacketDespawnEntity,
         input::{InputMap, PacketInput},
         set_player_id::PacketSetPlayerId,
         snapshot::PacketSnapshot,
@@ -20,15 +16,13 @@ use protocol::{
 };
 use tokio::sync::watch;
 
-use crate::spawn_network_entity::spawn_network_entity;
-
 pub struct Client {
     pub state: State,
     pub client_id: NetworkId,
 
-    input_send: watch::Sender<Packet>,
-    input_seq: u32,
-    last_maps: Vec<(u32, InputMap)>,
+    pub input_send: watch::Sender<Packet>,
+    pub input_seq: u32,
+    pub last_maps: Vec<(u32, InputMap)>,
 }
 
 impl Client {
@@ -71,6 +65,11 @@ impl Client {
                 let packet_spawn_entity: PacketSpawnEntity = bincode::deserialize(&packet.payload)?;
                 spawn_network_entity(&mut self.state.world, packet_spawn_entity);
             }
+            PacketKind::DespawnEntity => {
+                let packet_despawn_entity: PacketDespawnEntity =
+                    bincode::deserialize(&packet.payload)?;
+                despawn_network_entity(&mut self.state.world, packet_despawn_entity);
+            }
             PacketKind::SetPlayerId => {
                 let packet_set_player_id: PacketSetPlayerId =
                     bincode::deserialize(&packet.payload)?;
@@ -79,30 +78,7 @@ impl Client {
             }
             PacketKind::Snapshot => {
                 let packet_snapshot: PacketSnapshot = bincode::deserialize(&packet.payload)?;
-                for (id, new_pos) in packet_snapshot.players {
-                    let found = self
-                        .state
-                        .world
-                        .query_mut::<(&NetworkId, &mut Position)>()
-                        .with::<&Player>()
-                        .into_iter()
-                        .find(|(e_id, _)| **e_id == id)
-                        .map(|(_, pos)| pos);
-                    if let Some(pos) = found {
-                        pos.update_vec2(new_pos);
-                        if id == self.client_id {
-                            self.last_maps
-                                .retain(|(seq, _)| *seq > packet_snapshot.last_ack_seq);
-
-                            for (_, map) in self.last_maps.iter() {
-                                input_system(&mut self.state, self.client_id, map);
-                                physics_system(&mut self.state, 1.0 / TPS as f32);
-                            }
-                        }
-                    } else {
-                        Player::spawn(&mut self.state.world, Position::from(new_pos), id);
-                    }
-                }
+                snapshot_handler(self, packet_snapshot);
             }
             _ => panic!("unhandled packet kind '{:?}'", packet.kind),
         }
