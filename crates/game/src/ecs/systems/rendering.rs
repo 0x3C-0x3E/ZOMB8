@@ -1,5 +1,8 @@
 use crate::{
-    ecs::components::{sprite::Sprite, transform::Position},
+    ecs::{
+        components::{sprite::Sprite, transform::Position},
+        transform::RenderPosition,
+    },
     game::{state::State, texture_manager::TextureManager},
 };
 use macroquad::prelude::*;
@@ -40,7 +43,11 @@ pub fn rendering_system(state: &mut State, texture_manager: &TextureManager) {
 
     clear_background(Color::from_hex(0x696353));
 
-    for (_e, pos, sprite) in state.world.query::<(Entity, &Position, &Sprite)>().iter() {
+    for (e, pos, sprite) in state.world.query::<(Entity, &Position, &Sprite)>().iter() {
+        let mut render_pos = *pos;
+        if let Ok(rpos) = state.world.get::<&RenderPosition>(e) {
+            render_pos = rpos.to_pos();
+        }
         let params = DrawTextureParams {
             dest_size: Some(Vec2 {
                 x: sprite.rect.w * camera.scale,
@@ -54,8 +61,8 @@ pub fn rendering_system(state: &mut State, texture_manager: &TextureManager) {
             texture_manager
                 .get_texture(&sprite.id)
                 .expect("invalid texture"),
-            ((pos.x - camera.pos.x) * camera.scale) as i32 as f32,
-            ((pos.y - camera.pos.y) * camera.scale) as i32 as f32,
+            ((render_pos.x - camera.pos.x) * camera.scale) as i32 as f32,
+            ((render_pos.y - camera.pos.y) * camera.scale) as i32 as f32,
             WHITE,
             params,
         );

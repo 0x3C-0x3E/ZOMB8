@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::ecs::{
     components::{sprite::Sprite, transform::Position},
     network_id::NetworkId,
-    transform::Velocity,
+    transform::{RenderPosition, Velocity},
 };
 
 #[derive(Serialize, Deserialize)]
@@ -16,6 +16,7 @@ impl Player {
         world.spawn((
             Player,
             pos,
+            RenderPosition::from_pos(pos),
             Velocity::zero(),
             network_id,
             Sprite::new(

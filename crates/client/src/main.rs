@@ -93,6 +93,7 @@ async fn main() -> anyhow::Result<()> {
             accumulator -= FIXED_DT;
         }
 
+        client.set_render_pos(accumulator / FIXED_DT);
         rendering_system(&mut client.state, &texture_manager);
         next_frame().await;
     }

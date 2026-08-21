@@ -2,7 +2,14 @@ use crate::{
     snapshot_handler::snapshot_handler,
     spawn_despawn_handler::{despawn_network_entity, spawn_network_entity},
 };
-use game::{ecs::network_id::NetworkId, game::state::State};
+use game::{
+    ecs::{
+        entities::player::Player,
+        network_id::NetworkId,
+        transform::{Position, RenderPosition},
+    },
+    game::state::State,
+};
 use protocol::{
     network_id::ProtocolNetworkId,
     packet::Packet,
@@ -24,6 +31,8 @@ pub struct Client {
     pub input_seq: u32,
     pub last_maps: Vec<(u32, InputMap)>,
     pub last_sent_map: Option<InputMap>,
+
+    pub last_snapshots: Vec<PacketSnapshot>,
 }
 
 impl Client {
@@ -36,11 +45,35 @@ impl Client {
             input_seq: 0,
             last_maps: vec![],
             last_sent_map: None,
+
+            last_snapshots: vec![],
         }
     }
 
     pub fn set_client_id(&mut self, id: NetworkId) {
         self.client_id = id;
+    }
+
+    pub fn set_render_pos(&mut self, alpha: f32) {
+        let prev_snapshot = self.last_snapshots.iter().rev().nth(1);
+        for (render_pos, pos, id) in self
+            .state
+            .world
+            .query_mut::<(&mut RenderPosition, &Position, &NetworkId)>()
+            .with::<&Player>()
+        {
+            if let Some(prev_snapshot) = prev_snapshot
+                && let Some(prev_pos) = prev_snapshot
+                    .players
+                    .iter()
+                    .find(|(pid, _)| pid == id)
+                    .map(|(_, state)| state.pos)
+            {
+                render_pos.lerp(&Position::new(prev_pos.x, prev_pos.y), pos, alpha);
+            } else {
+                render_pos.lerp(pos, pos, alpha);
+            }
+        }
     }
 
     pub fn check_for_new_input(&mut self, current_map: &InputMap) -> anyhow::Result<()> {
@@ -77,6 +110,7 @@ impl Client {
             }
             PacketKind::Snapshot => {
                 let packet_snapshot: PacketSnapshot = bincode::deserialize(&packet.payload)?;
+                self.last_snapshots.push(packet_snapshot.clone());
                 snapshot_handler(self, packet_snapshot);
             }
             _ => panic!("unhandled packet kind '{:?}'", packet.kind),

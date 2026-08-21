@@ -6,7 +6,7 @@ use crate::{
     packet::{PacketKind, PacketPayload},
 };
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct PacketSnapshot {
     pub tick: u64,
     pub last_ack_seq: u32,

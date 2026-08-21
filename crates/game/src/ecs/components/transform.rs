@@ -39,6 +39,27 @@ impl From<Position> for Vec2 {
 }
 
 #[derive(Debug, Default, Serialize, Deserialize, PartialEq, Clone, Copy)]
+pub struct RenderPosition {
+    pub x: f32,
+    pub y: f32,
+}
+
+impl RenderPosition {
+    pub fn lerp(&mut self, last: &Position, current: &Position, alpha: f32) {
+        self.x = last.x + (current.x - last.x) * alpha;
+        self.y = last.y + (current.y - last.y) * alpha;
+    }
+
+    pub fn from_pos(pos: Position) -> Self {
+        Self { x: pos.x, y: pos.x }
+    }
+
+    pub fn to_pos(&self) -> Position {
+        Position::new(self.x, self.y)
+    }
+}
+
+#[derive(Debug, Default, Serialize, Deserialize, PartialEq, Clone, Copy)]
 pub struct Velocity {
     pub x: f32,
     pub y: f32,

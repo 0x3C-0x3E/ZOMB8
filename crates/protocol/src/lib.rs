@@ -4,4 +4,4 @@ pub mod packet;
 
 pub mod packets;
 
-pub const TPS: u32 = 60;
+pub const TPS: u32 = 20;
