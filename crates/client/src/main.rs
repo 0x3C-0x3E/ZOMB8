@@ -86,7 +86,7 @@ async fn main() -> anyhow::Result<()> {
 
         accumulator += get_frame_time();
         while accumulator >= FIXED_DT {
-            client.set_local_player_prev_pos();
+            client.set_local_prev_pos();
 
             let input_map = get_input_map();
             client.check_for_new_input(&input_map)?;
@@ -98,8 +98,8 @@ async fn main() -> anyhow::Result<()> {
         client.interp_timer += get_frame_time();
         let interp_alpha = (client.interp_timer / (1.0 / TPS as f32)).clamp(0.0, 1.0);
 
-        client.set_local_player_render_pos(accumulator / FIXED_DT);
-        client.set_render_pos(interp_alpha);
+        client.set_local_render_pos(accumulator / FIXED_DT);
+        client.set_net_render_pos(interp_alpha);
 
         rendering_system(&mut client.state, &texture_manager);
         next_frame().await;

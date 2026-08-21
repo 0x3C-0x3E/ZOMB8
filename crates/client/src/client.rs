@@ -65,7 +65,7 @@ impl Client {
         self.client_id = id;
     }
 
-    pub fn set_local_player_prev_pos(&mut self) {
+    pub fn set_local_prev_pos(&mut self) {
         if let Some(player) = self.player {
             self.prev_pos = *self
                 .state
@@ -75,7 +75,7 @@ impl Client {
         }
     }
 
-    pub fn set_local_player_render_pos(&mut self, alpha: f32) {
+    pub fn set_local_render_pos(&mut self, alpha: f32) {
         if let Some(player) = self.player
             && let Ok((render_pos, pos)) = self
                 .state
@@ -87,7 +87,7 @@ impl Client {
         }
     }
 
-    pub fn set_render_pos(&mut self, alpha: f32) {
+    pub fn set_net_render_pos(&mut self, alpha: f32) {
         let prev_snapshot = self.last_snapshots.iter().rev().nth(1);
         for (render_pos, pos, id) in self
             .state
