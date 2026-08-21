@@ -14,7 +14,7 @@ pub async fn server_network_loop(
             result = socket.recv_from(&mut buf) => {
                 let (len, sender_addr) = result?;
                 if let Ok(recv_packet) = Packet::try_from(&buf[..len]) {
-                    out_send.send((sender_addr, recv_packet)).await.unwrap();
+                    out_send.send((sender_addr, recv_packet)).await?;
                 }
             },
             Some((client_addr, packet)) = in_recv.recv() => {

@@ -67,8 +67,9 @@ async fn main() -> anyhow::Result<()> {
     });
 
     let payload = PacketPing::new();
-    let packet = Packet::from_payload(payload).unwrap();
-    let _ = in_send.send(packet).await;
+    if let Ok(packet) = Packet::from_payload(payload) {
+        let _ = in_send.send(packet).await;
+    }
 
     let mut accumulator = 0.0f32;
     let fixed_dt = 1.0 / TPS as f32;
@@ -79,7 +80,7 @@ async fn main() -> anyhow::Result<()> {
         }
 
         while let Ok(packet) = out_recv.try_recv() {
-            client.handle_packet(packet);
+            let _ = client.handle_packet(packet);
         }
 
         accumulator += get_frame_time();

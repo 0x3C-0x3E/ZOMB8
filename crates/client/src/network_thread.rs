@@ -24,8 +24,10 @@ pub async fn client_network_loop(
         tokio::select! {
             result = socket.recv(&mut buf) => {
                 let len = result?;
-                let recv_packet = Packet::try_from(&buf[..len]).unwrap();
-                out_send.send(recv_packet).await.unwrap();
+                let recv_packet = Packet::try_from(&buf[..len]);
+                if let Ok(recv_packet) = recv_packet {
+                    let _ = out_send.send(recv_packet).await;
+                }
             },
 
             Some(packet) = in_recv.recv() => {

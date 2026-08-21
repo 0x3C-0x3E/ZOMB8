@@ -48,7 +48,11 @@ impl Client {
     }
 
     pub fn check_for_new_input(&mut self, current_map: &InputMap) -> anyhow::Result<()> {
-        if self.last_maps.last().is_none() || *current_map != self.last_maps.last().unwrap().1 {
+        if self
+            .last_maps
+            .last()
+            .is_none_or(|last_map| *current_map != last_map.1)
+        {
             self.input_seq += 1;
             let payload = PacketInput::new(self.client_id, self.input_seq, current_map.clone());
             let packet = Packet::from_payload(payload)?;
@@ -60,23 +64,21 @@ impl Client {
         Ok(())
     }
 
-    pub fn handle_packet(&mut self, packet: Packet) {
+    pub fn handle_packet(&mut self, packet: Packet) -> anyhow::Result<()> {
         use protocol::packet::PacketKind;
         match packet.kind {
             PacketKind::SpawnEntity => {
-                let packet_spawn_entity: PacketSpawnEntity =
-                    bincode::deserialize(&packet.payload).unwrap();
+                let packet_spawn_entity: PacketSpawnEntity = bincode::deserialize(&packet.payload)?;
                 spawn_network_entity(&mut self.state.world, packet_spawn_entity);
             }
             PacketKind::SetPlayerId => {
                 let packet_set_player_id: PacketSetPlayerId =
-                    bincode::deserialize(&packet.payload).unwrap();
+                    bincode::deserialize(&packet.payload)?;
                 println!("this client has id: {:?}", packet_set_player_id.id);
                 self.set_client_id(packet_set_player_id.id);
             }
             PacketKind::Snapshot => {
-                let packet_snapshot: PacketSnapshot =
-                    bincode::deserialize(&packet.payload).unwrap();
+                let packet_snapshot: PacketSnapshot = bincode::deserialize(&packet.payload)?;
                 for (id, new_pos) in packet_snapshot.players {
                     let found = self
                         .state
@@ -104,5 +106,6 @@ impl Client {
             }
             _ => panic!("unhandled packet kind '{:?}'", packet.kind),
         }
+        Ok(())
     }
 }

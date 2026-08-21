@@ -99,12 +99,11 @@ impl Server {
 
         let payload =
             PacketSpawnEntity::new(client_id, EntityKind::Player, client_player_pos.into());
-        let packet = Packet::from_payload(payload).unwrap();
-
+        let packet = Packet::from_payload(payload)?;
         let _ = self.send_to_all(&packet).await;
 
         let payload = PacketSetPlayerId::new(client_id);
-        let packet = Packet::from_payload(payload).unwrap();
+        let packet = Packet::from_payload(payload)?;
 
         self.client_ids.insert(sender_addr, client_id);
 
@@ -133,14 +132,14 @@ impl Server {
         }
     }
 
-    pub fn handle_packet(&mut self, packet: Packet) {
+    pub fn handle_packet(&mut self, packet: Packet) -> anyhow::Result<()> {
         use protocol::packet::PacketKind;
         match packet.kind {
             PacketKind::Ping => {
-                let _packet_ping: PacketPing = bincode::deserialize(&packet.payload).unwrap();
+                let _packet_ping: PacketPing = bincode::deserialize(&packet.payload)?;
             }
             PacketKind::Input => {
-                let packet_input: PacketInput = bincode::deserialize(&packet.payload).unwrap();
+                let packet_input: PacketInput = bincode::deserialize(&packet.payload)?;
                 let found = self
                     .state
                     .world
@@ -153,7 +152,7 @@ impl Server {
                         && *prev_seq > packet_input.seq
                     {
                         println!("got out of order packet -> ignoring");
-                        return;
+                        return Ok(());
                     }
                     self.client_input_seq
                         .insert(packet_input.client_id, packet_input.seq);
@@ -170,5 +169,6 @@ impl Server {
                 println!("unhandled packet kind '{:?}'!", packet.kind)
             }
         }
+        Ok(())
     }
 }
