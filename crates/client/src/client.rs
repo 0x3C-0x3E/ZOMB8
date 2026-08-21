@@ -118,8 +118,10 @@ impl Client {
         if changed {
             self.input_seq += 1;
             self.last_maps.push((self.input_seq, current_map.clone()));
+
             let payload = PacketInput::new(self.client_id, self.input_seq, current_map.clone());
             let packet = Packet::from_payload(payload)?;
+
             self.input_send.send(packet)?;
             self.last_sent_map = Some(current_map.clone());
         }
