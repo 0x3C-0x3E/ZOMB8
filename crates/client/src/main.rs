@@ -12,6 +12,7 @@ use game::{
 };
 use macroquad::prelude::*;
 use protocol::{
+    TPS,
     network_id::ProtocolNetworkId,
     packet::Packet,
     packets::{
@@ -69,6 +70,9 @@ async fn main() -> anyhow::Result<()> {
     let packet = Packet::from_payload(payload).unwrap();
     let _ = in_send.send(packet).await;
 
+    let mut accumulator = 0.0f32;
+    let fixed_dt = 1.0 / TPS as f32;
+
     loop {
         if network_thread.is_finished() {
             panic!("network thread exited with {:?}", network_thread.join());
@@ -78,11 +82,15 @@ async fn main() -> anyhow::Result<()> {
             client.handle_packet(packet);
         }
 
-        let input_map = get_input_map();
-        client.check_for_new_input(&input_map)?;
+        accumulator += get_frame_time();
+        while accumulator >= fixed_dt {
+            let input_map = get_input_map();
+            client.check_for_new_input(&input_map)?;
 
-        input_system(&mut client.state, client.client_id, &input_map);
-        physics_system(&mut client.state, get_frame_time());
+            input_system(&mut client.state, client.client_id, &input_map);
+            physics_system(&mut client.state, get_frame_time());
+            accumulator -= fixed_dt;
+        }
 
         rendering_system(&mut client.state, &texture_manager);
         next_frame().await;

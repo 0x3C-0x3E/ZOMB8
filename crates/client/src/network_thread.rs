@@ -1,10 +1,7 @@
 use std::net::{Ipv6Addr, SocketAddrV6};
 
 use macroquad::prelude::*;
-use protocol::{
-    packet::{MAX_DATAGRAM_SIZE, Packet},
-    packets::input::PacketInput,
-};
+use protocol::packet::{MAX_DATAGRAM_SIZE, Packet};
 use tokio::{
     net::UdpSocket,
     sync::{

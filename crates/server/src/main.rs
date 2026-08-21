@@ -1,8 +1,7 @@
 use std::time::Duration;
 
-use crate::server::TPS;
-
-use game::ecs::systems::{input::input_system, physics::physics_system};
+use game::ecs::systems::physics::physics_system;
+use protocol::TPS;
 
 use crate::server::Server;
 

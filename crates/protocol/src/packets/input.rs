@@ -5,7 +5,7 @@ use crate::{
     packet::{PacketKind, PacketPayload},
 };
 
-#[derive(Serialize, Deserialize, PartialEq, Eq, Clone)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct InputMap {
     pub up: bool,
     pub down: bool,

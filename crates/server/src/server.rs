@@ -27,8 +27,6 @@ use tokio::{sync::mpsc::Receiver, sync::mpsc::Sender, task::JoinHandle};
 
 use crate::network_id_allocator::NetworkIdAllocator;
 
-pub const TPS: u32 = 60;
-
 pub struct Server {
     pub allocator: NetworkIdAllocator,
     pub state: State,
@@ -41,6 +39,7 @@ pub struct Server {
     pub out_recv: Receiver<(SocketAddr, Packet)>,
     pub in_send: Sender<(SocketAddr, Packet)>,
 
+    pub client_ids: HashMap<SocketAddr, NetworkId>,
     pub client_input_seq: HashMap<NetworkId, u32>,
 }
 
@@ -60,6 +59,7 @@ impl Server {
             network_thread,
             out_recv,
             in_send,
+            client_ids: HashMap::new(),
             client_input_seq: HashMap::new(),
         })
     }
@@ -106,6 +106,8 @@ impl Server {
         let payload = PacketSetPlayerId::new(client_id);
         let packet = Packet::from_payload(payload).unwrap();
 
+        self.client_ids.insert(sender_addr, client_id);
+
         let _ = self.send_to(&packet, sender_addr).await;
         Ok(())
     }
@@ -120,10 +122,15 @@ impl Server {
             .map(|(n, pos)| (*n, (*pos).into()))
             .collect();
 
-        let payload = PacketSnapshot::new(self.tick, players);
-        let packet = Packet::from_payload(payload).unwrap();
-
-        let _ = self.send_to_all(&packet).await;
+        for client in self.clients.keys() {
+            let id = self.client_ids.get(client);
+            if let Some(id) = id {
+                let last_ack_seq = self.client_input_seq.get(id).copied().unwrap_or(0);
+                let payload = PacketSnapshot::new(self.tick, last_ack_seq, players.clone());
+                let packet = Packet::from_payload(payload).unwrap();
+                let _ = self.in_send.send((*client, packet)).await;
+            }
+        }
     }
 
     pub fn handle_packet(&mut self, packet: Packet) {

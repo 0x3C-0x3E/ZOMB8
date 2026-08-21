@@ -9,6 +9,7 @@ use crate::{
 #[derive(Serialize, Deserialize)]
 pub struct PacketSnapshot {
     pub tick: u64,
+    pub last_ack_seq: u32,
     pub players: Vec<(ProtocolNetworkId, Vec2)>,
 }
 
@@ -17,7 +18,11 @@ impl PacketPayload for PacketSnapshot {
 }
 
 impl PacketSnapshot {
-    pub fn new(tick: u64, players: Vec<(ProtocolNetworkId, Vec2)>) -> Self {
-        Self { tick, players }
+    pub fn new(tick: u64, last_ack_seq: u32, players: Vec<(ProtocolNetworkId, Vec2)>) -> Self {
+        Self {
+            tick,
+            last_ack_seq,
+            players,
+        }
     }
 }
