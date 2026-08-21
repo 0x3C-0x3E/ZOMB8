@@ -61,6 +61,10 @@ async fn main() -> anyhow::Result<()> {
         .load_texture("assets/img/player.png", "player")
         .await;
 
+    texture_manager
+        .load_texture("assets/img/mole.png", "mole")
+        .await;
+
     let network_thread = std::thread::spawn(move || -> anyhow::Result<()> {
         let rt = tokio::runtime::Runtime::new().unwrap();
 
