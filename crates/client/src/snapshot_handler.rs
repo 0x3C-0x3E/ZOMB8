@@ -2,10 +2,7 @@ use crate::client::Client;
 use game::ecs::{
     entities::player::Player,
     network_id::NetworkId,
-    systems::{
-        input::{input_system, input_system_for_player},
-        physics::physics_system_for_entity,
-    },
+    systems::{input::input_system_for_player, physics::physics_system_for_entity},
     transform::{Position, Velocity},
 };
 use hecs::Entity;
@@ -15,7 +12,7 @@ pub const FIXED_DT: f32 = 1.0 / TPS as f32;
 
 pub fn snapshot_handler(client: &mut Client, packet_snapshot: PacketSnapshot) {
     client.interp_timer = 0.0;
-    for (id, new_state) in packet_snapshot.players {
+    for (id, new_state) in packet_snapshot.entities {
         let found = client
             .state
             .world

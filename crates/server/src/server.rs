@@ -9,10 +9,8 @@ use hecs::Entity;
 
 use game::{
     ecs::{
-        entities::player::Player,
-        network_id::NetworkId,
-        systems::input::input_system,
-        transform::{Position, Velocity},
+        components::snapshot_sync::SnapshotSync, entities::player::Player, network_id::NetworkId,
+        systems::input::input_system, transform::Position,
     },
     game::state::State,
 };
@@ -23,7 +21,7 @@ use protocol::{
         input::PacketInput,
         ping::PacketPing,
         set_player_id::PacketSetPlayerId,
-        snapshot::{PacketSnapshot, PlayerState},
+        snapshot::{EntityState, PacketSnapshot},
         spawn_entity::{EntityKind, PacketSpawnEntity},
     },
 };
@@ -147,13 +145,13 @@ impl Server {
     }
 
     pub async fn send_snapshot(&mut self) {
-        let players: Vec<(NetworkId, PlayerState)> = self
+        let players: Vec<(NetworkId, EntityState)> = self
             .state
             .world
-            .query_mut::<(&NetworkId, &Position, &Velocity)>()
-            .with::<&Player>()
+            .query_mut::<(&NetworkId, &Position)>()
+            .with::<&SnapshotSync>()
             .into_iter()
-            .map(|(n, pos, vel)| (*n, PlayerState::new((*pos).into(), (*vel).into())))
+            .map(|(n, pos)| (*n, EntityState::new((*pos).into())))
             .collect();
 
         for client in self.clients.keys() {

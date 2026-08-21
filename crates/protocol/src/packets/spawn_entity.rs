@@ -10,6 +10,7 @@ use crate::{
 pub enum EntityKind {
     Tile,
     Player,
+    Mole,
 }
 
 #[derive(Serialize, Deserialize)]

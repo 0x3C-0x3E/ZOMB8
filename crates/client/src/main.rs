@@ -2,7 +2,6 @@
 
 use crate::network_thread::client_network_loop;
 use crate::{client::Client, snapshot_handler::FIXED_DT};
-use game::ecs::transform::Position;
 use game::{
     ecs::systems::{
         input::{get_input_map, input_system},

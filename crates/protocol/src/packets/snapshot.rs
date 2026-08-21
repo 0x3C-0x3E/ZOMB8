@@ -10,7 +10,7 @@ use crate::{
 pub struct PacketSnapshot {
     pub tick: u64,
     pub last_ack_seq: u32,
-    pub players: Vec<(ProtocolNetworkId, PlayerState)>,
+    pub entities: Vec<(ProtocolNetworkId, EntityState)>,
 }
 
 impl PacketPayload for PacketSnapshot {
@@ -21,24 +21,23 @@ impl PacketSnapshot {
     pub fn new(
         tick: u64,
         last_ack_seq: u32,
-        players: Vec<(ProtocolNetworkId, PlayerState)>,
+        entities: Vec<(ProtocolNetworkId, EntityState)>,
     ) -> Self {
         Self {
             tick,
             last_ack_seq,
-            players,
+            entities,
         }
     }
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct PlayerState {
+pub struct EntityState {
     pub pos: Vec2,
-    pub vel: Vec2,
 }
 
-impl PlayerState {
-    pub fn new(pos: Vec2, vel: Vec2) -> Self {
-        Self { pos, vel }
+impl EntityState {
+    pub fn new(pos: Vec2) -> Self {
+        Self { pos }
     }
 }

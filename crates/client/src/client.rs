@@ -1,4 +1,4 @@
-use std::collections::{VecDeque, vec_deque};
+use std::collections::VecDeque;
 
 use crate::{
     snapshot_handler::snapshot_handler,
@@ -93,7 +93,6 @@ impl Client {
             .state
             .world
             .query_mut::<(&mut RenderPosition, &Position, &NetworkId)>()
-            .with::<&Player>()
         {
             if *id == self.client_id {
                 continue;
@@ -101,7 +100,7 @@ impl Client {
 
             if let Some(prev_snapshot) = prev_snapshot
                 && let Some(prev_pos) = prev_snapshot
-                    .players
+                    .entities
                     .iter()
                     .find(|(pid, _)| pid == id)
                     .map(|(_, state)| state.pos)

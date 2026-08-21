@@ -1,5 +1,5 @@
 use game::ecs::{
-    entities::{player::Player, tile::Tile},
+    entities::{mole::Mole, player::Player, tile::Tile},
     network_id::NetworkId,
     transform::Position,
 };
@@ -11,6 +11,7 @@ pub fn spawn_network_entity(world: &mut World, packet: PacketSpawnEntity) -> Ent
     match packet.kind {
         EntityKind::Tile => Tile::spawn(world, Position::from(packet.pos), packet.network_id),
         EntityKind::Player => Player::spawn(world, Position::from(packet.pos), packet.network_id),
+        EntityKind::Mole => Mole::spawn(world, Position::from(packet.pos), packet.network_id),
     }
 }
 
