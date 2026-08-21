@@ -55,7 +55,6 @@ impl Client {
     }
 
     pub fn handle_packet(&mut self, packet: Packet) {
-        println!("kind: {:?}", packet);
         use protocol::packet::PacketKind;
         match packet.kind {
             PacketKind::SpawnEntity => {

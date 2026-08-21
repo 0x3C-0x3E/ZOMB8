@@ -1,5 +1,6 @@
+use std::time::Duration;
+
 use crate::server::TPS;
-use std::{thread::sleep, time::Duration};
 
 use game::ecs::systems::{input::input_system, physics::physics_system};
 
@@ -15,27 +16,27 @@ async fn main() -> anyhow::Result<()> {
 
     loop {
         if server.network_thread.is_finished() {
-            panic!(
-                "network thread exited with {:?}",
-                server.network_thread.await?
-            );
+            match server.network_thread.await {
+                Ok(res) => panic!("network thread exited with {:?}", res),
+                Err(e) => panic!("network thread exited with {:?}", e),
+            }
         }
         while let Ok((sender_addr, packet)) = server.out_recv.try_recv() {
             if server.check_insert_client(sender_addr) {
                 let _ = server.create_new_player(sender_addr).await;
             }
 
-            server.check_for_disconnects();
-
             server.touch_client(sender_addr);
             server.handle_packet(packet);
         }
 
-        physics_system(&mut server.state, 1.0 / TPS as f32);
+        let dt = 1.0 / TPS as f32;
+        physics_system(&mut server.state, dt);
 
-        // server.send_snapshot().await;
+        server.send_snapshot().await;
 
+        server.check_for_disconnects();
         server.tick += 1;
-        sleep(Duration::from_millis((1000 / TPS).into()));
+        tokio::time::sleep(Duration::from_secs_f64(1.0 / TPS as f64)).await;
     }
 }

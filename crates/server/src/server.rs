@@ -27,7 +27,7 @@ use tokio::{sync::mpsc::Receiver, sync::mpsc::Sender, task::JoinHandle};
 
 use crate::network_id_allocator::NetworkIdAllocator;
 
-pub const TPS: u32 = 2;
+pub const TPS: u32 = 60;
 
 pub struct Server {
     pub allocator: NetworkIdAllocator,
@@ -120,17 +120,13 @@ impl Server {
             .map(|(n, pos)| (*n, (*pos).into()))
             .collect();
 
-        println!("players: {:?}", players);
         let payload = PacketSnapshot::new(self.tick, players);
         let packet = Packet::from_payload(payload).unwrap();
-
-        println!("snapshot: {:?}", packet);
 
         let _ = self.send_to_all(&packet).await;
     }
 
     pub fn handle_packet(&mut self, packet: Packet) {
-        println!("kind: {:?}", packet);
         use protocol::packet::PacketKind;
         match packet.kind {
             PacketKind::Ping => {
