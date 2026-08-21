@@ -2,6 +2,7 @@
 
 use crate::network_thread::client_network_loop;
 use crate::{client::Client, snapshot_handler::FIXED_DT};
+use game::ecs::transform::Position;
 use game::{
     ecs::systems::{
         input::{get_input_map, input_system},
@@ -85,9 +86,10 @@ async fn main() -> anyhow::Result<()> {
 
         accumulator += get_frame_time();
         while accumulator >= FIXED_DT {
+            client.set_local_player_prev_pos();
+
             let input_map = get_input_map();
             client.check_for_new_input(&input_map)?;
-
             input_system(&mut client.state, client.client_id, &input_map);
             physics_system(&mut client.state, FIXED_DT);
             accumulator -= FIXED_DT;
@@ -95,7 +97,10 @@ async fn main() -> anyhow::Result<()> {
 
         client.interp_timer += get_frame_time();
         let interp_alpha = (client.interp_timer / (1.0 / TPS as f32)).clamp(0.0, 1.0);
+
+        client.set_local_player_render_pos(accumulator / FIXED_DT);
         client.set_render_pos(interp_alpha);
+
         rendering_system(&mut client.state, &texture_manager);
         next_frame().await;
     }

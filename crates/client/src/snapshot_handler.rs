@@ -25,7 +25,6 @@ pub fn snapshot_handler(client: &mut Client, packet_snapshot: PacketSnapshot) {
             .find(|(_, net_id, _, _)| **net_id == id)
             .map(|(e, _, pos, vel)| {
                 pos.update_vec2(new_state.pos);
-                // vel.update_vec2(new_state.vel);
                 (e, *pos, *vel)
             });
         if let Some((e, mut pos, mut vel)) = found {
@@ -40,9 +39,7 @@ pub fn snapshot_handler(client: &mut Client, packet_snapshot: PacketSnapshot) {
                 }
             }
             let mut old_pos = client.state.world.get::<&mut Position>(e).unwrap();
-            // let mut old_vel = client.state.world.get::<&mut Velocity>(e).unwrap();
             *old_pos = pos;
-            // *old_vel = vel;
         } else {
             Player::spawn(&mut client.state.world, Position::from(new_state.pos), id);
         }

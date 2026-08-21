@@ -1,3 +1,5 @@
+use std::collections::{VecDeque, vec_deque};
+
 use crate::{
     snapshot_handler::snapshot_handler,
     spawn_despawn_handler::{despawn_network_entity, spawn_network_entity},
@@ -10,6 +12,7 @@ use game::{
     },
     game::state::State,
 };
+use hecs::Entity;
 use protocol::{
     network_id::ProtocolNetworkId,
     packet::Packet,
@@ -32,7 +35,10 @@ pub struct Client {
     pub last_maps: Vec<(u32, InputMap)>,
     pub last_sent_map: Option<InputMap>,
 
-    pub last_snapshots: Vec<PacketSnapshot>,
+    pub player: Option<Entity>,
+    pub prev_pos: Position,
+
+    pub last_snapshots: VecDeque<PacketSnapshot>,
     pub interp_timer: f32,
 }
 
@@ -47,13 +53,38 @@ impl Client {
             last_maps: vec![],
             last_sent_map: None,
 
-            last_snapshots: vec![],
+            player: None,
+            prev_pos: Position::zero(),
+
+            last_snapshots: VecDeque::with_capacity(5),
             interp_timer: 0.0,
         }
     }
 
     pub fn set_client_id(&mut self, id: NetworkId) {
         self.client_id = id;
+    }
+
+    pub fn set_local_player_prev_pos(&mut self) {
+        if let Some(player) = self.player {
+            self.prev_pos = *self
+                .state
+                .world
+                .get::<&Position>(player)
+                .expect("player has no position");
+        }
+    }
+
+    pub fn set_local_player_render_pos(&mut self, alpha: f32) {
+        if let Some(player) = self.player
+            && let Ok((render_pos, pos)) = self
+                .state
+                .world
+                .query_one::<(&mut RenderPosition, &Position)>(player)
+                .get()
+        {
+            render_pos.lerp(&self.prev_pos, pos, alpha);
+        }
     }
 
     pub fn set_render_pos(&mut self, alpha: f32) {
@@ -65,7 +96,6 @@ impl Client {
             .with::<&Player>()
         {
             if *id == self.client_id {
-                render_pos.set(pos);
                 continue;
             }
 
@@ -114,10 +144,24 @@ impl Client {
                     bincode::deserialize(&packet.payload)?;
                 println!("this client has id: {:?}", packet_set_player_id.id);
                 self.set_client_id(packet_set_player_id.id);
+                let player = self
+                    .state
+                    .world
+                    .query_mut::<(Entity, &NetworkId)>()
+                    .with::<&Player>()
+                    .into_iter()
+                    .find(|(_, n)| **n == self.client_id)
+                    .map(|(e, _)| e)
+                    .expect("client player does not exist");
+
+                self.player = Some(player);
             }
             PacketKind::Snapshot => {
                 let packet_snapshot: PacketSnapshot = bincode::deserialize(&packet.payload)?;
-                self.last_snapshots.push(packet_snapshot.clone());
+                self.last_snapshots.push_back(packet_snapshot.clone());
+                if self.last_snapshots.len() > 5 {
+                    self.last_snapshots.pop_front();
+                }
                 snapshot_handler(self, packet_snapshot);
             }
             _ => panic!("unhandled packet kind '{:?}'", packet.kind),
