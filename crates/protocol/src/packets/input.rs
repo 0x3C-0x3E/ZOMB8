@@ -5,7 +5,7 @@ use crate::{
     packet::{PacketKind, PacketPayload},
 };
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct InputMap {
     pub up: bool,
     pub down: bool,
@@ -27,6 +27,7 @@ impl InputMap {
 #[derive(Serialize, Deserialize)]
 pub struct PacketInput {
     pub client_id: ProtocolNetworkId,
+    pub seq: u32,
     pub input_map: InputMap,
 }
 
@@ -35,9 +36,10 @@ impl PacketPayload for PacketInput {
 }
 
 impl PacketInput {
-    pub fn new(client_id: ProtocolNetworkId, input_map: InputMap) -> Self {
+    pub fn new(client_id: ProtocolNetworkId, seq: u32, input_map: InputMap) -> Self {
         Self {
             client_id,
+            seq,
             input_map,
         }
     }

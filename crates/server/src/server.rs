@@ -40,6 +40,8 @@ pub struct Server {
 
     pub out_recv: Receiver<(SocketAddr, Packet)>,
     pub in_send: Sender<(SocketAddr, Packet)>,
+
+    pub client_input_seq: HashMap<NetworkId, u32>,
 }
 
 impl Server {
@@ -58,6 +60,7 @@ impl Server {
             network_thread,
             out_recv,
             in_send,
+            client_input_seq: HashMap::new(),
         })
     }
 
@@ -141,8 +144,17 @@ impl Server {
                     .query_mut::<&NetworkId>()
                     .with::<&Player>()
                     .into_iter()
-                    .find(|id| **id == packet_input.client_id);
-                if found.is_some() {
+                    .any(|id| *id == packet_input.client_id);
+                if found {
+                    if let Some(prev_seq) = self.client_input_seq.get(&packet_input.client_id)
+                        && *prev_seq > packet_input.seq
+                    {
+                        println!("got out of order packet -> ignoring");
+                        return;
+                    }
+                    self.client_input_seq
+                        .insert(packet_input.client_id, packet_input.seq);
+
                     input_system(
                         &mut self.state,
                         packet_input.client_id,

@@ -6,27 +6,52 @@ use protocol::{
     network_id::ProtocolNetworkId,
     packet::Packet,
     packets::{
-        set_player_id::PacketSetPlayerId, snapshot::PacketSnapshot, spawn_entity::PacketSpawnEntity,
+        input::{InputMap, PacketInput},
+        set_player_id::PacketSetPlayerId,
+        snapshot::PacketSnapshot,
+        spawn_entity::PacketSpawnEntity,
     },
 };
+use tokio::sync::watch;
 
 use crate::spawn_network_entity::spawn_network_entity;
 
 pub struct Client {
     pub state: State,
     pub client_id: NetworkId,
+
+    input_send: watch::Sender<Packet>,
+    input_seq: u32,
+    last_map: InputMap,
 }
 
 impl Client {
-    pub fn new() -> Self {
+    pub fn new(input_send: watch::Sender<Packet>) -> Self {
         Self {
             state: State::new(),
             client_id: ProtocolNetworkId(0),
+
+            input_send,
+            input_seq: 0,
+            last_map: InputMap::zero(),
         }
     }
 
     pub fn set_client_id(&mut self, id: NetworkId) {
         self.client_id = id;
+    }
+
+    pub fn check_for_new_input(&mut self, current_map: &InputMap) -> anyhow::Result<()> {
+        if *current_map != self.last_map {
+            let payload = PacketInput::new(self.client_id, self.input_seq, current_map.clone());
+            let packet = Packet::from_payload(payload)?;
+            self.input_send.send(packet)?;
+
+            self.last_map = current_map.clone();
+            self.input_seq += 1;
+        }
+
+        Ok(())
     }
 
     pub fn handle_packet(&mut self, packet: Packet) {

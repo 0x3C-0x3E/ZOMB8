@@ -12,8 +12,12 @@ use game::{
 };
 use macroquad::prelude::*;
 use protocol::{
+    network_id::ProtocolNetworkId,
     packet::Packet,
-    packets::{input::PacketInput, ping::PacketPing},
+    packets::{
+        input::{InputMap, PacketInput},
+        ping::PacketPing,
+    },
 };
 
 mod client;
@@ -35,7 +39,14 @@ fn window_conf() -> Conf {
 async fn main() -> anyhow::Result<()> {
     set_default_filter_mode(FilterMode::Nearest);
 
-    let mut client = Client::new();
+    let (out_send, mut out_recv) = tokio::sync::mpsc::channel::<Packet>(100);
+    let (in_send, in_recv) = tokio::sync::mpsc::channel::<Packet>(100);
+
+    let (input_send, input_recv) = tokio::sync::watch::channel::<Packet>(Packet::from_payload(
+        PacketInput::new(ProtocolNetworkId(0), 0, InputMap::zero()),
+    )?);
+
+    let mut client = Client::new(input_send);
 
     let mut texture_manager = TextureManager::new();
 
@@ -47,13 +58,10 @@ async fn main() -> anyhow::Result<()> {
         .load_texture("assets/img/player.png", "player")
         .await;
 
-    let (out_send, mut out_recv) = tokio::sync::mpsc::channel::<Packet>(100);
-    let (in_send, in_recv) = tokio::sync::mpsc::channel::<Packet>(100);
-
     let network_thread = std::thread::spawn(move || -> anyhow::Result<()> {
         let rt = tokio::runtime::Runtime::new().unwrap();
 
-        rt.block_on(client_network_loop(out_send, in_recv))?;
+        rt.block_on(client_network_loop(out_send, in_recv, input_recv))?;
         Ok(())
     });
 
@@ -71,12 +79,10 @@ async fn main() -> anyhow::Result<()> {
         }
 
         let input_map = get_input_map();
+        client.check_for_new_input(&input_map)?;
+
         input_system(&mut client.state, client.client_id, &input_map);
         physics_system(&mut client.state, get_frame_time());
-
-        let payload = PacketInput::new(client.client_id, input_map);
-        let packet = Packet::from_payload(payload).unwrap();
-        in_send.send(packet).await?;
 
         rendering_system(&mut client.state, &texture_manager);
         next_frame().await;

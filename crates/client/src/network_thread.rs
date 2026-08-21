@@ -1,15 +1,22 @@
 use std::net::{Ipv6Addr, SocketAddrV6};
 
 use macroquad::prelude::*;
-use protocol::packet::{MAX_DATAGRAM_SIZE, Packet};
+use protocol::{
+    packet::{MAX_DATAGRAM_SIZE, Packet},
+    packets::input::PacketInput,
+};
 use tokio::{
     net::UdpSocket,
-    sync::mpsc::{Receiver, Sender},
+    sync::{
+        mpsc::{Receiver, Sender},
+        watch,
+    },
 };
 
 pub async fn client_network_loop(
     out_send: Sender<Packet>,
     mut in_recv: Receiver<Packet>,
+    mut input_recv: watch::Receiver<Packet>,
 ) -> anyhow::Result<()> {
     let addr = SocketAddrV6::new(Ipv6Addr::UNSPECIFIED, 0, 0, 0);
     let socket = UdpSocket::bind(addr).await?;
@@ -25,6 +32,11 @@ pub async fn client_network_loop(
             },
 
             Some(packet) = in_recv.recv() => {
+                let buffer: Vec<u8> = (&packet).into();
+                socket.send(&buffer).await?;
+            }
+            _ = input_recv.changed() => {
+                let packet = input_recv.borrow_and_update().clone();
                 let buffer: Vec<u8> = (&packet).into();
                 socket.send(&buffer).await?;
             }
