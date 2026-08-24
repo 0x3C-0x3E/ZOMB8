@@ -33,6 +33,9 @@ pub fn zombie_movement_system(world: &mut World) {
 
             vel.x = diff.x * 30.0;
             vel.y = diff.y * 20.0;
+        } else {
+            vel.x = 0.0;
+            vel.y = 0.0;
         }
     }
 }

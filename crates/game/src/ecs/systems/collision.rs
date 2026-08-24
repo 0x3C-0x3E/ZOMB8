@@ -24,11 +24,7 @@ pub fn resolve_collision_system(world: &World, axis: Axis) {
             .with::<&Moveable>()
             .iter()
         {
-            for (e2, p2) in world
-                .query::<(Entity, &Position)>()
-                .without::<&Player>()
-                .iter()
-            {
+            for (e2, p2) in world.query::<(Entity, &Position)>().iter() {
                 if e1 == e2 {
                     continue;
                 }
