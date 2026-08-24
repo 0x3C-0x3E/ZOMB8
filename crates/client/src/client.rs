@@ -2,7 +2,9 @@ use std::collections::VecDeque;
 
 use crate::{
     snapshot_handler::snapshot_handler,
-    spawn_despawn_handler::{despawn_network_entity, spawn_network_entity},
+    spawn_despawn_handler::{
+        despawn_network_entity, spawn_network_entity, spawn_network_entity_from_state,
+    },
 };
 use game::{
     ecs::{
@@ -20,9 +22,10 @@ use protocol::{
     packets::{
         despawn_entity::PacketDespawnEntity,
         input::{InputMap, PacketInput},
+        level_data::PacketLevelData,
         set_player_id::PacketSetPlayerId,
-        snapshot::PacketSnapshot,
-        spawn_entity::PacketSpawnEntity,
+        snapshot::{EntityState, PacketSnapshot},
+        spawn_entity::{EntityKind, PacketSpawnEntity},
     },
 };
 use tokio::sync::watch;
@@ -197,6 +200,19 @@ impl Client {
                     self.last_snapshots.pop_front();
                 }
                 snapshot_handler(self, packet_snapshot);
+            }
+            PacketKind::LevelData => {
+                let packet_level_data: PacketLevelData = bincode::deserialize(&packet.payload)?;
+                for (id, pos) in packet_level_data.tiles {
+                    spawn_network_entity_from_state(
+                        &mut self.state.world,
+                        EntityState {
+                            kind: EntityKind::Tile,
+                            pos,
+                        },
+                        id,
+                    );
+                }
             }
             _ => panic!("unhandled packet kind '{:?}'", packet.kind),
         }

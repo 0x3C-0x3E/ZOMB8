@@ -88,6 +88,13 @@ async fn main() -> anyhow::Result<()> {
             let _ = client.handle_packet(packet);
         }
 
+        if is_key_down(KeyCode::Space) {
+            let payload = PacketRequest::new(RequestKind::LevelData);
+            if let Ok(packet) = Packet::from_payload(payload) {
+                let _ = in_send.send(packet).await;
+            }
+        }
+
         accumulator += get_frame_time();
         while accumulator >= FIXED_DT {
             client.set_local_prev_pos();
