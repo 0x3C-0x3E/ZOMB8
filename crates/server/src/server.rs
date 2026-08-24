@@ -5,12 +5,13 @@ use std::{
     time::{Duration, Instant},
 };
 
+use glam::Vec2;
 use hecs::Entity;
 
 use game::{
     ecs::{
         components::snapshot_sync::SnapshotSync,
-        entities::{mole::Mole, player::Player},
+        entities::{mole::Mole, player::Player, tile::Tile},
         network_id::NetworkId,
         systems::input::input_system,
         transform::Position,
@@ -22,6 +23,7 @@ use protocol::{
     packets::{
         despawn_entity::PacketDespawnEntity,
         input::PacketInput,
+        level_data::PacketLevelData,
         ping::PacketPing,
         request::PacketRequest,
         set_player_id::PacketSetPlayerId,
@@ -193,9 +195,25 @@ impl Server {
         }
     }
 
+    pub async fn send_level_data(&mut self, sender_addr: &SocketAddr) -> anyhow::Result<()> {
+        let tiles: Vec<(NetworkId, Vec2)> = self
+            .state
+            .world
+            .query_mut::<(&NetworkId, &Position)>()
+            .with::<&Tile>()
+            .into_iter()
+            .map(|(n, pos)| (*n, pos.vec2()))
+            .collect();
+
+        let payload = PacketLevelData::new(tiles);
+        let packet = Packet::from_payload(payload)?;
+
+        self.send_to(&packet, *sender_addr).await
+    }
+
     pub async fn handle_packet(
         &mut self,
-        client_addr: SocketAddr,
+        sender_addr: SocketAddr,
         packet: Packet,
     ) -> anyhow::Result<()> {
         use protocol::packet::PacketKind;
@@ -234,7 +252,7 @@ impl Server {
                 let packet_request: PacketRequest = bincode::deserialize(&packet.payload)?;
                 match packet_request.kind {
                     RequestKind::PlayerId => {
-                        let Some(client_id) = self.client_ids.get(&client_addr) else {
+                        let Some(client_id) = self.client_ids.get(&sender_addr) else {
                             todo!(
                                 "this client does not have a player but is somehow talking to us"
                             );
@@ -243,16 +261,16 @@ impl Server {
                         let payload = PacketSetPlayerId::new(*client_id);
                         let packet = Packet::from_payload(payload)?;
 
-                        let _ = self.send_to(&packet, client_addr).await;
+                        let _ = self.send_to(&packet, sender_addr).await;
                     }
                     RequestKind::LevelData => {
-                        todo!()
+                        let _ = self.send_level_data(&sender_addr).await;
                     }
                     RequestKind::Ping => {
                         let payload = PacketPing::new();
                         let packet = Packet::from_payload(payload)?;
 
-                        let _ = self.send_to(&packet, client_addr).await;
+                        let _ = self.send_to(&packet, sender_addr).await;
                     }
                 }
             }

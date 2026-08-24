@@ -22,6 +22,7 @@ async fn main() -> anyhow::Result<()> {
                 Err(e) => panic!("network thread exited with {:?}", e),
             }
         }
+
         while let Ok((sender_addr, packet)) = server.out_recv.try_recv() {
             if server.check_insert_client(sender_addr) {
                 let _ = server.create_new_player(sender_addr).await;
