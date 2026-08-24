@@ -6,6 +6,7 @@ use crate::{
 };
 use game::{
     ecs::{
+        components::snapshot_sync::SnapshotSync,
         entities::player::Player,
         network_id::NetworkId,
         transform::{Position, RenderPosition},
@@ -83,32 +84,55 @@ impl Client {
                 .query_one::<(&mut RenderPosition, &Position)>(player)
                 .get()
         {
-            render_pos.lerp(&self.prev_pos, pos, alpha);
+            render_pos.lerp(&self.prev_pos.vec2(), &pos.vec2(), alpha);
         }
     }
 
     pub fn set_net_render_pos(&mut self, alpha: f32) {
-        let prev_snapshot = self.last_snapshots.iter().rev().nth(1);
-        for (render_pos, pos, id) in self
+        let mut snapshot_iter = self.last_snapshots.iter().rev();
+        let sn_after = snapshot_iter.next();
+        let sn_before = snapshot_iter.next();
+
+        for (render_pos, id, pos) in self
             .state
             .world
-            .query_mut::<(&mut RenderPosition, &Position, &NetworkId)>()
+            .query_mut::<(&mut RenderPosition, &NetworkId, &Position)>()
+            .with::<&SnapshotSync>()
         {
             if *id == self.client_id {
                 continue;
             }
+            let Some(sn_before) = sn_before else {
+                render_pos.set(pos);
+                continue;
+            };
 
-            if let Some(prev_snapshot) = prev_snapshot
-                && let Some(prev_pos) = prev_snapshot
-                    .entities
-                    .iter()
-                    .find(|(pid, _)| pid == id)
-                    .map(|(_, state)| state.pos)
-            {
-                render_pos.lerp(&Position::new(prev_pos.x, prev_pos.y), pos, alpha);
-            } else {
-                render_pos.lerp(pos, pos, alpha);
-            }
+            let Some(sn_after) = sn_after else {
+                render_pos.set(pos);
+                continue;
+            };
+
+            let Some(pos_before) = sn_before
+                .entities
+                .iter()
+                .find(|(eid, _)| eid == id)
+                .map(|(_, state)| state.pos)
+            else {
+                render_pos.set(pos);
+                continue;
+            };
+
+            let Some(pos_after) = sn_after
+                .entities
+                .iter()
+                .find(|(eid, _)| eid == id)
+                .map(|(_, state)| state.pos)
+            else {
+                render_pos.set(pos);
+                continue;
+            };
+
+            render_pos.lerp(&pos_before, &pos_after, alpha);
         }
     }
 

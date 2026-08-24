@@ -45,7 +45,7 @@ pub struct RenderPosition {
 }
 
 impl RenderPosition {
-    pub fn lerp(&mut self, last: &Position, current: &Position, alpha: f32) {
+    pub fn lerp(&mut self, last: &Vec2, current: &Vec2, alpha: f32) {
         self.x = last.x + (current.x - last.x) * alpha;
         self.y = last.y + (current.y - last.y) * alpha;
     }
