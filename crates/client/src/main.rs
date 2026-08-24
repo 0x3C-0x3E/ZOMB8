@@ -122,6 +122,11 @@ async fn main() -> anyhow::Result<()> {
 
         animation_playback_system(&mut client.state.world);
 
+        if let Some((pos, _)) = client.get_player_state() {
+            let pos = *pos;
+            client.state.rendering_state.set_camera(pos);
+        }
+
         rendering_system(&mut client.state, &texture_manager);
         next_frame().await;
     }

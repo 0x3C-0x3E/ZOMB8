@@ -1,5 +1,6 @@
 use hecs::{Entity, World};
 use macroquad::math::Rect;
+use macroquad::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::ecs::{
@@ -19,8 +20,8 @@ impl Tile {
             Sprite::new(
                 "tileset",
                 Rect {
-                    x: 8.0,
-                    y: 40.0,
+                    x: 80.0,
+                    y: 16.0,
                     w: 8.0,
                     h: 8.0,
                 },

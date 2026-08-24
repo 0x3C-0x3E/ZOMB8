@@ -29,6 +29,21 @@ impl RenderingState {
             },
         }
     }
+
+    pub fn set_camera(&mut self, player_pos: Position) {
+        let half_w = screen_width() / 2.0 / self.camera.scale;
+        let half_h = screen_height() / 2.0 / self.camera.scale;
+
+        let target_x = player_pos.x - half_w;
+        let target_y = player_pos.y - half_h;
+
+        let smoothing = 8.0;
+        let dt = get_frame_time().min(1.0 / 30.0);
+        let t = (1.0 - (-smoothing * dt).exp()).clamp(0.0, 1.0);
+
+        self.camera.pos.x += (target_x - self.camera.pos.x) * t;
+        self.camera.pos.y += (target_y - self.camera.pos.y) * t;
+    }
 }
 
 impl Default for RenderingState {
