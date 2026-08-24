@@ -3,7 +3,9 @@ use macroquad::math::Rect;
 use serde::{Deserialize, Serialize};
 
 use crate::ecs::{
-    components::{snapshot_sync::SnapshotSync, sprite::Sprite, transform::Position},
+    components::{
+        moveable::Moveable, snapshot_sync::SnapshotSync, sprite::Sprite, transform::Position,
+    },
     network_id::NetworkId,
     transform::{RenderPosition, Velocity},
 };
@@ -17,9 +19,10 @@ impl Player {
             Player,
             pos,
             RenderPosition::from_pos(pos),
-            SnapshotSync,
             Velocity::zero(),
+            SnapshotSync,
             network_id,
+            Moveable,
             Sprite::new(
                 "player",
                 Rect {

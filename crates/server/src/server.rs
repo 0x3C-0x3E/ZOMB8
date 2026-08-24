@@ -18,11 +18,12 @@ use game::{
     game::state::State,
 };
 use protocol::{
-    packet::Packet,
+    packet::{Packet, PacketPayload},
     packets::{
         despawn_entity::PacketDespawnEntity,
         input::PacketInput,
         ping::PacketPing,
+        request::PacketRequest,
         set_player_id::PacketSetPlayerId,
         snapshot::{EntityState, PacketSnapshot},
         spawn_entity::{
@@ -196,7 +197,11 @@ impl Server {
         }
     }
 
-    pub fn handle_packet(&mut self, packet: Packet) -> anyhow::Result<()> {
+    pub async fn handle_packet(
+        &mut self,
+        client_addr: SocketAddr,
+        packet: Packet,
+    ) -> anyhow::Result<()> {
         use protocol::packet::PacketKind;
         match packet.kind {
             PacketKind::Ping => {
@@ -226,6 +231,26 @@ impl Server {
                         packet_input.client_id,
                         &packet_input.input_map,
                     );
+                }
+            }
+            PacketKind::Request => {
+                use protocol::packets::request::RequestKind;
+                let packet_request: PacketRequest = bincode::deserialize(&packet.payload)?;
+                match packet_request.kind {
+                    RequestKind::PlayerId => {
+                        let Some(client_id) = self.client_ids.get(&client_addr) else {
+                            todo!(
+                                "this client does not have a player but is somehow talking to us"
+                            );
+                        };
+
+                        let payload = PacketSetPlayerId::new(*client_id);
+                        let packet = Packet::from_payload(payload)?;
+
+                        let _ = self.send_to(&packet, client_addr).await;
+                    }
+                    RequestKind::LevelData => {}
+                    RequestKind::Ping => {}
                 }
             }
 

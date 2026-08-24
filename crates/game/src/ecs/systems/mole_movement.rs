@@ -23,12 +23,6 @@ fn get_closest_player_pos(world: &World, pos: &Position) -> Option<Position> {
 }
 
 pub fn mole_movement_system(world: &mut World) {
-    let len = world
-        .query::<(&Position, &mut Velocity)>()
-        .with::<&Mole>()
-        .iter()
-        .len();
-
     for (pos, vel) in world
         .query::<(&Position, &mut Velocity)>()
         .with::<&Mole>()

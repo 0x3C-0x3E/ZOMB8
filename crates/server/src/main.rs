@@ -28,7 +28,7 @@ async fn main() -> anyhow::Result<()> {
             }
 
             server.touch_client(sender_addr);
-            let _ = server.handle_packet(packet);
+            let _ = server.handle_packet(sender_addr, packet).await;
         }
 
         mole_movement_system(&mut server.state.world);

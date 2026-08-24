@@ -1,0 +1,19 @@
+use serde::{Deserialize, Serialize};
+
+use crate::packet::{PacketKind, PacketPayload};
+
+#[derive(Serialize, Deserialize)]
+pub enum RequestKind {
+    PlayerId,
+    LevelData,
+    Ping,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct PacketRequest {
+    pub kind: RequestKind,
+}
+
+impl PacketPayload for PacketRequest {
+    const KIND: PacketKind = PacketKind::Request;
+}

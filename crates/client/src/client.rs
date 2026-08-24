@@ -9,7 +9,7 @@ use game::{
         components::snapshot_sync::SnapshotSync,
         entities::player::Player,
         network_id::NetworkId,
-        transform::{Position, RenderPosition},
+        transform::{Position, RenderPosition, Velocity},
     },
     game::state::State,
 };
@@ -64,6 +64,15 @@ impl Client {
 
     pub fn set_client_id(&mut self, id: NetworkId) {
         self.client_id = id;
+    }
+
+    pub fn get_player_state(&mut self) -> Option<(&mut Position, &mut Velocity)> {
+        let player = self.player?;
+
+        self.state
+            .world
+            .query_one_mut::<(&mut Position, &mut Velocity)>(player)
+            .ok()
     }
 
     pub fn set_local_prev_pos(&mut self) {

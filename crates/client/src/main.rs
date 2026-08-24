@@ -2,11 +2,10 @@
 
 use crate::network_thread::client_network_loop;
 use crate::{client::Client, snapshot_handler::FIXED_DT};
-use game::ecs::systems::mole_movement::mole_movement_system;
+use game::ecs::systems::physics::physics_system_for_entity;
 use game::{
     ecs::systems::{
         input::{get_input_map, input_system},
-        physics::physics_system,
         rendering::rendering_system,
     },
     game::texture_manager::TextureManager,
@@ -96,9 +95,9 @@ async fn main() -> anyhow::Result<()> {
             client.check_for_new_input(&input_map)?;
             input_system(&mut client.state, client.client_id, &input_map);
 
-            mole_movement_system(&mut client.state.world);
-
-            physics_system(&mut client.state, FIXED_DT);
+            if let Some((pos, vel)) = client.get_player_state() {
+                physics_system_for_entity(pos, vel, FIXED_DT);
+            }
             accumulator -= FIXED_DT;
         }
 
