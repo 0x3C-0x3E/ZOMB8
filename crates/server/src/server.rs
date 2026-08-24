@@ -1,12 +1,14 @@
 use crate::network_thread::server_network_loop;
 use std::{
     collections::HashMap,
+    fs::File,
+    io::BufReader,
     net::SocketAddr,
     time::{Duration, Instant},
 };
 
 use glam::Vec2;
-use hecs::Entity;
+use hecs::{Entity, World};
 
 use game::{
     ecs::{
@@ -62,9 +64,14 @@ impl Server {
         let (in_send, in_recv) = tokio::sync::mpsc::channel::<(SocketAddr, Packet)>(100);
 
         let network_thread = tokio::spawn(server_network_loop(out_send, in_recv));
+
+        let mut allocator = NetworkIdAllocator::new();
+        let mut state = State::new();
+        Server::deserialize_world(&mut state.world, &mut allocator);
+
         Ok(Self {
-            allocator: NetworkIdAllocator::new(),
-            state: State::new(),
+            allocator,
+            state,
             tick: 0,
             clients,
             network_thread,
@@ -73,6 +80,20 @@ impl Server {
             client_ids: HashMap::new(),
             client_input_seq: HashMap::new(),
         })
+    }
+
+    pub fn deserialize_world(world: &mut World, allocator: &mut NetworkIdAllocator) {
+        let file = File::open("assets/world.bin")
+            .expect("could not open world.bin -> maybe you are in the wrong dir");
+
+        let mut reader = BufReader::new(file);
+
+        let tiles: Vec<Position> =
+            bincode::deserialize_from(&mut reader).expect("deserialization error on world.bin");
+
+        for pos in tiles {
+            let _ = Tile::spawn(world, pos, allocator.allocate());
+        }
     }
 
     pub async fn send_to_all(&mut self, packet: &Packet) {
@@ -136,7 +157,7 @@ impl Server {
 
     pub async fn create_new_player(&mut self, sender_addr: SocketAddr) -> anyhow::Result<()> {
         let client_id = self.allocator.allocate();
-        let client_player_pos = Position::new(0.0 + client_id.0 as f32 * 8.0, 20.0);
+        let client_player_pos = Position::new(8.0, 20.0);
         let _ = Player::spawn(&mut self.state.world, client_player_pos, client_id);
 
         let payload =

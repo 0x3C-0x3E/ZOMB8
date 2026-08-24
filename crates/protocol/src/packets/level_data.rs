@@ -6,7 +6,7 @@ use crate::{
     packet::{PacketKind, PacketPayload},
 };
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct PacketLevelData {
     pub tiles: Vec<(ProtocolNetworkId, Vec2)>,
     // TODO: pub sprite: SerializeRect
