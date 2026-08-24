@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use game::ecs::systems::{mole_movement::mole_movement_system, physics::physics_system};
+use game::ecs::systems::{physics::physics_system, zombie_movement::zombie_movement_system};
 use protocol::TPS;
 
 use crate::server::Server;
@@ -13,7 +13,7 @@ mod server;
 async fn main() -> anyhow::Result<()> {
     let mut server = Server::new().await?;
 
-    server.create_new_mole().await?;
+    server.create_new_zombie().await?;
 
     loop {
         if server.network_thread.is_finished() {
@@ -32,7 +32,7 @@ async fn main() -> anyhow::Result<()> {
             let _ = server.handle_packet(sender_addr, packet).await;
         }
 
-        mole_movement_system(&mut server.state.world);
+        zombie_movement_system(&mut server.state.world);
 
         let dt = 1.0 / TPS as f32;
         physics_system(&mut server.state, dt);

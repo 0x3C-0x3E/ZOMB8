@@ -11,7 +11,7 @@ use hecs::Entity;
 use game::{
     ecs::{
         components::snapshot_sync::SnapshotSync,
-        entities::{mole::Mole, player::Player, tile::Tile},
+        entities::{player::Player, tile::Tile, zombie::Zombie},
         network_id::NetworkId,
         systems::input::input_system,
         transform::Position,
@@ -149,13 +149,13 @@ impl Server {
         Ok(())
     }
 
-    pub async fn create_new_mole(&mut self) -> anyhow::Result<()> {
+    pub async fn create_new_zombie(&mut self) -> anyhow::Result<()> {
         let id = self.allocator.allocate();
         let pos = Position::new(40.0, 20.0);
 
-        let _ = Mole::spawn(&mut self.state.world, pos, id);
+        let _ = Zombie::spawn(&mut self.state.world, pos, id);
 
-        let payload = PacketSpawnEntity::new(id, EntityKind::Mole, pos.into());
+        let payload = PacketSpawnEntity::new(id, EntityKind::Zombie, pos.into());
         let packet = Packet::from_payload(payload)?;
         let _ = self.send_to_all(&packet).await;
 
@@ -179,9 +179,9 @@ impl Server {
                 .world
                 .query_mut::<(&NetworkId, &Position)>()
                 .with::<&SnapshotSync>()
-                .with::<&Mole>()
+                .with::<&Zombie>()
                 .into_iter()
-                .map(|(n, pos)| (*n, EntityState::new(EntityKind::Mole, (*pos).into()))),
+                .map(|(n, pos)| (*n, EntityState::new(EntityKind::Zombie, (*pos).into()))),
         );
 
         for client in self.clients.keys() {

@@ -1,5 +1,5 @@
 use game::ecs::{
-    entities::{mole::Mole, player::Player, tile::Tile},
+    entities::{player::Player, tile::Tile, zombie::Zombie},
     network_id::NetworkId,
     transform::Position,
 };
@@ -17,7 +17,7 @@ pub fn spawn_network_entity_from_state(
     match state.kind {
         EntityKind::Tile => Tile::spawn(world, Position::from(state.pos), network_id),
         EntityKind::Player => Player::spawn(world, Position::from(state.pos), network_id),
-        EntityKind::Mole => Mole::spawn(world, Position::from(state.pos), network_id),
+        EntityKind::Zombie => Zombie::spawn(world, Position::from(state.pos), network_id),
     }
 }
 

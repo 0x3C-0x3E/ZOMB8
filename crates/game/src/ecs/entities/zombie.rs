@@ -9,19 +9,19 @@ use crate::ecs::{
 };
 
 #[derive(Serialize, Deserialize)]
-pub struct Mole;
+pub struct Zombie;
 
-impl Mole {
+impl Zombie {
     pub fn spawn(world: &mut World, pos: Position, network_id: NetworkId) -> Entity {
         world.spawn((
-            Mole,
+            Zombie,
             pos,
             RenderPosition::from_pos(pos),
             SnapshotSync,
             Velocity::zero(),
             network_id,
             Sprite::new(
-                "mole",
+                "zombie",
                 Rect {
                     x: 0.0,
                     y: 0.0,

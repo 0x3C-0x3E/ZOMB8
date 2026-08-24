@@ -41,7 +41,7 @@ pub fn rendering_system(state: &mut State, texture_manager: &TextureManager) {
     let rd_state = &state.rendering_state;
     let camera = &rd_state.camera;
 
-    clear_background(Color::from_hex(0x696353));
+    clear_background(Color::from_hex(0x727272));
 
     for (e, pos, sprite) in state.world.query::<(Entity, &Position, &Sprite)>().iter() {
         let mut render_pos = *pos;

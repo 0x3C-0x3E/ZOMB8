@@ -2,7 +2,7 @@ use hecs::World;
 
 use crate::ecs::{
     components::transform::{Position, Velocity},
-    entities::{mole::Mole, player::Player},
+    entities::{player::Player, zombie::Zombie},
 };
 
 fn get_closest_player_pos(world: &World, pos: &Position) -> Option<Position> {
@@ -22,10 +22,10 @@ fn get_closest_player_pos(world: &World, pos: &Position) -> Option<Position> {
     closest
 }
 
-pub fn mole_movement_system(world: &mut World) {
+pub fn zombie_movement_system(world: &mut World) {
     for (pos, vel) in world
         .query::<(&Position, &mut Velocity)>()
-        .with::<&Mole>()
+        .with::<&Zombie>()
         .iter()
     {
         if let Some(closest) = get_closest_player_pos(world, pos) {

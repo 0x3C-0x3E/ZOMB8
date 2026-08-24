@@ -16,10 +16,7 @@ use protocol::{
     TPS,
     network_id::ProtocolNetworkId,
     packet::Packet,
-    packets::{
-        input::{InputMap, PacketInput},
-        ping::PacketPing,
-    },
+    packets::input::{InputMap, PacketInput},
 };
 
 mod client;
@@ -58,11 +55,15 @@ async fn main() -> anyhow::Result<()> {
         .await;
 
     texture_manager
+        .load_texture("assets/img/spritesheet.png", "spritesheet")
+        .await;
+
+    texture_manager
         .load_texture("assets/img/player.png", "player")
         .await;
 
     texture_manager
-        .load_texture("assets/img/mole.png", "mole")
+        .load_texture("assets/img/zombie.png", "zombie")
         .await;
 
     let network_thread = std::thread::spawn(move || -> anyhow::Result<()> {
