@@ -14,6 +14,12 @@ pub struct PacketRequest {
     pub kind: RequestKind,
 }
 
+impl PacketRequest {
+    pub fn new(kind: RequestKind) -> Self {
+        Self { kind }
+    }
+}
+
 impl PacketPayload for PacketRequest {
     const KIND: PacketKind = PacketKind::Request;
 }

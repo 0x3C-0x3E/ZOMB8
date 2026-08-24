@@ -11,6 +11,7 @@ use game::{
     game::texture_manager::TextureManager,
 };
 use macroquad::prelude::*;
+use protocol::packets::request::{PacketRequest, RequestKind};
 use protocol::{
     TPS,
     network_id::ProtocolNetworkId,
@@ -71,7 +72,7 @@ async fn main() -> anyhow::Result<()> {
         Ok(())
     });
 
-    let payload = PacketPing::new();
+    let payload = PacketRequest::new(RequestKind::PlayerId);
     if let Ok(packet) = Packet::from_payload(payload) {
         let _ = in_send.send(packet).await;
     }

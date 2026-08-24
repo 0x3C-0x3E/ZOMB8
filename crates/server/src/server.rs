@@ -18,7 +18,7 @@ use game::{
     game::state::State,
 };
 use protocol::{
-    packet::{Packet, PacketPayload},
+    packet::Packet,
     packets::{
         despawn_entity::PacketDespawnEntity,
         input::PacketInput,
@@ -142,12 +142,8 @@ impl Server {
         let packet = Packet::from_payload(payload)?;
         let _ = self.send_to_all(&packet).await;
 
-        let payload = PacketSetPlayerId::new(client_id);
-        let packet = Packet::from_payload(payload)?;
-
         self.client_ids.insert(sender_addr, client_id);
 
-        let _ = self.send_to(&packet, sender_addr).await;
         Ok(())
     }
 
@@ -249,8 +245,15 @@ impl Server {
 
                         let _ = self.send_to(&packet, client_addr).await;
                     }
-                    RequestKind::LevelData => {}
-                    RequestKind::Ping => {}
+                    RequestKind::LevelData => {
+                        todo!()
+                    }
+                    RequestKind::Ping => {
+                        let payload = PacketPing::new();
+                        let packet = Packet::from_payload(payload)?;
+
+                        let _ = self.send_to(&packet, client_addr).await;
+                    }
                 }
             }
 
