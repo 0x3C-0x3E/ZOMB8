@@ -22,22 +22,25 @@ pub fn snapshot_handler(client: &mut Client, packet_snapshot: PacketSnapshot) {
             .find(|(net_id, _, _)| **net_id == id)
             .map(|(_, pos, vel)| (pos, vel));
 
-        if let Some((pos, vel)) = found {
-            if id == client.client_id {
-                client
-                    .last_maps
-                    .retain(|(seq, _)| *seq > packet_snapshot.last_ack_seq);
-
+        if id == client.client_id {
+            drop(binding);
+            client
+                .last_maps
+                .retain(|(seq, _)| *seq > packet_snapshot.last_ack_seq);
+            if let Some(player) = client.player {
                 for (_, map) in client.last_maps.iter() {
-                    input_system_for_player(vel, map);
+                    {
+                        let mut vel = client.state.world.get::<&mut Velocity>(player).unwrap();
+                        input_system_for_player(&mut vel, map);
+                    }
                     if let Some(player) = client.player {
                         physics_system_for_player(&client.state.world, player, FIXED_DT);
                     }
                 }
-            } else {
-                *pos = new_state.pos.into();
-                *vel = new_state.vel.into();
             }
+        } else if let Some((pos, vel)) = found {
+            *pos = new_state.pos.into();
+            *vel = new_state.vel.into();
         } else {
             drop(binding);
             spawn_network_entity_from_state(&mut client.state.world, new_state, id);
