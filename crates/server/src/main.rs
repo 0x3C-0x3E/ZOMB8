@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use game::ecs::systems::physics::physics_system;
+use game::ecs::systems::{mole_movement::mole_movement_system, physics::physics_system};
 use protocol::TPS;
 
 use crate::server::Server;
@@ -30,6 +30,8 @@ async fn main() -> anyhow::Result<()> {
             server.touch_client(sender_addr);
             let _ = server.handle_packet(packet);
         }
+
+        mole_movement_system(&mut server.state.world);
 
         let dt = 1.0 / TPS as f32;
         physics_system(&mut server.state, dt);

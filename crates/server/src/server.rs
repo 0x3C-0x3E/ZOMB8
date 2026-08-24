@@ -10,7 +10,7 @@ use hecs::Entity;
 use game::{
     ecs::{
         components::snapshot_sync::SnapshotSync,
-        entities::{self, mole::Mole, player::Player},
+        entities::{mole::Mole, player::Player},
         network_id::NetworkId,
         systems::input::input_system,
         transform::Position,

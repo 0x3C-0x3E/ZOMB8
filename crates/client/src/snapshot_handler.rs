@@ -1,9 +1,6 @@
-use crate::{
-    client::Client,
-    spawn_despawn_handler::{spawn_network_entity, spawn_network_entity_from_state},
-};
+use crate::{client::Client, spawn_despawn_handler::spawn_network_entity_from_state};
 use game::ecs::{
-    entities::player::Player,
+    components::snapshot_sync::SnapshotSync,
     network_id::NetworkId,
     systems::{input::input_system_for_player, physics::physics_system_for_entity},
     transform::{Position, Velocity},
@@ -20,7 +17,7 @@ pub fn snapshot_handler(client: &mut Client, packet_snapshot: PacketSnapshot) {
             .state
             .world
             .query_mut::<(Entity, &NetworkId, &mut Position, &mut Velocity)>()
-            .with::<&Player>()
+            .with::<&SnapshotSync>()
             .into_iter()
             .find(|(_, net_id, _, _)| **net_id == id)
             .map(|(e, _, pos, vel)| {
