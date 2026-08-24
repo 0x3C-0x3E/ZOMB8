@@ -33,6 +33,7 @@ pub fn snapshot_handler(client: &mut Client, packet_snapshot: PacketSnapshot) {
                 }
             }
             *pos = new_state.pos.into();
+            *vel = new_state.vel.into();
         } else {
             spawn_network_entity_from_state(&mut client.state.world, new_state, id);
         }

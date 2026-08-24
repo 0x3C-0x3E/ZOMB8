@@ -16,7 +16,7 @@ use game::{
         entities::{player::Player, tile::Tile, zombie::Zombie},
         network_id::NetworkId,
         systems::input::input_system,
-        transform::Position,
+        transform::{Position, Velocity},
     },
     game::state::State,
 };
@@ -188,21 +188,31 @@ impl Server {
         entities.extend(
             self.state
                 .world
-                .query_mut::<(&NetworkId, &Position)>()
+                .query_mut::<(&NetworkId, &Position, &Velocity)>()
                 .with::<&SnapshotSync>()
                 .with::<&Player>()
                 .into_iter()
-                .map(|(n, pos)| (*n, EntityState::new(EntityKind::Player, (*pos).into()))),
+                .map(|(n, pos, vel)| {
+                    (
+                        *n,
+                        EntityState::new(EntityKind::Player, (*pos).into(), (*vel).into()),
+                    )
+                }),
         );
 
         entities.extend(
             self.state
                 .world
-                .query_mut::<(&NetworkId, &Position)>()
+                .query_mut::<(&NetworkId, &Position, &Velocity)>()
                 .with::<&SnapshotSync>()
                 .with::<&Zombie>()
                 .into_iter()
-                .map(|(n, pos)| (*n, EntityState::new(EntityKind::Zombie, (*pos).into()))),
+                .map(|(n, pos, vel)| {
+                    (
+                        *n,
+                        EntityState::new(EntityKind::Zombie, (*pos).into(), (*vel).into()),
+                    )
+                }),
         );
 
         for client in self.clients.keys() {

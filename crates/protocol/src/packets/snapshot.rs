@@ -36,10 +36,11 @@ impl PacketSnapshot {
 pub struct EntityState {
     pub kind: EntityKind,
     pub pos: Vec2,
+    pub vel: Vec2,
 }
 
 impl EntityState {
-    pub fn new(kind: EntityKind, pos: Vec2) -> Self {
-        Self { kind, pos }
+    pub fn new(kind: EntityKind, pos: Vec2, vel: Vec2) -> Self {
+        Self { kind, pos, vel }
     }
 }

@@ -15,6 +15,7 @@ use game::{
     },
     game::state::State,
 };
+use glam::Vec2;
 use hecs::Entity;
 use protocol::{
     network_id::ProtocolNetworkId,
@@ -209,6 +210,7 @@ impl Client {
                         EntityState {
                             kind: EntityKind::Tile,
                             pos,
+                            vel: Vec2::ZERO,
                         },
                         id,
                     );
