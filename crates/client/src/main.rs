@@ -2,6 +2,9 @@
 
 use crate::network_thread::client_network_loop;
 use crate::{client::Client, snapshot_handler::FIXED_DT};
+use game::ecs::systems::animation::{
+    animation_playback_system, player_animation_state_system, zombie_animation_state_system,
+};
 use game::ecs::systems::physics::physics_system_for_entity;
 use game::{
     ecs::systems::{
@@ -115,6 +118,11 @@ async fn main() -> anyhow::Result<()> {
 
         client.set_local_render_pos(accumulator / FIXED_DT);
         client.set_net_render_pos(interp_alpha);
+
+        player_animation_state_system(&mut client.state.world);
+        zombie_animation_state_system(&mut client.state.world);
+
+        animation_playback_system(&mut client.state.world);
 
         rendering_system(&mut client.state, &texture_manager);
         next_frame().await;

@@ -3,7 +3,12 @@ use macroquad::math::Rect;
 use serde::{Deserialize, Serialize};
 
 use crate::ecs::{
-    components::{snapshot_sync::SnapshotSync, sprite::Sprite, transform::Position},
+    components::{
+        animation::{AnimController, ZombieAnimState},
+        snapshot_sync::SnapshotSync,
+        sprite::Sprite,
+        transform::Position,
+    },
     network_id::NetworkId,
     transform::{RenderPosition, Velocity},
 };
@@ -29,6 +34,11 @@ impl Zombie {
                     h: 8.0,
                 },
             ),
+            AnimController {
+                tick: 0.0,
+                frame: 0,
+                state: Box::new(ZombieAnimState::default()),
+            },
         ))
     }
 }

@@ -4,7 +4,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::ecs::{
     components::{
-        moveable::Moveable, snapshot_sync::SnapshotSync, sprite::Sprite, transform::Position,
+        animation::{AnimController, PlayerAnimState},
+        moveable::Moveable,
+        snapshot_sync::SnapshotSync,
+        sprite::Sprite,
+        transform::Position,
     },
     network_id::NetworkId,
     transform::{RenderPosition, Velocity},
@@ -32,6 +36,11 @@ impl Player {
                     h: 8.0,
                 },
             ),
+            AnimController {
+                tick: 0.0,
+                frame: 0,
+                state: Box::new(PlayerAnimState::default()),
+            },
         ))
     }
 }
