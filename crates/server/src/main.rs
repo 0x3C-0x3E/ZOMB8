@@ -35,7 +35,7 @@ async fn main() -> anyhow::Result<()> {
         zombie_movement_system(&mut server.state.world);
 
         let dt = 1.0 / TPS as f32;
-        physics_system(&mut server.state, dt);
+        physics_system(&server.state.world, dt);
 
         server.send_snapshot().await;
 

@@ -1,12 +1,9 @@
-use hecs::Entity;
+use hecs::{Entity, World};
 use macroquad::prelude::*;
 
-use crate::{
-    ecs::{
-        components::{moveable::Moveable, transform::Position},
-        entities::player::Player,
-    },
-    game::state::State,
+use crate::ecs::{
+    components::{moveable::Moveable, transform::Position},
+    entities::player::Player,
 };
 
 pub enum Axis {
@@ -18,8 +15,7 @@ fn colliding(p1: &Position, p2: &Position) -> bool {
     p1.x < p2.x + 8.0 && p1.x + 8.0 > p2.x && p1.y < p2.y + 8.0 && p1.y + 8.0 > p2.y
 }
 
-pub fn resolve_collision_system(state: &mut State, axis: Axis) {
-    let world = &mut state.world;
+pub fn resolve_collision_system(world: &World, axis: Axis) {
     for _ in 0..3 {
         let mut collisions: Vec<(Entity, Entity)> = Vec::new();
 

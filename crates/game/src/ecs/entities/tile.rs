@@ -1,6 +1,5 @@
 use hecs::{Entity, World};
 use macroquad::math::Rect;
-use macroquad::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::ecs::{

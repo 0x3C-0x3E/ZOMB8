@@ -5,7 +5,7 @@ use crate::{client::Client, snapshot_handler::FIXED_DT};
 use game::ecs::systems::animation::{
     animation_playback_system, player_animation_state_system, zombie_animation_state_system,
 };
-use game::ecs::systems::physics::physics_system_for_entity;
+use game::ecs::systems::physics::physics_system_for_player;
 use game::{
     ecs::systems::{
         input::{get_input_map, input_system},
@@ -105,8 +105,8 @@ async fn main() -> anyhow::Result<()> {
             client.check_for_new_input(&input_map)?;
             input_system(&mut client.state, client.client_id, &input_map);
 
-            if let Some((pos, vel)) = client.get_player_state() {
-                physics_system_for_entity(pos, vel, FIXED_DT);
+            if let Some(player) = client.player {
+                physics_system_for_player(&client.state.world, player, FIXED_DT);
             }
             accumulator -= FIXED_DT;
         }
