@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::ecs::{
     components::{
         animation::{AnimController, ZombieAnimState},
+        moveable::Moveable,
         snapshot_sync::SnapshotSync,
         sprite::Sprite,
         transform::Position,
@@ -24,6 +25,7 @@ impl Zombie {
             RenderPosition::from_pos(pos),
             SnapshotSync,
             Velocity::zero(),
+            Moveable,
             network_id,
             Sprite::new(
                 "zombie",
