@@ -6,13 +6,7 @@ use game::ecs::systems::animation::{
     animation_playback_system, player_animation_state_system, zombie_animation_state_system,
 };
 use game::ecs::systems::physics::physics_system_for_player;
-use game::{
-    ecs::systems::{
-        input::{get_input_map, input_system},
-        rendering::rendering_system,
-    },
-    game::texture_manager::TextureManager,
-};
+use game::{ecs::systems::rendering::rendering_system, game::texture_manager::TextureManager};
 use macroquad::prelude::*;
 use protocol::packets::request::{PacketRequest, RequestKind};
 use protocol::{

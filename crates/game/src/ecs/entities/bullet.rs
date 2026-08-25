@@ -18,7 +18,7 @@ use crate::ecs::{
 pub struct Bullet;
 
 impl Bullet {
-    pub fn spawn(world: &mut World, pos: Position, network_id: NetworkId) -> Entity {
+    pub fn spawn(world: &mut World, pos: Position, rotation: f32, network_id: NetworkId) -> Entity {
         world.spawn((
             Bullet,
             pos,
@@ -36,7 +36,7 @@ impl Bullet {
                     h: 8.0,
                 },
             ),
-            Rotation(0.0),
+            Rotation(rotation),
         ))
     }
 }

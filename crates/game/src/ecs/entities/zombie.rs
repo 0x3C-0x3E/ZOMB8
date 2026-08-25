@@ -27,7 +27,7 @@ impl Zombie {
             SnapshotSync(EntityKind::Zombie),
             Velocity::zero(),
             Moveable,
-            CollisionMesh,
+            CollisionMesh::default(),
             network_id,
             Sprite::new(
                 "zombie",

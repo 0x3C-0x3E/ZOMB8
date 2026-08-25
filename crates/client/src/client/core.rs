@@ -13,7 +13,7 @@ use game::{
 };
 use glam::Vec2;
 use hecs::Entity;
-use macroquad::input::{MouseButton, is_mouse_button_pressed};
+use macroquad::input::{MouseButton, is_mouse_button_pressed, mouse_position};
 use protocol::{
     network_id::ProtocolNetworkId,
     packet::Packet,
@@ -106,7 +106,14 @@ impl Client {
             && let Some((pos, _)) = self.get_player_state()
         {
             let pos = *pos;
-            let payload = PacketShoot::new(self.client_id, pos.vec2(), 0.0);
+            let render_pos = self.state.rendering_state.get_render_pos(&pos);
+            let mouse_pos = glam::Vec2::new(mouse_position().0, mouse_position().1);
+
+            let direction = mouse_pos - Vec2::from(render_pos);
+            let angle = direction.y.atan2(direction.x).to_degrees();
+            println!("{angle}");
+
+            let payload = PacketShoot::new(self.client_id, pos.vec2(), angle);
             if let Ok(packet) = Packet::from_payload(payload) {
                 self.send(packet).await;
             }

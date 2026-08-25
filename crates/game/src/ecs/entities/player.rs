@@ -28,7 +28,7 @@ impl Player {
             SnapshotSync(EntityKind::Player),
             network_id,
             Moveable,
-            CollisionMesh,
+            CollisionMesh::default(),
             Sprite::new(
                 "player",
                 Rect {

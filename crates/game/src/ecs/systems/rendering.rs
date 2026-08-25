@@ -5,9 +5,9 @@ use crate::{
     },
     game::{state::State, texture_manager::TextureManager},
 };
-use macroquad::prelude::*;
 
 use hecs::Entity;
+use macroquad::prelude::*;
 
 pub struct Camera {
     pub pos: Vec2,
@@ -28,6 +28,15 @@ impl RenderingState {
                 scale: DEFAULT_SCALE,
             },
         }
+    }
+
+    pub fn get_render_pos(&self, pos: &Position) -> (f32, f32) {
+        let camera = &self.camera;
+
+        (
+            ((pos.x - camera.pos.x) * camera.scale) as i32 as f32,
+            ((pos.y - camera.pos.y) * camera.scale) as i32 as f32,
+        )
     }
 
     pub fn set_camera(&mut self, player_pos: Position) {

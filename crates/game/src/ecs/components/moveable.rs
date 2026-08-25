@@ -1,3 +1,9 @@
 pub struct Moveable;
 
-pub struct CollisionMesh;
+#[derive(Default)]
+pub struct CollisionMesh {
+    pub top: bool,
+    pub down: bool,
+    pub left: bool,
+    pub right: bool,
+}

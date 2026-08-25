@@ -11,7 +11,8 @@ pub fn bullet_movement_system(world: &mut World) {
         .query_mut::<(&mut Velocity, &Rotation)>()
         .with::<&Bullet>()
     {
-        let vec_vel = Vec2::from_angle(rotation.0.to_radians());
+        let mut vec_vel = Vec2::from_angle(rotation.0.to_radians());
+        vec_vel *= 140.0;
         vel.update_vec2(vec_vel);
     }
 }

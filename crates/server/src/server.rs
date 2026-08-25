@@ -189,7 +189,7 @@ impl Server {
 
         let pos: Position = packet_shoot.pos.into();
 
-        let _ = Bullet::spawn(&mut self.state.world, pos, id);
+        let _ = Bullet::spawn(&mut self.state.world, pos, packet_shoot.rotation, id);
 
         let payload = PacketSpawnEntity::new(id, EntityKind::Bullet, pos.into());
         let packet = Packet::from_payload(payload)?;

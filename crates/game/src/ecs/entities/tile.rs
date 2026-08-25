@@ -16,7 +16,7 @@ impl Tile {
             Tile,
             pos,
             network_id,
-            CollisionMesh,
+            CollisionMesh::default(),
             Sprite::new(
                 "tileset",
                 Rect {
