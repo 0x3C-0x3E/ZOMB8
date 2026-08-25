@@ -1,10 +1,7 @@
 use hecs::{Entity, World};
 use macroquad::prelude::*;
 
-use crate::ecs::{
-    components::{moveable::Moveable, transform::Position},
-    entities::player::Player,
-};
+use crate::ecs::components::{moveable::Moveable, transform::Position};
 
 pub enum Axis {
     X,

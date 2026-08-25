@@ -1,11 +1,6 @@
+use crate::client::spawn_despawn_handler::despawn_network_entity;
 use std::collections::VecDeque;
 
-use crate::{
-    snapshot_handler::snapshot_handler,
-    spawn_despawn_handler::{
-        despawn_network_entity, spawn_network_entity, spawn_network_entity_from_state,
-    },
-};
 use game::{
     ecs::{
         components::snapshot_sync::SnapshotSync,
@@ -30,6 +25,8 @@ use protocol::{
     },
 };
 use tokio::sync::watch;
+
+use crate::client::spawn_despawn_handler::{spawn_network_entity, spawn_network_entity_from_state};
 
 pub struct Client {
     pub state: State,
@@ -158,7 +155,7 @@ impl Client {
             let payload = PacketInput::new(self.client_id, self.input_seq, current_map.clone());
             let packet = Packet::from_payload(payload)?;
 
-            self.input_send.send(packet)?;
+            self.input_send.send_replace(packet);
             self.last_sent_map = Some(current_map.clone());
         }
 
@@ -200,7 +197,7 @@ impl Client {
                 if self.last_snapshots.len() > 5 {
                     self.last_snapshots.pop_front();
                 }
-                snapshot_handler(self, packet_snapshot);
+                self.snapshot_handler(packet_snapshot);
             }
             PacketKind::LevelData => {
                 let packet_level_data: PacketLevelData = bincode::deserialize(&packet.payload)?;

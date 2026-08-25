@@ -30,7 +30,7 @@ impl Bullet {
             Sprite::new(
                 "bullet",
                 Rect {
-                    x: 0.0,
+                    x: 8.0,
                     y: 0.0,
                     w: 8.0,
                     h: 8.0,

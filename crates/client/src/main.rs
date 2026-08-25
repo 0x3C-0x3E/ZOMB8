@@ -1,7 +1,7 @@
 #![allow(clippy::new_without_default)]
 
 use crate::network_thread::client_network_loop;
-use crate::{client::Client, snapshot_handler::FIXED_DT};
+use crate::{client::core::Client, client::snapshot_handler::FIXED_DT};
 use game::ecs::systems::animation::{
     animation_playback_system, player_animation_state_system, zombie_animation_state_system,
 };
@@ -24,12 +24,10 @@ use protocol::{
 
 mod client;
 mod network_thread;
-mod snapshot_handler;
-mod spawn_despawn_handler;
 
 fn window_conf() -> Conf {
     Conf {
-        window_title: "".to_owned(),
+        window_title: "ZOMB8".to_owned(),
         window_width: 600.0 as i32,
         window_height: 600.0 as i32,
         window_resizable: true,
@@ -42,6 +40,8 @@ fn window_conf() -> Conf {
 async fn main() -> anyhow::Result<()> {
     set_default_filter_mode(FilterMode::Nearest);
 
+    let texture_manager = TextureManager::load_game_textures().await;
+
     let (out_send, mut out_recv) = tokio::sync::mpsc::channel::<Packet>(100);
     let (in_send, in_recv) = tokio::sync::mpsc::channel::<Packet>(100);
 
@@ -50,24 +50,6 @@ async fn main() -> anyhow::Result<()> {
     )?);
 
     let mut client = Client::new(input_send);
-
-    let mut texture_manager = TextureManager::new();
-
-    texture_manager
-        .load_texture("assets/img/tileset.png", "tileset")
-        .await;
-
-    texture_manager
-        .load_texture("assets/img/spritesheet.png", "spritesheet")
-        .await;
-
-    texture_manager
-        .load_texture("assets/img/player.png", "player")
-        .await;
-
-    texture_manager
-        .load_texture("assets/img/zombie.png", "zombie")
-        .await;
 
     let network_thread = std::thread::spawn(move || -> anyhow::Result<()> {
         let rt = tokio::runtime::Runtime::new().unwrap();
@@ -100,9 +82,9 @@ async fn main() -> anyhow::Result<()> {
         accumulator += get_frame_time();
         while accumulator >= FIXED_DT {
             client.set_local_prev_pos();
-
             let input_map = get_input_map();
             client.check_for_new_input(&input_map)?;
+
             input_system(&mut client.state, client.client_id, &input_map);
 
             if let Some(player) = client.player {
