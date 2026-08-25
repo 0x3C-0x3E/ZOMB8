@@ -3,7 +3,7 @@ use macroquad::math::Rect;
 use serde::{Deserialize, Serialize};
 
 use crate::ecs::{
-    components::{sprite::Sprite, transform::Position},
+    components::{moveable::CollisionMesh, sprite::Sprite, transform::Position},
     network_id::NetworkId,
 };
 
@@ -16,6 +16,7 @@ impl Tile {
             Tile,
             pos,
             network_id,
+            CollisionMesh,
             Sprite::new(
                 "tileset",
                 Rect {

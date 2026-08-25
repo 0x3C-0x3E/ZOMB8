@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::ecs::{
     components::{
         animation::{AnimController, ZombieAnimState},
-        moveable::Moveable,
+        moveable::{CollisionMesh, Moveable},
         snapshot_sync::SnapshotSync,
         sprite::Sprite,
         transform::Position,
@@ -27,6 +27,7 @@ impl Zombie {
             SnapshotSync(EntityKind::Zombie),
             Velocity::zero(),
             Moveable,
+            CollisionMesh,
             network_id,
             Sprite::new(
                 "zombie",

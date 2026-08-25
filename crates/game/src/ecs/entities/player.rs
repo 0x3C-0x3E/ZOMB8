@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::ecs::{
     components::{
         animation::{AnimController, PlayerAnimState},
-        moveable::Moveable,
+        moveable::{CollisionMesh, Moveable},
         snapshot_sync::SnapshotSync,
         sprite::Sprite,
         transform::Position,
@@ -28,6 +28,7 @@ impl Player {
             SnapshotSync(EntityKind::Player),
             network_id,
             Moveable,
+            CollisionMesh,
             Sprite::new(
                 "player",
                 Rect {

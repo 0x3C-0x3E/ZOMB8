@@ -1,7 +1,10 @@
 use hecs::{Entity, World};
 use macroquad::prelude::*;
 
-use crate::ecs::components::{moveable::Moveable, transform::Position};
+use crate::ecs::components::{
+    moveable::{CollisionMesh, Moveable},
+    transform::Position,
+};
 
 pub enum Axis {
     X,
@@ -35,6 +38,10 @@ pub fn resolve_collision_system(world: &World, axis: Axis) {
         for (e1, e2) in collisions {
             let p2 = *world.entity(e2).unwrap().get::<&Position>().unwrap();
             let mut p1 = world.entity(e1).unwrap().get::<&mut Position>().unwrap();
+
+            if world.entity(e2).unwrap().get::<&CollisionMesh>().is_none() {
+                continue;
+            }
 
             match axis {
                 Axis::X => {

@@ -13,7 +13,7 @@ mod server;
 async fn main() -> anyhow::Result<()> {
     let mut server = Server::new().await?;
 
-    server.create_new_zombie().await?;
+    server.spawn_zombie().await?;
 
     loop {
         if server.network_thread.is_finished() {

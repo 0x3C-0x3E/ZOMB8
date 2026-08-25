@@ -13,7 +13,7 @@ use hecs::{Entity, World};
 use game::{
     ecs::{
         components::snapshot_sync::SnapshotSync,
-        entities::{player::Player, tile::Tile, zombie::Zombie},
+        entities::{bullet::Bullet, player::Player, tile::Tile, zombie::Zombie},
         network_id::NetworkId,
         systems::input::input_system,
         transform::{Position, Velocity},
@@ -29,6 +29,7 @@ use protocol::{
         ping::PacketPing,
         request::PacketRequest,
         set_player_id::PacketSetPlayerId,
+        shoot::PacketShoot,
         snapshot::{EntityState, PacketSnapshot},
         spawn_entity::{
             EntityKind::{self},
@@ -170,13 +171,27 @@ impl Server {
         Ok(())
     }
 
-    pub async fn create_new_zombie(&mut self) -> anyhow::Result<()> {
+    pub async fn spawn_zombie(&mut self) -> anyhow::Result<()> {
         let id = self.allocator.allocate();
         let pos = Position::new(40.0, 20.0);
 
         let _ = Zombie::spawn(&mut self.state.world, pos, id);
 
         let payload = PacketSpawnEntity::new(id, EntityKind::Zombie, pos.into());
+        let packet = Packet::from_payload(payload)?;
+        let _ = self.send_to_all(&packet).await;
+
+        Ok(())
+    }
+
+    pub async fn spawn_bullet(&mut self, packet_shoot: PacketShoot) -> anyhow::Result<()> {
+        let id = self.allocator.allocate();
+
+        let pos: Position = packet_shoot.pos.into();
+
+        let _ = Bullet::spawn(&mut self.state.world, pos, id);
+
+        let payload = PacketSpawnEntity::new(id, EntityKind::Bullet, pos.into());
         let packet = Packet::from_payload(payload)?;
         let _ = self.send_to_all(&packet).await;
 
@@ -282,6 +297,10 @@ impl Server {
                         let _ = self.send_to(&packet, sender_addr).await;
                     }
                 }
+            }
+            PacketKind::Shoot => {
+                let packet_shoot: PacketShoot = bincode::deserialize(&packet.payload)?;
+                let _ = self.spawn_bullet(packet_shoot).await;
             }
 
             _ => {

@@ -13,7 +13,7 @@ use game::{
 };
 use glam::Vec2;
 use hecs::Entity;
-use macroquad::input::{MouseButton, is_key_down, is_key_pressed, is_mouse_button_pressed};
+use macroquad::input::{MouseButton, is_mouse_button_pressed};
 use protocol::{
     network_id::ProtocolNetworkId,
     packet::Packet,
@@ -22,6 +22,7 @@ use protocol::{
         input::{InputMap, PacketInput},
         level_data::PacketLevelData,
         set_player_id::PacketSetPlayerId,
+        shoot::PacketShoot,
         snapshot::{EntityState, PacketSnapshot},
         spawn_entity::{EntityKind, PacketSpawnEntity},
     },
@@ -95,14 +96,20 @@ impl Client {
         let _ = self.in_send.send(packet).await;
     }
 
-    pub fn input_system(&mut self) {
+    pub async fn input_system(&mut self) {
         let input_map = get_input_map();
         let _ = self.check_for_new_input(&input_map);
 
         input_system(&mut self.state, self.client_id, &input_map);
 
-        if is_mouse_button_pressed(MouseButton::Left) {
-            println!("shoot!");
+        if is_mouse_button_pressed(MouseButton::Left)
+            && let Some((pos, _)) = self.get_player_state()
+        {
+            let pos = *pos;
+            let payload = PacketShoot::new(self.client_id, pos.vec2(), 0.0);
+            if let Ok(packet) = Packet::from_payload(payload) {
+                self.send(packet).await;
+            }
         }
     }
 
