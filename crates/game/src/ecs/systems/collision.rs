@@ -39,9 +39,9 @@ pub fn resolve_collision_system(world: &World, axis: Axis) {
             let p2 = *world.entity(e2).unwrap().get::<&Position>().unwrap();
             let mut p1 = world.entity(e1).unwrap().get::<&mut Position>().unwrap();
 
-            let Some(_mesh1) = world.entity(e1).unwrap().get::<&mut CollisionMesh>() else {
-                continue;
-            };
+            // let Some(_mesh1) = world.entity(e1).unwrap().get::<&mut CollisionMesh>() else {
+            //     continue;
+            // };
 
             let Some(_mesh2) = world.entity(e2).unwrap().get::<&mut CollisionMesh>() else {
                 continue;
