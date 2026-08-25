@@ -1,7 +1,10 @@
 use crate::{
     ecs::{
-        components::{sprite::Sprite, transform::Position},
-        transform::RenderPosition,
+        components::{
+            sprite::{Rotation, Sprite},
+            transform::Position,
+        },
+        transform::{RenderPosition, Velocity},
     },
     game::{state::State, texture_manager::TextureManager},
 };
@@ -72,12 +75,22 @@ pub fn rendering_system(state: &mut State, texture_manager: &TextureManager) {
         if let Ok(rpos) = state.world.get::<&RenderPosition>(e) {
             render_pos = rpos.to_pos();
         }
+
+        let mut rotation: f32 = 0.0;
+        if let Ok(rot) = state.world.get::<&Rotation>(e) {
+            rotation = rot.0;
+            if let Ok(vel) = state.world.get::<&Velocity>(e) {
+                rotation = vel.y.atan2(vel.x);
+            }
+        }
+
         let params = DrawTextureParams {
             dest_size: Some(Vec2 {
                 x: sprite.rect.w * camera.scale,
                 y: sprite.rect.h * camera.scale,
             }),
             source: Some(sprite.rect),
+            rotation,
             ..Default::default()
         };
 

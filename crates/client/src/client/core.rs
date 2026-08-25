@@ -111,7 +111,6 @@ impl Client {
 
             let direction = mouse_pos - Vec2::from(render_pos);
             let angle = direction.y.atan2(direction.x).to_degrees();
-            println!("{angle}");
 
             let payload = PacketShoot::new(self.client_id, pos.vec2(), angle);
             if let Ok(packet) = Packet::from_payload(payload) {
