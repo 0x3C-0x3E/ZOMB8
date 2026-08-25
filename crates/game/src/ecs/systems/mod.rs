@@ -1,4 +1,5 @@
 pub mod animation;
+pub mod bullet_movement;
 pub mod collision;
 pub mod input;
 pub mod physics;

@@ -1,6 +1,9 @@
 use std::time::Duration;
 
-use game::ecs::systems::{physics::physics_system, zombie_movement::zombie_movement_system};
+use game::ecs::systems::{
+    bullet_movement::bullet_movement_system, physics::physics_system,
+    zombie_movement::zombie_movement_system,
+};
 use protocol::TPS;
 
 use crate::server::Server;
@@ -33,6 +36,7 @@ async fn main() -> anyhow::Result<()> {
         }
 
         zombie_movement_system(&mut server.state.world);
+        bullet_movement_system(&mut server.state.world);
 
         let dt = 1.0 / TPS as f32;
         physics_system(&server.state.world, dt);
