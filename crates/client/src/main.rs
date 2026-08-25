@@ -42,14 +42,14 @@ async fn main() -> anyhow::Result<()> {
 
     let texture_manager = TextureManager::load_game_textures().await;
 
-    let (out_send, mut out_recv) = tokio::sync::mpsc::channel::<Packet>(100);
+    let (out_send, out_recv) = tokio::sync::mpsc::channel::<Packet>(100);
     let (in_send, in_recv) = tokio::sync::mpsc::channel::<Packet>(100);
 
     let (input_send, input_recv) = tokio::sync::watch::channel::<Packet>(Packet::from_payload(
         PacketInput::new(ProtocolNetworkId(0), 0, InputMap::zero()),
     )?);
 
-    let mut client = Client::new(input_send);
+    let mut client = Client::new(out_recv, in_send, input_send);
 
     let network_thread = std::thread::spawn(move || -> anyhow::Result<()> {
         let rt = tokio::runtime::Runtime::new().unwrap();
@@ -60,12 +60,12 @@ async fn main() -> anyhow::Result<()> {
 
     let payload = PacketRequest::new(RequestKind::PlayerId);
     if let Ok(packet) = Packet::from_payload(payload) {
-        let _ = in_send.send(packet).await;
+        client.send(packet).await;
     }
 
     let payload = PacketRequest::new(RequestKind::LevelData);
     if let Ok(packet) = Packet::from_payload(payload) {
-        let _ = in_send.send(packet).await;
+        client.send(packet).await;
     }
 
     let mut accumulator = 0.0f32;
@@ -75,9 +75,7 @@ async fn main() -> anyhow::Result<()> {
             panic!("network thread exited with {:?}", network_thread.join());
         }
 
-        while let Ok(packet) = out_recv.try_recv() {
-            let _ = client.handle_packet(packet);
-        }
+        client.try_recv();
 
         accumulator += get_frame_time();
         while accumulator >= FIXED_DT {

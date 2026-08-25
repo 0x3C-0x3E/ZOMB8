@@ -24,13 +24,19 @@ use protocol::{
         spawn_entity::{EntityKind, PacketSpawnEntity},
     },
 };
-use tokio::sync::watch;
+use tokio::sync::{
+    mpsc::{Receiver, Sender},
+    watch,
+};
 
 use crate::client::spawn_despawn_handler::{spawn_network_entity, spawn_network_entity_from_state};
 
 pub struct Client {
     pub state: State,
     pub client_id: NetworkId,
+
+    pub out_recv: Receiver<Packet>,
+    pub in_send: Sender<Packet>,
 
     pub input_send: watch::Sender<Packet>,
     pub input_seq: u32,
@@ -45,10 +51,17 @@ pub struct Client {
 }
 
 impl Client {
-    pub fn new(input_send: watch::Sender<Packet>) -> Self {
+    pub fn new(
+        out_recv: Receiver<Packet>,
+        in_send: Sender<Packet>,
+        input_send: watch::Sender<Packet>,
+    ) -> Self {
         Self {
             state: State::new(),
             client_id: ProtocolNetworkId(0),
+
+            out_recv,
+            in_send,
 
             input_send,
             input_seq: 0,
@@ -74,6 +87,10 @@ impl Client {
             .world
             .query_one_mut::<(&mut Position, &mut Velocity)>(player)
             .ok()
+    }
+
+    pub async fn send(&mut self, packet: Packet) {
+        let _ = self.in_send.send(packet).await;
     }
 
     pub fn set_local_prev_pos(&mut self) {
@@ -160,6 +177,12 @@ impl Client {
         }
 
         Ok(())
+    }
+
+    pub fn try_recv(&mut self) {
+        while let Ok(packet) = self.out_recv.try_recv() {
+            let _ = self.handle_packet(packet);
+        }
     }
 
     pub fn handle_packet(&mut self, packet: Packet) -> anyhow::Result<()> {
