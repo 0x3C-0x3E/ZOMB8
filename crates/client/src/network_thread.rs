@@ -1,5 +1,5 @@
 use std::{
-    net::{Ipv6Addr, SocketAddrV6},
+    net::{Ipv6Addr, SocketAddr, SocketAddrV6},
     time::Duration,
 };
 
@@ -21,10 +21,13 @@ pub async fn client_network_loop(
     out_send: Sender<Packet>,
     mut in_recv: Receiver<Packet>,
     mut input_recv: watch::Receiver<Packet>,
+    ipv6addr: Ipv6Addr,
 ) -> anyhow::Result<()> {
     let addr = SocketAddrV6::new(Ipv6Addr::UNSPECIFIED, 0, 0, 0);
     let socket = UdpSocket::bind(addr).await?;
-    socket.connect("[::1]:6969").await?;
+
+    let addr = SocketAddrV6::new(ipv6addr, 6969, 0, 2);
+    socket.connect(addr).await?;
 
     let mut last_sent = Instant::now();
 

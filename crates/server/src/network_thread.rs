@@ -7,7 +7,9 @@ pub async fn server_network_loop(
     out_send: Sender<(SocketAddr, Packet)>,
     mut in_recv: Receiver<(SocketAddr, Packet)>,
 ) -> anyhow::Result<()> {
-    let socket = UdpSocket::bind("[::1]:6969".parse::<SocketAddr>()?).await?;
+    let addr = "[::]:6969".parse::<SocketAddr>()?;
+    println!("Server listening on {addr}");
+    let socket = UdpSocket::bind(addr).await?;
     let mut buf = vec![0u8; MAX_DATAGRAM_SIZE];
     loop {
         tokio::select! {

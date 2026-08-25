@@ -1,5 +1,7 @@
 #![allow(clippy::new_without_default)]
 
+use std::net::Ipv6Addr;
+
 use crate::network_thread::client_network_loop;
 use crate::{client::core::Client, client::snapshot_handler::FIXED_DT};
 use game::ecs::systems::animation::{
@@ -45,10 +47,12 @@ async fn main() -> anyhow::Result<()> {
 
     let mut client = Client::new(out_recv, in_send, input_send);
 
+    let ipv6addr: Ipv6Addr = "fe80::da5e:d3ff:fe99:686b".parse()?;
+
     let network_thread = std::thread::spawn(move || -> anyhow::Result<()> {
         let rt = tokio::runtime::Runtime::new().unwrap();
 
-        rt.block_on(client_network_loop(out_send, in_recv, input_recv))?;
+        rt.block_on(client_network_loop(out_send, in_recv, input_recv, ipv6addr))?;
         Ok(())
     });
 
