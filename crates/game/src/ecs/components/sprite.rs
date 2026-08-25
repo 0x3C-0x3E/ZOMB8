@@ -8,6 +8,9 @@ pub struct Sprite {
     pub rect: Rect,
 }
 
+#[derive(Debug, Default, PartialEq, Clone)]
+pub struct Rotation(pub f32);
+
 #[derive(Debug, Default, Serialize, Deserialize, PartialEq, Clone)]
 pub struct SerRect {
     pub x: f32,
