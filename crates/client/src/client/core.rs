@@ -13,6 +13,7 @@ use game::{
 };
 use glam::Vec2;
 use hecs::Entity;
+use macroquad::input::{MouseButton, is_key_down, is_key_pressed, is_mouse_button_pressed};
 use protocol::{
     network_id::ProtocolNetworkId,
     packet::Packet,
@@ -95,11 +96,14 @@ impl Client {
     }
 
     pub fn input_system(&mut self) {
-        self.set_local_prev_pos();
         let input_map = get_input_map();
         let _ = self.check_for_new_input(&input_map);
 
         input_system(&mut self.state, self.client_id, &input_map);
+
+        if is_mouse_button_pressed(MouseButton::Left) {
+            println!("shoot!");
+        }
     }
 
     pub fn set_local_prev_pos(&mut self) {

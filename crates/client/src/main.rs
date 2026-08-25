@@ -76,11 +76,11 @@ async fn main() -> anyhow::Result<()> {
         }
 
         client.try_recv();
+        client.input_system();
 
         accumulator += get_frame_time();
         while accumulator >= FIXED_DT {
-            client.input_system();
-
+            client.set_local_prev_pos();
             if let Some(player) = client.player {
                 physics_system_for_player(&client.state.world, player, FIXED_DT);
             }
