@@ -198,6 +198,15 @@ impl Server {
         Ok(())
     }
 
+    pub async fn despawn_bullet(&mut self, bullet: Entity, id: NetworkId) -> anyhow::Result<()> {
+        let payload = PacketDespawnEntity::new(id);
+        let packet = Packet::from_payload(payload)?;
+        let _ = self.send_to_all(&packet).await;
+
+        self.state.world.despawn(bullet)?;
+        Ok(())
+    }
+
     pub async fn send_snapshot(&mut self) {
         let entities: Vec<(NetworkId, EntityState)> = self
             .state
