@@ -1,5 +1,6 @@
 use hecs::{Entity, World};
 use macroquad::math::Rect;
+use protocol::packets::spawn_entity::EntityKind;
 use serde::{Deserialize, Serialize};
 
 use crate::ecs::{
@@ -23,7 +24,7 @@ impl Zombie {
             Zombie,
             pos,
             RenderPosition::from_pos(pos),
-            SnapshotSync,
+            SnapshotSync(EntityKind::Zombie),
             Velocity::zero(),
             Moveable,
             network_id,

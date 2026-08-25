@@ -11,6 +11,7 @@ pub enum EntityKind {
     Tile,
     Player,
     Zombie,
+    Bullet,
 }
 
 #[derive(Serialize, Deserialize)]

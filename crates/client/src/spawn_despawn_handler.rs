@@ -1,5 +1,5 @@
 use game::ecs::{
-    entities::{player::Player, tile::Tile, zombie::Zombie},
+    entities::{bullet::Bullet, player::Player, tile::Tile, zombie::Zombie},
     network_id::NetworkId,
     transform::Position,
 };
@@ -19,6 +19,7 @@ pub fn spawn_network_entity_from_state(
         EntityKind::Tile => Tile::spawn(world, Position::from(state.pos), network_id),
         EntityKind::Player => Player::spawn(world, Position::from(state.pos), network_id),
         EntityKind::Zombie => Zombie::spawn(world, Position::from(state.pos), network_id),
+        EntityKind::Bullet => Bullet::spawn(world, Position::from(state.pos), network_id),
     }
 }
 

@@ -1,16 +1,16 @@
 use hecs::{Entity, World};
 use macroquad::math::Rect;
+use protocol::packets::spawn_entity::EntityKind;
 use serde::{Deserialize, Serialize};
 
 use crate::ecs::{
     components::{
-        animation::{AnimController, ZombieAnimState},
         moveable::Moveable,
         snapshot_sync::SnapshotSync,
         sprite::{Rotation, Sprite},
         transform::Position,
     },
-    network_id::{self, NetworkId},
+    network_id::NetworkId,
     transform::{RenderPosition, Velocity},
 };
 
@@ -23,7 +23,7 @@ impl Bullet {
             Bullet,
             pos,
             RenderPosition::from_pos(pos),
-            SnapshotSync,
+            SnapshotSync(EntityKind::Bullet),
             Velocity::zero(),
             Moveable,
             network_id,

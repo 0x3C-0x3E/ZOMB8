@@ -1,5 +1,6 @@
 use hecs::{Entity, World};
 use macroquad::math::Rect;
+use protocol::packets::spawn_entity::EntityKind;
 use serde::{Deserialize, Serialize};
 
 use crate::ecs::{
@@ -24,7 +25,7 @@ impl Player {
             pos,
             RenderPosition::from_pos(pos),
             Velocity::zero(),
-            SnapshotSync,
+            SnapshotSync(EntityKind::Player),
             network_id,
             Moveable,
             Sprite::new(

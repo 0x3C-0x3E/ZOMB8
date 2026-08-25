@@ -184,36 +184,14 @@ impl Server {
     }
 
     pub async fn send_snapshot(&mut self) {
-        let mut entities: Vec<(NetworkId, EntityState)> = Vec::new();
-        entities.extend(
-            self.state
-                .world
-                .query_mut::<(&NetworkId, &Position, &Velocity)>()
-                .with::<&SnapshotSync>()
-                .with::<&Player>()
-                .into_iter()
-                .map(|(n, pos, vel)| {
-                    (
-                        *n,
-                        EntityState::new(EntityKind::Player, (*pos).into(), (*vel).into()),
-                    )
-                }),
-        );
-
-        entities.extend(
-            self.state
-                .world
-                .query_mut::<(&NetworkId, &Position, &Velocity)>()
-                .with::<&SnapshotSync>()
-                .with::<&Zombie>()
-                .into_iter()
-                .map(|(n, pos, vel)| {
-                    (
-                        *n,
-                        EntityState::new(EntityKind::Zombie, (*pos).into(), (*vel).into()),
-                    )
-                }),
-        );
+        let entities: Vec<(NetworkId, EntityState)> = self
+            .state
+            .world
+            .query_mut::<(&NetworkId, &Position, &Velocity, &SnapshotSync)>()
+            .with::<&SnapshotSync>()
+            .into_iter()
+            .map(|(n, pos, vel, kind)| (*n, EntityState::new(kind.0, (*pos).into(), (*vel).into())))
+            .collect();
 
         for client in self.clients.keys() {
             let id = self.client_ids.get(client);
