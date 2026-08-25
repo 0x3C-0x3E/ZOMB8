@@ -6,6 +6,7 @@ use game::{
         components::snapshot_sync::SnapshotSync,
         entities::player::Player,
         network_id::NetworkId,
+        systems::input::{get_input_map, input_system},
         transform::{Position, RenderPosition, Velocity},
     },
     game::state::State,
@@ -93,6 +94,14 @@ impl Client {
         let _ = self.in_send.send(packet).await;
     }
 
+    pub fn input_system(&mut self) {
+        self.set_local_prev_pos();
+        let input_map = get_input_map();
+        let _ = self.check_for_new_input(&input_map);
+
+        input_system(&mut self.state, self.client_id, &input_map);
+    }
+
     pub fn set_local_prev_pos(&mut self) {
         if let Some(player) = self.player {
             self.prev_pos = *self
@@ -101,6 +110,22 @@ impl Client {
                 .get::<&Position>(player)
                 .expect("player has no position");
         }
+    }
+
+    pub fn check_for_new_input(&mut self, current_map: &InputMap) -> anyhow::Result<()> {
+        let changed = self.last_sent_map.as_ref() != Some(current_map);
+        if changed {
+            self.input_seq += 1;
+            self.last_maps.push((self.input_seq, current_map.clone()));
+
+            let payload = PacketInput::new(self.client_id, self.input_seq, current_map.clone());
+            let packet = Packet::from_payload(payload)?;
+
+            self.input_send.send_replace(packet);
+            self.last_sent_map = Some(current_map.clone());
+        }
+
+        Ok(())
     }
 
     pub fn set_local_render_pos(&mut self, alpha: f32) {
@@ -161,22 +186,6 @@ impl Client {
 
             render_pos.lerp(&pos_before, &pos_after, alpha);
         }
-    }
-
-    pub fn check_for_new_input(&mut self, current_map: &InputMap) -> anyhow::Result<()> {
-        let changed = self.last_sent_map.as_ref() != Some(current_map);
-        if changed {
-            self.input_seq += 1;
-            self.last_maps.push((self.input_seq, current_map.clone()));
-
-            let payload = PacketInput::new(self.client_id, self.input_seq, current_map.clone());
-            let packet = Packet::from_payload(payload)?;
-
-            self.input_send.send_replace(packet);
-            self.last_sent_map = Some(current_map.clone());
-        }
-
-        Ok(())
     }
 
     pub fn try_recv(&mut self) {

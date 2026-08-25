@@ -4,5 +4,6 @@ pub mod level_data;
 pub mod ping;
 pub mod request;
 pub mod set_player_id;
+pub mod shoot;
 pub mod snapshot;
 pub mod spawn_entity;

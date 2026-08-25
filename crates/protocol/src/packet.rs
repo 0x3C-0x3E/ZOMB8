@@ -17,6 +17,7 @@ pub enum PacketKind {
 
     Snapshot,
     Input,
+    Shoot,
 }
 
 impl From<PacketKind> for u8 {
