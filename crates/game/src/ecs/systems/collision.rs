@@ -1,5 +1,6 @@
 use hecs::{Entity, World};
 use macroquad::prelude::*;
+use protocol::packets::spawn_entity::EntityKind;
 
 use crate::ecs::components::{
     moveable::{CollisionMesh, Moveable},
@@ -39,13 +40,10 @@ pub fn resolve_collision_system(world: &World, axis: Axis) {
             let p2 = *world.entity(e2).unwrap().get::<&Position>().unwrap();
             let mut p1 = world.entity(e1).unwrap().get::<&mut Position>().unwrap();
 
-            // let Some(_mesh1) = world.entity(e1).unwrap().get::<&mut CollisionMesh>() else {
-            //     continue;
-            // };
+            let k1 = *world.get::<&EntityKind>(e1).unwrap();
+            let k2 = *world.get::<&EntityKind>(e2).unwrap();
 
-            let Some(_mesh2) = world.entity(e2).unwrap().get::<&mut CollisionMesh>() else {
-                continue;
-            };
+            let mut collision_mesh = CollisionMesh::default();
 
             match axis {
                 Axis::X => {
@@ -54,8 +52,10 @@ pub fn resolve_collision_system(world: &World, axis: Axis) {
                     let hit_right = overlap_left < overlap_right;
                     if hit_right {
                         p1.x = p2.x - 8.0;
+                        collision_mesh.right = Some(k2);
                     } else {
                         p1.x = p2.x + 8.0;
+                        collision_mesh.left = Some(k2);
                     }
                 }
                 Axis::Y => {
@@ -64,10 +64,26 @@ pub fn resolve_collision_system(world: &World, axis: Axis) {
                     let hit_top = overlap_top < overlap_bottom;
                     if hit_top {
                         p1.y = p2.y - 8.0;
+                        collision_mesh.top = Some(k2);
                     } else {
                         p1.y = p2.y + 8.0;
+                        collision_mesh.bottom = Some(k2);
                     }
                 }
+            }
+
+            {
+                let Some(mut mesh) = world.entity(e1).unwrap().get::<&mut CollisionMesh>() else {
+                    continue;
+                };
+                mesh.update(&collision_mesh);
+            }
+            let collision_mesh = CollisionMesh::invert(&collision_mesh, k1);
+            {
+                let Some(mut mesh) = world.entity(e2).unwrap().get::<&mut CollisionMesh>() else {
+                    continue;
+                };
+                mesh.update(&collision_mesh);
             }
         }
     }

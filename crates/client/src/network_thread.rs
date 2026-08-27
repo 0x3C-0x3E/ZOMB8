@@ -26,7 +26,7 @@ pub async fn client_network_loop(
     let addr = SocketAddrV6::new(Ipv6Addr::UNSPECIFIED, 0, 0, 0);
     let socket = UdpSocket::bind(addr).await?;
 
-    let addr = SocketAddrV6::new(ipv6addr, 6969, 0, 2);
+    let addr = SocketAddrV6::new(ipv6addr, 6969, 0, 0);
     socket.connect(addr).await?;
 
     let mut last_sent = Instant::now();

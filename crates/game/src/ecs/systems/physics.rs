@@ -2,11 +2,19 @@ use hecs::{Entity, World};
 use macroquad::prelude::*;
 
 use crate::ecs::{
-    components::transform::{Position, Velocity},
+    components::{
+        moveable::CollisionMesh,
+        transform::{Position, Velocity},
+    },
     systems::collision::{Axis, resolve_collision_system},
 };
 
 pub fn physics_system_for_player(world: &World, player: Entity, dt: f32) {
+    {
+        let mut mesh = world.get::<&mut CollisionMesh>(player).unwrap();
+        mesh.reset();
+    }
+
     {
         let vel = world.get::<&Velocity>(player).unwrap();
         let mut pos = world.get::<&mut Position>(player).unwrap();
@@ -22,6 +30,10 @@ pub fn physics_system_for_player(world: &World, player: Entity, dt: f32) {
 }
 
 pub fn physics_system(world: &World, dt: f32) {
+    for mesh in world.query::<&mut CollisionMesh>().iter() {
+        mesh.reset();
+    }
+
     for (pos, vel) in world.query::<(&mut Position, &mut Velocity)>().iter() {
         pos.x += vel.x * dt;
     }

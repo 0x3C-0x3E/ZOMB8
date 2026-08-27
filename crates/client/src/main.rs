@@ -47,7 +47,7 @@ async fn main() -> anyhow::Result<()> {
 
     let mut client = Client::new(out_recv, in_send, input_send);
 
-    let ipv6addr: Ipv6Addr = "fe80::da5e:d3ff:fe99:686b".parse()?;
+    let ipv6addr: Ipv6Addr = "::1".parse()?;
 
     let network_thread = std::thread::spawn(move || -> anyhow::Result<()> {
         let rt = tokio::runtime::Runtime::new().unwrap();

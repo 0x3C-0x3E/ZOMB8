@@ -1,5 +1,6 @@
 use hecs::{Entity, World};
 use macroquad::math::Rect;
+use protocol::packets::spawn_entity::EntityKind;
 use serde::{Deserialize, Serialize};
 
 use crate::ecs::{
@@ -14,6 +15,7 @@ impl Tile {
     pub fn spawn(world: &mut World, pos: Position, network_id: NetworkId) -> Entity {
         world.spawn((
             Tile,
+            EntityKind::Tile,
             pos,
             network_id,
             CollisionMesh::default(),

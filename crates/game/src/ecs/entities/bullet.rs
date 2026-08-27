@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::ecs::{
     components::{
-        moveable::Moveable,
+        moveable::{CollisionMesh, Moveable},
         snapshot_sync::SnapshotSync,
         sprite::{Rotation, Sprite},
         transform::Position,
@@ -29,6 +29,8 @@ impl Bullet {
             pos,
             RenderPosition::from_pos(pos),
             SnapshotSync(EntityKind::Bullet),
+            EntityKind::Bullet,
+            CollisionMesh::default(),
             Velocity::zero(),
             Moveable,
             network_id,

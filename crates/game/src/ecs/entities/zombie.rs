@@ -25,6 +25,7 @@ impl Zombie {
             pos,
             RenderPosition::from_pos(pos),
             SnapshotSync(EntityKind::Zombie),
+            EntityKind::Zombie,
             Velocity::zero(),
             Moveable,
             CollisionMesh::default(),

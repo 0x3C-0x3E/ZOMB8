@@ -26,6 +26,7 @@ impl Player {
             RenderPosition::from_pos(pos),
             Velocity::zero(),
             SnapshotSync(EntityKind::Player),
+            EntityKind::Player,
             network_id,
             Moveable,
             CollisionMesh::default(),
