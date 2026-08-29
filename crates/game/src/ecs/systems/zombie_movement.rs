@@ -6,10 +6,7 @@ use crate::ecs::{
         moveable::CollisionMesh,
         transform::{Position, Velocity},
     },
-    entities::{
-        player::Player,
-        zombie::{self, Zombie},
-    },
+    entities::{player::Player, zombie::Zombie},
     network_id::NetworkId,
 };
 
