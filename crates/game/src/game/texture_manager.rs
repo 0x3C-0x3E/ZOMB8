@@ -21,6 +21,10 @@ impl TextureManager {
             .await;
 
         texture_manager
+            .load_texture("assets/img/spritesheet.png", "particle")
+            .await;
+
+        texture_manager
             .load_texture("assets/img/spritesheet.png", "bullet")
             .await;
 

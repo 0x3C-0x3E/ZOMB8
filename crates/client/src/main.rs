@@ -7,6 +7,7 @@ use crate::{client::core::Client, client::snapshot_handler::FIXED_DT};
 use game::ecs::systems::animation::{
     animation_playback_system, player_animation_state_system, zombie_animation_state_system,
 };
+use game::ecs::systems::particle_movement::particle_movement_system;
 use game::ecs::systems::physics::physics_system_for_player;
 use game::{ecs::systems::rendering::rendering_system, game::texture_manager::TextureManager};
 use macroquad::prelude::*;
@@ -91,6 +92,8 @@ async fn main() -> anyhow::Result<()> {
 
         client.set_local_render_pos(accumulator / FIXED_DT);
         client.set_net_render_pos(interp_alpha);
+
+        particle_movement_system(&mut client.state.world);
 
         player_animation_state_system(&mut client.state.world);
         zombie_animation_state_system(&mut client.state.world);

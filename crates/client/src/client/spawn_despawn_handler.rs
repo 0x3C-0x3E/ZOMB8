@@ -1,5 +1,5 @@
 use game::ecs::{
-    entities::{bullet::Bullet, player::Player, tile::Tile, zombie::Zombie},
+    entities::{bullet::Bullet, particle::Particle, player::Player, tile::Tile, zombie::Zombie},
     network_id::NetworkId,
     transform::Position,
 };
@@ -68,10 +68,24 @@ impl Client {
                 }
                 EntityKind::Bullet => {
                     println!("spawning break particles");
+                    self.spawn_particles(e);
                 }
                 _ => {}
             }
             let _ = self.state.world.despawn(e);
+        }
+    }
+
+    pub fn spawn_particles(&mut self, entity: Entity) {
+        let Ok(entity_pos) = self.state.world.get::<&Position>(entity) else {
+            panic!("particle system cannot spawn on entity without position");
+        };
+
+        let pos = *entity_pos;
+        drop(entity_pos);
+
+        for _ in 0..10 {
+            Particle::spawn(&mut self.state.world, pos);
         }
     }
 }
