@@ -67,7 +67,6 @@ impl Client {
                     println!("spawning death particles");
                 }
                 EntityKind::Bullet => {
-                    println!("spawning break particles");
                     self.spawn_particles(e);
                 }
                 _ => {}
