@@ -4,7 +4,11 @@ use protocol::packets::spawn_entity::EntityKind;
 use serde::{Deserialize, Serialize};
 
 use crate::ecs::{
-    components::{moveable::CollisionMesh, sprite::Sprite, transform::Position},
+    components::{
+        moveable::{Collideable, CollisionMesh},
+        sprite::Sprite,
+        transform::Position,
+    },
     network_id::NetworkId,
 };
 
@@ -18,6 +22,7 @@ impl Tile {
             EntityKind::Tile,
             pos,
             network_id,
+            Collideable,
             CollisionMesh::default(),
             Sprite::new(
                 "tileset",

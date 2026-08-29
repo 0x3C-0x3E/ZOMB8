@@ -1,4 +1,3 @@
-use crate::client::spawn_despawn_handler::despawn_network_entity;
 use std::collections::VecDeque;
 
 use game::{
@@ -31,8 +30,6 @@ use tokio::sync::{
     mpsc::{Receiver, Sender},
     watch,
 };
-
-use crate::client::spawn_despawn_handler::{spawn_network_entity, spawn_network_entity_from_state};
 
 pub struct Client {
     pub state: State,
@@ -216,12 +213,12 @@ impl Client {
         match packet.kind {
             PacketKind::SpawnEntity => {
                 let packet_spawn_entity: PacketSpawnEntity = bincode::deserialize(&packet.payload)?;
-                spawn_network_entity(&mut self.state.world, packet_spawn_entity);
+                self.spawn_network_entity(packet_spawn_entity);
             }
             PacketKind::DespawnEntity => {
                 let packet_despawn_entity: PacketDespawnEntity =
                     bincode::deserialize(&packet.payload)?;
-                despawn_network_entity(&mut self.state.world, packet_despawn_entity);
+                self.despawn_network_entity(packet_despawn_entity);
             }
             PacketKind::SetPlayerId => {
                 let packet_set_player_id: PacketSetPlayerId =
@@ -251,8 +248,7 @@ impl Client {
             PacketKind::LevelData => {
                 let packet_level_data: PacketLevelData = bincode::deserialize(&packet.payload)?;
                 for (id, pos) in packet_level_data.tiles {
-                    spawn_network_entity_from_state(
-                        &mut self.state.world,
+                    self.spawn_network_entity_from_state(
                         EntityState {
                             kind: EntityKind::Tile,
                             pos,

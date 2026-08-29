@@ -2,6 +2,8 @@ use protocol::packets::spawn_entity::EntityKind;
 
 pub struct Moveable;
 
+pub struct Collideable;
+
 #[derive(Debug, Default, Copy, Clone)]
 pub struct CollisionMesh {
     pub top: Option<EntityKind>,

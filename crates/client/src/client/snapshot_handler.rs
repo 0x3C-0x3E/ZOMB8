@@ -1,4 +1,4 @@
-use crate::{client::core::Client, client::spawn_despawn_handler::spawn_network_entity_from_state};
+use crate::client::core::Client;
 use game::ecs::{
     components::snapshot_sync::SnapshotSync,
     network_id::NetworkId,
@@ -45,7 +45,7 @@ impl Client {
                 }
             } else {
                 drop(binding);
-                spawn_network_entity_from_state(&mut self.state.world, new_state, id);
+                self.spawn_network_entity_from_state(new_state, id);
             }
         }
     }

@@ -3,7 +3,7 @@ use macroquad::prelude::*;
 use protocol::packets::spawn_entity::EntityKind;
 
 use crate::ecs::components::{
-    moveable::{CollisionMesh, Moveable},
+    moveable::{Collideable, CollisionMesh, Moveable},
     transform::Position,
 };
 
@@ -45,17 +45,24 @@ pub fn resolve_collision_system(world: &World, axis: Axis) {
 
             let mut collision_mesh = CollisionMesh::default();
 
+            let is_collidiable =
+                world.get::<&Collideable>(e1).is_ok() && world.get::<&Collideable>(e2).is_ok();
+
             match axis {
                 Axis::X => {
                     let overlap_left = (p1.x + 8.0) - p2.x;
                     let overlap_right = (p2.x + 8.0) - p1.x;
                     let hit_right = overlap_left < overlap_right;
                     if hit_right {
-                        p1.x = p2.x - 8.0;
                         collision_mesh.right = Some(k2);
+                        if is_collidiable {
+                            p1.x = p2.x - 8.0;
+                        }
                     } else {
-                        p1.x = p2.x + 8.0;
                         collision_mesh.left = Some(k2);
+                        if is_collidiable {
+                            p1.x = p2.x + 8.0;
+                        }
                     }
                 }
                 Axis::Y => {
@@ -63,11 +70,15 @@ pub fn resolve_collision_system(world: &World, axis: Axis) {
                     let overlap_bottom = (p2.y + 8.0) - p1.y;
                     let hit_top = overlap_top < overlap_bottom;
                     if hit_top {
-                        p1.y = p2.y - 8.0;
                         collision_mesh.top = Some(k2);
+                        if is_collidiable {
+                            p1.y = p2.y - 8.0;
+                        }
                     } else {
-                        p1.y = p2.y + 8.0;
                         collision_mesh.bottom = Some(k2);
+                        if is_collidiable {
+                            p1.y = p2.y + 8.0;
+                        }
                     }
                 }
             }
