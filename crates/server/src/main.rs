@@ -11,12 +11,11 @@ use crate::server::Server;
 mod network_id_allocator;
 mod network_thread;
 mod server;
+mod wave;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let mut server = Server::new().await?;
-
-    server.spawn_zombie().await?;
 
     loop {
         if server.network_thread.is_finished() {
@@ -34,6 +33,8 @@ async fn main() -> anyhow::Result<()> {
             server.touch_client(sender_addr);
             let _ = server.handle_packet(sender_addr, packet).await;
         }
+
+        server.spawn_wave_system().await;
 
         let mut remove = zombie_movement_system(&mut server.state.world);
         remove.extend(bullet_movement_system(&mut server.state.world));

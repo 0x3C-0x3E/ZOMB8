@@ -171,9 +171,8 @@ impl Server {
         Ok(())
     }
 
-    pub async fn spawn_zombie(&mut self) -> anyhow::Result<()> {
+    pub async fn spawn_zombie(&mut self, pos: Position) -> anyhow::Result<()> {
         let id = self.allocator.allocate();
-        let pos = Position::new(40.0, 20.0);
 
         let _ = Zombie::spawn(&mut self.state.world, pos, id);
 
