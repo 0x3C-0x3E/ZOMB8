@@ -1,8 +1,16 @@
-use hecs::World;
+use hecs::{Entity, World};
+use protocol::packets::spawn_entity::EntityKind;
 
 use crate::ecs::{
-    components::transform::{Position, Velocity},
-    entities::{player::Player, zombie::Zombie},
+    components::{
+        moveable::CollisionMesh,
+        transform::{Position, Velocity},
+    },
+    entities::{
+        player::Player,
+        zombie::{self, Zombie},
+    },
+    network_id::NetworkId,
 };
 
 fn get_closest_player_pos(world: &World, pos: &Position) -> Option<Position> {
@@ -22,12 +30,17 @@ fn get_closest_player_pos(world: &World, pos: &Position) -> Option<Position> {
     closest
 }
 
-pub fn zombie_movement_system(world: &mut World) {
-    for (pos, vel) in world
-        .query::<(&Position, &mut Velocity)>()
+pub fn zombie_movement_system(world: &mut World) -> Vec<(Entity, NetworkId)> {
+    let mut zombies_to_remove = Vec::new();
+    for (e, pos, vel, mesh, id) in world
+        .query::<(Entity, &Position, &mut Velocity, &CollisionMesh, &NetworkId)>()
         .with::<&Zombie>()
         .iter()
     {
+        if mesh.any_of_kind(EntityKind::Bullet) {
+            zombies_to_remove.push((e, *id));
+        }
+
         if let Some(closest) = get_closest_player_pos(world, pos) {
             let diff = (closest.vec2() - pos.vec2()).normalize_or_zero();
 
@@ -38,4 +51,6 @@ pub fn zombie_movement_system(world: &mut World) {
             vel.y = 0.0;
         }
     }
+
+    zombies_to_remove
 }

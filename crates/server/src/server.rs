@@ -198,12 +198,12 @@ impl Server {
         Ok(())
     }
 
-    pub async fn despawn_bullet(&mut self, bullet: Entity, id: NetworkId) -> anyhow::Result<()> {
+    pub async fn despawn_entity(&mut self, entity: Entity, id: NetworkId) -> anyhow::Result<()> {
         let payload = PacketDespawnEntity::new(id);
         let packet = Packet::from_payload(payload)?;
         let _ = self.send_to_all(&packet).await;
 
-        self.state.world.despawn(bullet)?;
+        self.state.world.despawn(entity)?;
         Ok(())
     }
 

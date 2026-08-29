@@ -35,10 +35,11 @@ async fn main() -> anyhow::Result<()> {
             let _ = server.handle_packet(sender_addr, packet).await;
         }
 
-        zombie_movement_system(&mut server.state.world);
-        let remove = bullet_movement_system(&mut server.state.world);
-        for (bullet, id) in remove {
-            let _ = server.despawn_bullet(bullet, id).await;
+        let mut remove = zombie_movement_system(&mut server.state.world);
+        remove.extend(bullet_movement_system(&mut server.state.world));
+
+        for (entity, id) in remove {
+            let _ = server.despawn_entity(entity, id).await;
         }
 
         let dt = 1.0 / TPS as f32;

@@ -6,7 +6,9 @@ use game::ecs::{
 use glam::Vec2;
 use hecs::Entity;
 use protocol::packets::{
-    despawn_entity::PacketDespawnEntity, snapshot::EntityState, spawn_entity::PacketSpawnEntity,
+    despawn_entity::PacketDespawnEntity,
+    snapshot::EntityState,
+    spawn_entity::{EntityKind, PacketSpawnEntity},
 };
 
 use crate::client::core::Client;
@@ -50,12 +52,25 @@ impl Client {
         let found = self
             .state
             .world
-            .query::<(Entity, &NetworkId)>()
+            .query::<(Entity, &EntityKind, &NetworkId)>()
             .into_iter()
-            .find(|(_, id)| **id == packet.network_id)
-            .map(|(e, _)| e);
+            .find(|(_, _, id)| **id == packet.network_id)
+            .map(|(e, kind, _)| (e, *kind));
 
-        if let Some(e) = found {
+        if let Some((e, kind)) = found {
+            use protocol::packets::spawn_entity::EntityKind;
+            match kind {
+                EntityKind::Player => {
+                    println!("spawning death particles");
+                }
+                EntityKind::Zombie => {
+                    println!("spawning death particles");
+                }
+                EntityKind::Bullet => {
+                    println!("spawning break particles");
+                }
+                _ => {}
+            }
             let _ = self.state.world.despawn(e);
         }
     }

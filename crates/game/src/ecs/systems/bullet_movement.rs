@@ -28,6 +28,7 @@ pub fn bullet_movement_system(world: &mut World) -> Vec<(Entity, NetworkId)> {
 
         if pos.vec2().distance_squared(Vec2::ZERO) > 500.0_f32.powi(2)
             || mesh.any_of_kind(EntityKind::Tile)
+            || mesh.any_of_kind(EntityKind::Zombie)
         {
             bullets_to_remove.push((e, *id));
         }
