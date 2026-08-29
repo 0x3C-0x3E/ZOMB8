@@ -50,16 +50,18 @@ impl Server {
     async fn spawn_wave(&mut self) {
         let level_constrains = get_level_constraints(&self.state.world);
 
-        let _ = self
-            .spawn_zombie(self.choose_position(&level_constrains))
-            .await;
+        for _ in 0..5 {
+            let _ = self
+                .spawn_zombie(self.choose_position(&level_constrains))
+                .await;
+        }
     }
 
     fn choose_position(&self, level_constrains: &(Vec2, Vec2)) -> Position {
         loop {
             let pos = Position {
-                x: random_range(level_constrains.0.x..level_constrains.1.x),
-                y: random_range(level_constrains.0.y..level_constrains.1.y),
+                x: random_range(level_constrains.0.x..(level_constrains.1.x - 16.0)),
+                y: random_range(level_constrains.0.y..(level_constrains.1.y - 16.0)),
             };
 
             if !is_occupied(&self.state.world, &pos) {
