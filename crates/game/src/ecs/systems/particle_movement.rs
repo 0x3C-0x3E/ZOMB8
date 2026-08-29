@@ -2,14 +2,20 @@ use hecs::{Entity, World};
 use macroquad::time::get_frame_time;
 
 use crate::ecs::{
-    entities::particle::{Particle, TimeAlive},
+    entities::particle::{Particle, TimeAlive, TimeToLive},
     transform::{Position, Velocity},
 };
 
 pub fn particle_movement_system(world: &mut World) {
     let mut particles_to_remove = Vec::new();
-    for (e, alive, pos, vel) in world
-        .query::<(Entity, &mut TimeAlive, &mut Position, &Velocity)>()
+    for (e, alive, ttl, pos, vel) in world
+        .query::<(
+            Entity,
+            &mut TimeAlive,
+            &TimeToLive,
+            &mut Position,
+            &Velocity,
+        )>()
         .with::<&Particle>()
         .iter()
     {
@@ -18,7 +24,7 @@ pub fn particle_movement_system(world: &mut World) {
         pos.y += vel.y * get_frame_time();
 
         alive.0 += get_frame_time();
-        if alive.0 > 1.0 {
+        if alive.0 > ttl.0 {
             particles_to_remove.push(e);
         }
     }

@@ -18,14 +18,17 @@ pub struct Particle;
 
 pub struct TimeAlive(pub f32);
 
+pub struct TimeToLive(pub f32);
+
 impl Particle {
     pub fn spawn(world: &mut World, pos: Position) -> Entity {
         world.spawn((
             Particle,
             TimeAlive(0.0),
+            TimeToLive(rand::gen_range(0.2, 1.0)),
             pos,
             Velocity::from(
-                Vec2::from_angle(rand::gen_range(0.0, 2.0 * PI)) * rand::gen_range(50.0, 100.0),
+                Vec2::from_angle(rand::gen_range(0.0, 2.0 * PI)) * rand::gen_range(15.0, 50.0),
             ),
             Rotation(rand::gen_range(0.0, 360.0)),
             Sprite::new(
