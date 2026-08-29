@@ -1,5 +1,11 @@
 use game::ecs::{
-    entities::{bullet::Bullet, particle::Particle, player::Player, tile::Tile, zombie::Zombie},
+    entities::{
+        bullet::Bullet,
+        particle::{Particle, ParticleKind},
+        player::Player,
+        tile::Tile,
+        zombie::Zombie,
+    },
     network_id::NetworkId,
     transform::Position,
 };
@@ -61,13 +67,13 @@ impl Client {
             use protocol::packets::spawn_entity::EntityKind;
             match kind {
                 EntityKind::Player => {
-                    println!("spawning death particles");
+                    self.spawn_particles(e, ParticleKind::DeathPlayer);
                 }
                 EntityKind::Zombie => {
-                    println!("spawning death particles");
+                    self.spawn_particles(e, ParticleKind::DeathZombie);
                 }
                 EntityKind::Bullet => {
-                    self.spawn_particles(e);
+                    self.spawn_particles(e, ParticleKind::BulletCollision);
                 }
                 _ => {}
             }
@@ -75,7 +81,7 @@ impl Client {
         }
     }
 
-    pub fn spawn_particles(&mut self, entity: Entity) {
+    pub fn spawn_particles(&mut self, entity: Entity, kind: ParticleKind) {
         let Ok(entity_pos) = self.state.world.get::<&Position>(entity) else {
             panic!("particle system cannot spawn on entity without position");
         };
@@ -84,7 +90,7 @@ impl Client {
         drop(entity_pos);
 
         for _ in 0..10 {
-            Particle::spawn(&mut self.state.world, pos);
+            Particle::spawn(&mut self.state.world, pos, &kind);
         }
     }
 }

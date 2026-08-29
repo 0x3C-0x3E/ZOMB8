@@ -10,7 +10,7 @@ use crate::{
 };
 
 use hecs::Entity;
-use macroquad::prelude::*;
+use macroquad::{miniquad::window::show_mouse, prelude::*};
 
 pub struct Camera {
     pub pos: Vec2,
@@ -104,4 +104,36 @@ pub fn rendering_system(state: &mut State, texture_manager: &TextureManager) {
             params,
         );
     }
+
+    draw_mouse_cursor(state, texture_manager);
+}
+
+fn draw_mouse_cursor(state: &mut State, texture_manager: &TextureManager) {
+    let rd_state = &state.rendering_state;
+    let camera = &rd_state.camera;
+
+    show_mouse(false);
+
+    let sprite = Sprite {
+        id: "particle".to_string(),
+        rect: Rect::new(64.0, 24.0, 8.0, 8.0),
+    };
+
+    let params = DrawTextureParams {
+        dest_size: Some(Vec2 {
+            x: sprite.rect.w * camera.scale,
+            y: sprite.rect.h * camera.scale,
+        }),
+        source: Some(sprite.rect),
+        ..Default::default()
+    };
+    draw_texture_ex(
+        texture_manager
+            .get_texture(&sprite.id)
+            .expect("invalid texture"),
+        mouse_position().0,
+        mouse_position().1,
+        WHITE,
+        params,
+    );
 }
