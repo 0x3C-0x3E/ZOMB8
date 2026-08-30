@@ -12,7 +12,7 @@ use hecs::{Entity, World};
 
 use game::{
     ecs::{
-        components::snapshot_sync::SnapshotSync,
+        components::{health::Health, snapshot_sync::SnapshotSync},
         entities::{bullet::Bullet, player::Player, tile::Tile, zombie::Zombie},
         network_id::NetworkId,
         systems::input::input_system,
@@ -216,11 +216,24 @@ impl Server {
             .map(|(n, pos, vel, kind)| (*n, EntityState::new(kind.0, (*pos).into(), (*vel).into())))
             .collect();
 
+        let entity_health: Vec<(NetworkId, u32)> = self
+            .state
+            .world
+            .query_mut::<(&NetworkId, &Health)>()
+            .into_iter()
+            .map(|(id, health)| (*id, health.get()))
+            .collect();
+
         for client in self.clients.keys() {
             let id = self.client_ids.get(client);
             if let Some(id) = id {
                 let last_ack_seq = self.client_input_seq.get(id).copied().unwrap_or(0);
-                let payload = PacketSnapshot::new(self.tick, last_ack_seq, entities.clone());
+                let payload = PacketSnapshot::new(
+                    self.tick,
+                    last_ack_seq,
+                    entities.clone(),
+                    entity_health.clone(),
+                );
                 let packet = Packet::from_payload(payload).unwrap();
                 let _ = self.in_send.send((*client, packet)).await;
             }

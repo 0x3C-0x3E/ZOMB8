@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::ecs::{
     components::{
         animation::{AnimController, PlayerAnimState},
+        health::Health,
         moveable::{Collideable, CollisionMesh, Moveable},
         snapshot_sync::SnapshotSync,
         sprite::Sprite,
@@ -22,6 +23,7 @@ impl Player {
     pub fn spawn(world: &mut World, pos: Position, network_id: NetworkId) -> Entity {
         world.spawn((
             Player,
+            Health(100u32),
             pos,
             RenderPosition::from_pos(pos),
             Velocity::zero(),

@@ -1,4 +1,5 @@
 pub mod animation;
+pub mod health;
 pub mod moveable;
 pub mod network_id;
 pub mod snapshot_sync;

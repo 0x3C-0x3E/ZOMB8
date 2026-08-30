@@ -1,6 +1,6 @@
 use crate::client::core::Client;
 use game::ecs::{
-    components::snapshot_sync::SnapshotSync,
+    components::{health::Health, snapshot_sync::SnapshotSync},
     network_id::NetworkId,
     systems::{input::input_system_for_player, physics::physics_system_for_player},
     transform::{Position, Velocity},
@@ -47,6 +47,22 @@ impl Client {
                 drop(binding);
                 self.spawn_network_entity_from_state(new_state, id);
             }
+        }
+
+        for (id, new_health) in packet_snapshot.entity_health {
+            let Some(prev_health) = self
+                .state
+                .world
+                .query_mut::<(&NetworkId, &mut Health)>()
+                .with::<&SnapshotSync>()
+                .into_iter()
+                .find(|(net_id, _)| **net_id == id)
+                .map(|(_, new_health)| new_health)
+            else {
+                continue;
+            };
+
+            prev_health.0 = new_health;
         }
     }
 }

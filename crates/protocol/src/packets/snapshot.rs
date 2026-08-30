@@ -12,6 +12,7 @@ pub struct PacketSnapshot {
     pub tick: u64,
     pub last_ack_seq: u32,
     pub entities: Vec<(ProtocolNetworkId, EntityState)>,
+    pub entity_health: Vec<(ProtocolNetworkId, u32)>,
 }
 
 impl PacketPayload for PacketSnapshot {
@@ -23,11 +24,13 @@ impl PacketSnapshot {
         tick: u64,
         last_ack_seq: u32,
         entities: Vec<(ProtocolNetworkId, EntityState)>,
+        entity_health: Vec<(ProtocolNetworkId, u32)>,
     ) -> Self {
         Self {
             tick,
             last_ack_seq,
             entities,
+            entity_health,
         }
     }
 }

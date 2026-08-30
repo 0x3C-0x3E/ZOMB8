@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::ecs::{
     components::{
         animation::{AnimController, ZombieAnimState},
+        health::Health,
         moveable::{Collideable, CollisionMesh, Moveable},
         snapshot_sync::SnapshotSync,
         sprite::Sprite,
@@ -22,6 +23,7 @@ impl Zombie {
     pub fn spawn(world: &mut World, pos: Position, network_id: NetworkId) -> Entity {
         world.spawn((
             Zombie,
+            Health(50u32),
             pos,
             RenderPosition::from_pos(pos),
             SnapshotSync(EntityKind::Zombie),

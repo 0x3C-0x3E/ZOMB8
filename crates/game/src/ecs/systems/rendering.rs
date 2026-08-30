@@ -1,6 +1,7 @@
 use crate::{
     ecs::{
         components::{
+            health::Health,
             sprite::{Rotation, Sprite},
             transform::Position,
         },
@@ -84,12 +85,19 @@ pub fn rendering_system(state: &mut State, texture_manager: &TextureManager) {
             }
         }
 
+        let flip = state
+            .world
+            .get::<&Velocity>(e)
+            .map(|vel| vel.x < 0.0)
+            .unwrap_or_default();
+
         let params = DrawTextureParams {
             dest_size: Some(Vec2 {
                 x: sprite.rect.w * camera.scale,
                 y: sprite.rect.h * camera.scale,
             }),
             source: Some(sprite.rect),
+            flip_x: flip,
             rotation,
             ..Default::default()
         };
@@ -103,6 +111,16 @@ pub fn rendering_system(state: &mut State, texture_manager: &TextureManager) {
             WHITE,
             params,
         );
+
+        if let Ok(health) = state.world.get::<&Health>(e) {
+            draw_rectangle(
+                ((render_pos.x - camera.pos.x) * camera.scale) as i32 as f32,
+                ((render_pos.y - camera.pos.y - 4.0) * camera.scale) as i32 as f32,
+                8.0 * camera.scale,
+                2.0 * camera.scale,
+                BLACK,
+            );
+        }
     }
 
     draw_mouse_cursor(state, texture_manager);
