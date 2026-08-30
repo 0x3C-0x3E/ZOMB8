@@ -28,6 +28,7 @@ use protocol::{
         shoot::PacketShoot,
         snapshot::{EntityState, PacketSnapshot},
         spawn_entity::{EntityKind, PacketSpawnEntity},
+        wave::PacketWave,
     },
 };
 use tokio::sync::{
@@ -39,6 +40,9 @@ pub struct Client {
     pub state: State,
     pub client_id: NetworkId,
 
+    pub player: Option<Entity>,
+    pub prev_pos: Position,
+
     pub rendering_state: RenderingState,
 
     pub out_recv: Receiver<Packet>,
@@ -48,9 +52,6 @@ pub struct Client {
     pub input_seq: u32,
     pub last_maps: Vec<(u32, InputMap)>,
     pub last_sent_map: Option<InputMap>,
-
-    pub player: Option<Entity>,
-    pub prev_pos: Position,
 
     pub last_snapshots: VecDeque<PacketSnapshot>,
     pub interp_timer: f32,
@@ -231,6 +232,13 @@ impl Client {
                 self.send(packet).await;
             }
         }
+
+        if self.state.current_wave == 0 {
+            let payload = PacketRequest::new(RequestKind::Wave);
+            if let Ok(packet) = Packet::from_payload(payload) {
+                self.send(packet).await;
+            }
+        }
     }
 
     pub fn handle_packet(&mut self, packet: Packet) -> anyhow::Result<()> {
@@ -281,6 +289,10 @@ impl Client {
                         id,
                     );
                 }
+            }
+            PacketKind::Wave => {
+                let packet_wave: PacketWave = bincode::deserialize(&packet.payload)?;
+                self.state.current_wave = packet_wave.number;
             }
             _ => panic!("unhandled packet kind '{:?}'", packet.kind),
         }

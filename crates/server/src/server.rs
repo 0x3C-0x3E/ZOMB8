@@ -35,6 +35,7 @@ use protocol::{
             EntityKind::{self},
             PacketSpawnEntity,
         },
+        wave::PacketWave,
     },
 };
 use tokio::{sync::mpsc::Receiver, sync::mpsc::Sender, task::JoinHandle};
@@ -361,6 +362,12 @@ impl Server {
                         let packet = Packet::from_payload(payload)?;
 
                         let _ = self.send_to(&packet, sender_addr).await;
+                    }
+                    RequestKind::Wave => {
+                        let payload = PacketWave::new(self.state.current_wave);
+                        let packet = Packet::from_payload(payload)?;
+
+                        let _ = self.send_to_all(&packet).await;
                     }
                 }
             }

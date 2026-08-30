@@ -1,5 +1,6 @@
 use glam::Vec2;
 use hecs::World;
+use protocol::{packet::Packet, packets::wave::PacketWave};
 use rand::random_range;
 
 use game::ecs::{
@@ -58,12 +59,18 @@ impl Server {
     pub async fn spawn_wave_system(&mut self) {
         let zombies_count = self.state.world.query::<&Zombie>().into_iter().len();
         if zombies_count == 0 {
+            self.state.current_wave += 1;
             self.spawn_wave().await;
         }
     }
 
     async fn spawn_wave(&mut self) {
         let level_constrains = get_level_constraints(&self.state.world);
+
+        let payload = PacketWave::new(self.state.current_wave);
+        let packet = Packet::from_payload(payload).unwrap();
+
+        let _ = self.send_to_all(&packet).await;
 
         for _ in 0..self.wave_info.zomie_count {
             let _ = self

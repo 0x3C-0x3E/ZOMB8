@@ -151,11 +151,11 @@ fn draw_ui(state: &mut State, rd_state: &RenderingState, player: Option<Entity>)
     let health = state.world.get::<&Health>(player).unwrap();
     draw_fancy_text(rd_state, &format!("Health: {0}", health.get()), 10.0, 70.0);
 
-    let text = format!("Wave {0}", 1);
+    let text = format!("Wave {0}", state.current_wave);
     let dimm = measure_text(text, Some(&rd_state.font), 40, 1.0);
     draw_fancy_text(
         rd_state,
-        &format!("Wave {0}", 1),
+        &format!("Wave {0}", state.current_wave),
         screen_width() / 2.0 - dimm.width / 2.0,
         50.0,
     );

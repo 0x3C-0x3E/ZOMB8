@@ -11,6 +11,7 @@ pub enum PacketKind {
 
     SetPlayerId,
     LevelData,
+    Wave,
 
     SpawnEntity,
     DespawnEntity,
