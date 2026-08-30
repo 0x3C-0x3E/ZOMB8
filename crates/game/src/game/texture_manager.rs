@@ -21,7 +21,7 @@ impl TextureManager {
             .await;
 
         texture_manager
-            .load_texture("assets/img/spritesheet.png", "particle")
+            .load_texture("assets/img/spritesheet.png", "spritesheet")
             .await;
 
         texture_manager

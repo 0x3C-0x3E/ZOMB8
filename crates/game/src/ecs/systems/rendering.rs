@@ -146,14 +146,20 @@ fn draw_ui(state: &mut State, rd_state: &RenderingState, player: Option<Entity>)
     };
 
     let score = state.world.get::<&Score>(player).unwrap();
-    let params = TextParams {
+    let mut params = TextParams {
         font: Some(&rd_state.font),
         font_size: 40,
         color: BLACK,
         ..Default::default()
     };
-
-    draw_text_ex(format!("Score: {0}", score.0), 10.0, 50.0, params);
+    draw_text_ex(format!("Score: {0}", score.0), 10.0, 50.0, params.clone());
+    params.color = WHITE;
+    draw_text_ex(
+        format!("Score: {0}", score.0),
+        10.0 - rd_state.camera.scale,
+        50.0 - rd_state.camera.scale,
+        params,
+    );
 }
 
 fn draw_mouse_cursor(rd_state: &RenderingState) {
@@ -162,7 +168,7 @@ fn draw_mouse_cursor(rd_state: &RenderingState) {
     show_mouse(false);
 
     let sprite = Sprite {
-        id: "particle".to_string(),
+        id: "spritesheet".to_string(),
         rect: Rect::new(64.0, 24.0, 8.0, 8.0),
     };
 

@@ -74,7 +74,7 @@ impl Server {
                 .await;
         }
 
-        self.wave_info.max_health *= 2;
+        self.wave_info.max_health += 10;
         self.wave_info.zomie_count += 2;
     }
 

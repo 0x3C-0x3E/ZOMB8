@@ -33,13 +33,12 @@ fn get_closest_player_pos(world: &World, pos: &Position) -> Option<Position> {
     closest
 }
 
-fn get_closest_bullet(world: &World, pos: &Position) -> Option<Entity> {
+fn get_closest_entity<E>(world: &World, pos: &Position) -> Option<Entity>
+where
+    E: hecs::Query,
+{
     let mut closest: Option<(Entity, Position)> = None;
-    for (e, b_pos) in world
-        .query::<(Entity, &Position)>()
-        .with::<&Bullet>()
-        .iter()
-    {
+    for (e, b_pos) in world.query::<(Entity, &Position)>().with::<E>().iter() {
         if let Some(prev_closest) = closest {
             if pos.vec2().distance_squared(prev_closest.1.vec2())
                 > pos.vec2().distance_squared(b_pos.vec2())
@@ -71,7 +70,7 @@ pub fn zombie_movement_system(world: &mut World) -> Vec<(Entity, NetworkId)> {
         if mesh.any_of_kind(EntityKind::Bullet) {
             health.health = health.get().saturating_sub(25);
             if health.get() == 0 {
-                let bullet = get_closest_bullet(world, pos).unwrap();
+                let bullet = get_closest_entity::<&Bullet>(world, pos).unwrap();
                 let p_id = world.get::<&LinkedPlayerId>(bullet).unwrap();
                 let player = world
                     .query::<(Entity, &NetworkId)>()
@@ -84,6 +83,12 @@ pub fn zombie_movement_system(world: &mut World) -> Vec<(Entity, NetworkId)> {
                 score.0 += 100;
                 zombies_to_remove.push((e, *id));
             }
+        }
+
+        if mesh.any_of_kind(EntityKind::Player) {
+            let player = get_closest_entity::<&Player>(world, pos).unwrap();
+            let mut health = world.get::<&mut Health>(player).unwrap();
+            health.health = health.health.saturating_sub(10);
         }
 
         if let Some(closest) = get_closest_player_pos(world, pos) {

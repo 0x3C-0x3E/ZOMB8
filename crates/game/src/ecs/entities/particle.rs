@@ -67,7 +67,7 @@ impl Particle {
                 Vec2::from_angle(rand::gen_range(0.0, 2.0 * PI)) * rand::gen_range(15.0, 50.0),
             ),
             Rotation(rand::gen_range(0.0, 360.0)),
-            Sprite::new("particle", kind.get_sprite_rect()),
+            Sprite::new("spritesheet", kind.get_sprite_rect()),
         ))
     }
 }
