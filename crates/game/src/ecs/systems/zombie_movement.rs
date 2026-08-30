@@ -70,7 +70,9 @@ pub fn zombie_movement_system(world: &mut World) -> Vec<(Entity, NetworkId)> {
         if mesh.any_of_kind(EntityKind::Bullet) {
             health.health = health.get().saturating_sub(25);
             if health.get() == 0 {
-                let bullet = get_closest_entity::<&Bullet>(world, pos).unwrap();
+                let Some(bullet) = get_closest_entity::<&Bullet>(world, pos) else {
+                    continue;
+                };
                 let p_id = world.get::<&LinkedPlayerId>(bullet).unwrap();
                 let player = world
                     .query::<(Entity, &NetworkId)>()
@@ -86,7 +88,9 @@ pub fn zombie_movement_system(world: &mut World) -> Vec<(Entity, NetworkId)> {
         }
 
         if mesh.any_of_kind(EntityKind::Player) {
-            let player = get_closest_entity::<&Player>(world, pos).unwrap();
+            let Some(player) = get_closest_entity::<&Player>(world, pos) else {
+                continue;
+            };
             let mut health = world.get::<&mut Health>(player).unwrap();
             health.health = health.health.saturating_sub(10);
         }

@@ -159,6 +159,33 @@ impl Server {
         Ok(())
     }
 
+    pub async fn check_player_health(&mut self) {
+        let mut despawn_players = Vec::new();
+        for (e, id, health) in self
+            .state
+            .world
+            .query_mut::<(Entity, &NetworkId, &Health)>()
+            .with::<&Player>()
+        {
+            if health.get() == 0 {
+                let Some(client_addr) = self
+                    .client_ids
+                    .iter()
+                    .find_map(|(addr, c_id)| if c_id == id { Some(addr) } else { None })
+                else {
+                    continue;
+                };
+
+                despawn_players.push((e, *id, *client_addr));
+            }
+        }
+
+        for (e, id, client_addr) in despawn_players {
+            let _ = self.despawn_entity(e, id).await;
+            let _ = self.create_new_player(client_addr).await;
+        }
+    }
+
     pub async fn create_new_player(&mut self, sender_addr: SocketAddr) -> anyhow::Result<()> {
         let client_id = self.allocator.allocate();
         let client_player_pos = Position::new(8.0, 20.0);

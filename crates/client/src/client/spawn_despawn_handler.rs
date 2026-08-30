@@ -84,6 +84,12 @@ impl Client {
                 }
                 _ => {}
             }
+
+            if Some(e) == self.player {
+                self.player = None;
+                self.client_id = ProtocolNetworkId(0);
+            }
+
             let _ = self.state.world.despawn(e);
         }
     }

@@ -48,6 +48,8 @@ async fn main() -> anyhow::Result<()> {
         let dt = 1.0 / tps() as f32;
         physics_system(&server.state.world, dt);
 
+        server.check_player_health().await;
+
         server.send_snapshot().await;
 
         let _ = server.check_for_disconnects().await;
