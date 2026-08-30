@@ -1,13 +1,16 @@
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 
-use protocol::packet::{MAX_DATAGRAM_SIZE, Packet};
+use protocol::{
+    PORT,
+    packet::{MAX_DATAGRAM_SIZE, Packet},
+};
 use tokio::{net::UdpSocket, sync::mpsc::Receiver, sync::mpsc::Sender};
 
 pub async fn server_network_loop(
     out_send: Sender<(SocketAddr, Packet)>,
     mut in_recv: Receiver<(SocketAddr, Packet)>,
 ) -> anyhow::Result<()> {
-    let addr = SocketAddrV4::new(Ipv4Addr::UNSPECIFIED, 6969);
+    let addr = SocketAddrV4::new(Ipv4Addr::UNSPECIFIED, PORT);
     println!("Server listening on {addr}");
     let socket = UdpSocket::bind(addr).await?;
     let mut buf = vec![0u8; MAX_DATAGRAM_SIZE];

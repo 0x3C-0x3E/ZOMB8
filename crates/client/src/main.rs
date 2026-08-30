@@ -20,6 +20,7 @@ use protocol::{
 };
 
 mod client;
+mod config_parser;
 mod network_thread;
 
 fn window_conf() -> Conf {
@@ -48,17 +49,10 @@ async fn main() -> anyhow::Result<()> {
 
     let mut client = Client::new(out_recv, in_send, input_send);
 
-    let server_addr: Ipv4Addr = "192.168.2.119".parse()?;
-
     let network_thread = std::thread::spawn(move || -> anyhow::Result<()> {
         let rt = tokio::runtime::Runtime::new().unwrap();
 
-        rt.block_on(client_network_loop(
-            out_send,
-            in_recv,
-            input_recv,
-            server_addr,
-        ))?;
+        rt.block_on(client_network_loop(out_send, in_recv, input_recv))?;
         Ok(())
     });
 
