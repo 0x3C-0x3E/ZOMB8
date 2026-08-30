@@ -25,7 +25,7 @@ fn window_conf() -> Conf {
     Conf {
         window_title: "ZOMB8".to_owned(),
         window_width: 800.0 as i32,
-        window_height: 800.0 as i32,
+        window_height: 600.0 as i32,
         window_resizable: true,
         sample_count: 1,
         ..Default::default()
@@ -35,9 +35,9 @@ fn window_conf() -> Conf {
 #[macroquad::main(window_conf)]
 async fn main() -> anyhow::Result<()> {
     parse_config().unwrap();
+    set_default_filter_mode(FilterMode::Nearest);
     let fixed_dt: f32 = 1.0 / tps() as f32;
 
-    set_default_filter_mode(FilterMode::Nearest);
     let rendering_state = RenderingState::new().await;
 
     let (out_send, out_recv) = tokio::sync::mpsc::channel::<Packet>(100);

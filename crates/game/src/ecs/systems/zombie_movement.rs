@@ -46,7 +46,9 @@ where
                 closest = Some((e, *b_pos));
             }
         } else {
-            closest = Some((e, *b_pos))
+            if pos.vec2().distance_squared(b_pos.vec2()) <= 128.0 {
+                closest = Some((e, *b_pos))
+            }
         }
     }
 
@@ -74,13 +76,16 @@ pub fn zombie_movement_system(world: &mut World) -> Vec<(Entity, NetworkId)> {
                     continue;
                 };
                 let p_id = world.get::<&LinkedPlayerId>(bullet).unwrap();
-                let player = world
+                let Some(player) = world
                     .query::<(Entity, &NetworkId)>()
                     .with::<&Player>()
                     .into_iter()
                     .find(|(_, n)| **n == p_id.0)
                     .map(|(e, _)| e)
-                    .expect("client player does not exist");
+                else {
+                    continue;
+                };
+
                 let mut score = world.get::<&mut Score>(player).unwrap();
                 score.0 += 100;
                 zombies_to_remove.push((e, *id));

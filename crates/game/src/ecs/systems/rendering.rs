@@ -35,7 +35,9 @@ impl RenderingState {
                 scale: DEFAULT_SCALE,
             },
             texture_manager: TextureManager::load_game_textures().await,
-            font: load_ttf_font("assets/font/font.ttf").await.unwrap(),
+            font: load_ttf_font("assets/font/super-mario-bros-nes.ttf")
+                .await
+                .unwrap(),
         }
     }
 
@@ -146,19 +148,41 @@ fn draw_ui(state: &mut State, rd_state: &RenderingState, player: Option<Entity>)
     };
 
     let score = state.world.get::<&Score>(player).unwrap();
-    let mut params = TextParams {
+    let params_bg = TextParams {
         font: Some(&rd_state.font),
-        font_size: 40,
+        font_size: 20,
         color: BLACK,
         ..Default::default()
     };
-    draw_text_ex(format!("Score: {0}", score.0), 10.0, 50.0, params.clone());
+    let mut params = params_bg.clone();
     params.color = WHITE;
+
+    draw_text_ex(
+        format!("Score: {0}", score.0),
+        10.0,
+        50.0,
+        params_bg.clone(),
+    );
     draw_text_ex(
         format!("Score: {0}", score.0),
         10.0 - rd_state.camera.scale,
         50.0 - rd_state.camera.scale,
-        params,
+        params.clone(),
+    );
+
+    let health = state.world.get::<&Health>(player).unwrap();
+
+    draw_text_ex(
+        format!("Health: {0}", health.get()),
+        10.0,
+        70.0,
+        params_bg.clone(),
+    );
+    draw_text_ex(
+        format!("Health: {0}", health.get()),
+        10.0 - rd_state.camera.scale,
+        70.0 - rd_state.camera.scale,
+        params.clone(),
     );
 }
 
