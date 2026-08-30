@@ -248,7 +248,6 @@ impl Client {
             PacketKind::SetPlayerId => {
                 let packet_set_player_id: PacketSetPlayerId =
                     bincode::deserialize(&packet.payload)?;
-                println!("this client has id: {:?}", packet_set_player_id.id);
                 self.set_client_id(packet_set_player_id.id);
                 let player = self
                     .state

@@ -25,7 +25,7 @@ pub struct RenderingState {
     pub font: Font,
 }
 
-static DEFAULT_SCALE: f32 = 5.0;
+static DEFAULT_SCALE: f32 = 4.0;
 
 impl RenderingState {
     pub async fn new() -> Self {
@@ -148,7 +148,7 @@ fn draw_ui(state: &mut State, rd_state: &RenderingState, player: Option<Entity>)
     let score = state.world.get::<&Score>(player).unwrap();
     let params = TextParams {
         font: Some(&rd_state.font),
-        font_size: 30,
+        font_size: 40,
         color: BLACK,
         ..Default::default()
     };

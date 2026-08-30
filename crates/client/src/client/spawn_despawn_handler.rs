@@ -36,9 +36,12 @@ impl Client {
             EntityKind::Player => {
                 Player::spawn(&mut self.state.world, Position::from(state.pos), network_id)
             }
-            EntityKind::Zombie => {
-                Zombie::spawn(&mut self.state.world, Position::from(state.pos), network_id)
-            }
+            EntityKind::Zombie => Zombie::spawn(
+                &mut self.state.world,
+                Position::from(state.pos),
+                network_id,
+                None,
+            ),
             EntityKind::Bullet => Bullet::spawn(
                 &mut self.state.world,
                 Position::from(state.pos),
@@ -93,7 +96,14 @@ impl Client {
         let pos = *entity_pos;
         drop(entity_pos);
 
-        for _ in 0..10 {
+        let particle_count = match kind {
+            ParticleKind::DeathZombie => 5,
+            ParticleKind::DeathPlayer => 10,
+            ParticleKind::BulletCollision => 3,
+            ParticleKind::BulletTrail => 2,
+        };
+
+        for _ in 0..particle_count {
             Particle::spawn(&mut self.state.world, pos, &kind);
         }
     }

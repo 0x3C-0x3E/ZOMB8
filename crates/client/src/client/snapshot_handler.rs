@@ -62,7 +62,8 @@ impl Client {
                 continue;
             };
 
-            prev_health.health = new_health;
+            prev_health.health = new_health.0;
+            prev_health.max = new_health.1;
         }
 
         for (id, new_score) in packet_snapshot.player_scores {

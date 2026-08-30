@@ -39,6 +39,21 @@ fn is_occupied(world: &World, pos: &Position) -> bool {
         .is_some()
 }
 
+#[derive(Default)]
+pub struct WaveInfo {
+    pub zomie_count: u32,
+    pub max_health: u32,
+}
+
+impl WaveInfo {
+    pub fn new() -> Self {
+        Self {
+            zomie_count: 5,
+            max_health: 50,
+        }
+    }
+}
+
 impl Server {
     pub async fn spawn_wave_system(&mut self) {
         let zombies_count = self.state.world.query::<&Zombie>().into_iter().len();
@@ -50,18 +65,24 @@ impl Server {
     async fn spawn_wave(&mut self) {
         let level_constrains = get_level_constraints(&self.state.world);
 
-        for _ in 0..5 {
+        for _ in 0..self.wave_info.zomie_count {
             let _ = self
-                .spawn_zombie(self.choose_position(&level_constrains))
+                .spawn_zombie(
+                    self.choose_position(&level_constrains),
+                    self.wave_info.max_health,
+                )
                 .await;
         }
+
+        self.wave_info.max_health *= 2;
+        self.wave_info.zomie_count += 2;
     }
 
     fn choose_position(&self, level_constrains: &(Vec2, Vec2)) -> Position {
         loop {
             let pos = Position {
-                x: random_range(level_constrains.0.x..(level_constrains.1.x - 16.0)),
-                y: random_range(level_constrains.0.y..(level_constrains.1.y - 16.0)),
+                x: random_range(level_constrains.0.x..(level_constrains.1.x - 32.0)),
+                y: random_range(level_constrains.0.y..(level_constrains.1.y - 32.0)),
             };
 
             if !is_occupied(&self.state.world, &pos) {

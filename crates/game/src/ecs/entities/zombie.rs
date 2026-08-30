@@ -20,10 +20,15 @@ use crate::ecs::{
 pub struct Zombie;
 
 impl Zombie {
-    pub fn spawn(world: &mut World, pos: Position, network_id: NetworkId) -> Entity {
+    pub fn spawn(
+        world: &mut World,
+        pos: Position,
+        network_id: NetworkId,
+        max_health: Option<u32>,
+    ) -> Entity {
         world.spawn((
             Zombie,
-            Health::new(50, 50),
+            Health::new(max_health.unwrap_or(50), max_health.unwrap_or(50)),
             pos,
             RenderPosition::from_pos(pos),
             SnapshotSync(EntityKind::Zombie),

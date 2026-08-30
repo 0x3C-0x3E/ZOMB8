@@ -1,4 +1,4 @@
-use crate::network_thread::server_network_loop;
+use crate::{network_thread::server_network_loop, wave::WaveInfo};
 use std::{
     collections::HashMap,
     fs::File,
@@ -45,6 +45,8 @@ pub struct Server {
     pub allocator: NetworkIdAllocator,
     pub state: State,
 
+    pub wave_info: WaveInfo,
+
     pub tick: u64,
 
     pub network_thread: JoinHandle<anyhow::Result<()>>,
@@ -73,6 +75,7 @@ impl Server {
         Ok(Self {
             allocator,
             state,
+            wave_info: WaveInfo::new(),
             tick: 0,
             clients,
             network_thread,
@@ -171,10 +174,10 @@ impl Server {
         Ok(())
     }
 
-    pub async fn spawn_zombie(&mut self, pos: Position) -> anyhow::Result<()> {
+    pub async fn spawn_zombie(&mut self, pos: Position, max_health: u32) -> anyhow::Result<()> {
         let id = self.allocator.allocate();
 
-        let _ = Zombie::spawn(&mut self.state.world, pos, id);
+        let _ = Zombie::spawn(&mut self.state.world, pos, id, Some(max_health));
 
         let payload = PacketSpawnEntity::new(id, EntityKind::Zombie, pos.into());
         let packet = Packet::from_payload(payload)?;
@@ -222,12 +225,12 @@ impl Server {
             .map(|(n, pos, vel, kind)| (*n, EntityState::new(kind.0, (*pos).into(), (*vel).into())))
             .collect();
 
-        let entity_health: Vec<(NetworkId, u32)> = self
+        let entity_health: Vec<(NetworkId, (u32, u32))> = self
             .state
             .world
             .query_mut::<(&NetworkId, &Health)>()
             .into_iter()
-            .map(|(id, health)| (*id, health.get()))
+            .map(|(id, health)| (*id, (health.get(), health.get_max())))
             .collect();
 
         let player_scores: Vec<(NetworkId, u32)> = self
