@@ -3,6 +3,7 @@ use protocol::packets::spawn_entity::EntityKind;
 
 use crate::ecs::{
     components::{
+        health::Health,
         moveable::CollisionMesh,
         transform::{Position, Velocity},
     },
@@ -29,13 +30,23 @@ fn get_closest_player_pos(world: &World, pos: &Position) -> Option<Position> {
 
 pub fn zombie_movement_system(world: &mut World) -> Vec<(Entity, NetworkId)> {
     let mut zombies_to_remove = Vec::new();
-    for (e, pos, vel, mesh, id) in world
-        .query::<(Entity, &Position, &mut Velocity, &CollisionMesh, &NetworkId)>()
+    for (e, pos, vel, mesh, health, id) in world
+        .query::<(
+            Entity,
+            &Position,
+            &mut Velocity,
+            &CollisionMesh,
+            &mut Health,
+            &NetworkId,
+        )>()
         .with::<&Zombie>()
         .iter()
     {
         if mesh.any_of_kind(EntityKind::Bullet) {
-            zombies_to_remove.push((e, *id));
+            health.0 = health.get().saturating_sub(25);
+            if health.get() == 0 {
+                zombies_to_remove.push((e, *id));
+            }
         }
 
         if let Some(closest) = get_closest_player_pos(world, pos) {
