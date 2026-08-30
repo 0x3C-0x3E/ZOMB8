@@ -113,6 +113,10 @@ pub fn rendering_system(state: &mut State, texture_manager: &TextureManager) {
         );
 
         if let Ok(health) = state.world.get::<&Health>(e) {
+            if health.health == health.max {
+                continue;
+            }
+
             draw_rectangle(
                 ((render_pos.x - camera.pos.x) * camera.scale) as i32 as f32,
                 ((render_pos.y - camera.pos.y - 4.0) * camera.scale) as i32 as f32,
