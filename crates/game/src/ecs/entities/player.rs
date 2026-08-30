@@ -23,7 +23,7 @@ impl Player {
     pub fn spawn(world: &mut World, pos: Position, network_id: NetworkId) -> Entity {
         world.spawn((
             Player,
-            Health(100u32),
+            Health::new(100, 100),
             pos,
             RenderPosition::from_pos(pos),
             Velocity::zero(),

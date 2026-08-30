@@ -62,7 +62,7 @@ impl Client {
                 continue;
             };
 
-            prev_health.0 = new_health;
+            prev_health.health = new_health;
         }
     }
 }

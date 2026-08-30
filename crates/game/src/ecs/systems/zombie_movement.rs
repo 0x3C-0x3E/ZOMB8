@@ -43,7 +43,7 @@ pub fn zombie_movement_system(world: &mut World) -> Vec<(Entity, NetworkId)> {
         .iter()
     {
         if mesh.any_of_kind(EntityKind::Bullet) {
-            health.0 = health.get().saturating_sub(25);
+            health.health = health.get().saturating_sub(25);
             if health.get() == 0 {
                 zombies_to_remove.push((e, *id));
             }

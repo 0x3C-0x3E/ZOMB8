@@ -123,7 +123,7 @@ pub fn rendering_system(state: &mut State, texture_manager: &TextureManager) {
             draw_rectangle(
                 ((render_pos.x - camera.pos.x) * camera.scale) as i32 as f32,
                 ((render_pos.y - camera.pos.y - 4.0) * camera.scale) as i32 as f32,
-                8.0 * camera.scale * (health.get() as f32 / 100_f32),
+                8.0 * camera.scale * (health.get() as f32 / health.get_max() as f32),
                 2.0 * camera.scale,
                 Color::from_hex(0xea4a6e),
             );

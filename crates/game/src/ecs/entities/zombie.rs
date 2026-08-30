@@ -23,7 +23,7 @@ impl Zombie {
     pub fn spawn(world: &mut World, pos: Position, network_id: NetworkId) -> Entity {
         world.spawn((
             Zombie,
-            Health(50u32),
+            Health::new(50, 50),
             pos,
             RenderPosition::from_pos(pos),
             SnapshotSync(EntityKind::Zombie),
