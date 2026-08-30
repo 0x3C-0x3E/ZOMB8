@@ -21,17 +21,21 @@ pub struct Camera {
 
 pub struct RenderingState {
     pub camera: Camera,
+    pub texture_manager: TextureManager,
+    pub font: Font,
 }
 
 static DEFAULT_SCALE: f32 = 5.0;
 
 impl RenderingState {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self {
             camera: Camera {
                 pos: (0.0, 0.0).into(),
                 scale: DEFAULT_SCALE,
             },
+            texture_manager: TextureManager::load_game_textures().await,
+            font: load_ttf_font("assets/font/font.ttf").await.unwrap(),
         }
     }
 
@@ -60,18 +64,7 @@ impl RenderingState {
     }
 }
 
-impl Default for RenderingState {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-pub fn rendering_system(
-    state: &mut State,
-    player: Option<Entity>,
-    texture_manager: &TextureManager,
-) {
-    let rd_state = &state.rendering_state;
+pub fn rendering_system(state: &mut State, player: Option<Entity>, rd_state: &RenderingState) {
     let camera = &rd_state.camera;
 
     clear_background(Color::from_hex(0x727272));
@@ -108,7 +101,8 @@ pub fn rendering_system(
         };
 
         draw_texture_ex(
-            texture_manager
+            rd_state
+                .texture_manager
                 .get_texture(&sprite.id)
                 .expect("invalid texture"),
             ((render_pos.x - camera.pos.x) * camera.scale) as i32 as f32,
@@ -139,12 +133,12 @@ pub fn rendering_system(
         }
     }
 
-    draw_ui(state, player);
+    draw_ui(state, rd_state, player);
 
-    draw_mouse_cursor(state, texture_manager);
+    draw_mouse_cursor(rd_state);
 }
 
-fn draw_ui(state: &mut State, player: Option<Entity>) {
+fn draw_ui(state: &mut State, rd_state: &RenderingState, player: Option<Entity>) {
     let player = if let Some(player) = player {
         player
     } else {
@@ -152,11 +146,17 @@ fn draw_ui(state: &mut State, player: Option<Entity>) {
     };
 
     let score = state.world.get::<&Score>(player).unwrap();
-    draw_text(format!("Score: {0}", score.0), 10.0, 50.0, 30.0, BLACK);
+    let params = TextParams {
+        font: Some(&rd_state.font),
+        font_size: 30,
+        color: BLACK,
+        ..Default::default()
+    };
+
+    draw_text_ex(format!("Score: {0}", score.0), 10.0, 50.0, params);
 }
 
-fn draw_mouse_cursor(state: &mut State, texture_manager: &TextureManager) {
-    let rd_state = &state.rendering_state;
+fn draw_mouse_cursor(rd_state: &RenderingState) {
     let camera = &rd_state.camera;
 
     show_mouse(false);
@@ -175,7 +175,8 @@ fn draw_mouse_cursor(state: &mut State, texture_manager: &TextureManager) {
         ..Default::default()
     };
     draw_texture_ex(
-        texture_manager
+        rd_state
+            .texture_manager
             .get_texture(&sprite.id)
             .expect("invalid texture"),
         mouse_position().0,

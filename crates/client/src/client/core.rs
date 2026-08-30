@@ -5,7 +5,10 @@ use game::{
         components::snapshot_sync::SnapshotSync,
         entities::{player::Player, tile::Tile},
         network_id::NetworkId,
-        systems::input::{get_input_map, input_system},
+        systems::{
+            input::{get_input_map, input_system},
+            rendering::RenderingState,
+        },
         transform::{Position, RenderPosition, Velocity},
     },
     game::state::State,
@@ -36,6 +39,8 @@ pub struct Client {
     pub state: State,
     pub client_id: NetworkId,
 
+    pub rendering_state: RenderingState,
+
     pub out_recv: Receiver<Packet>,
     pub in_send: Sender<Packet>,
 
@@ -56,10 +61,13 @@ impl Client {
         out_recv: Receiver<Packet>,
         in_send: Sender<Packet>,
         input_send: watch::Sender<Packet>,
+        rendering_state: RenderingState,
     ) -> Self {
         Self {
             state: State::new(),
             client_id: ProtocolNetworkId(0),
+
+            rendering_state,
 
             out_recv,
             in_send,
@@ -104,7 +112,7 @@ impl Client {
             && let Some((pos, _)) = self.get_player_state()
         {
             let pos = *pos;
-            let render_pos = self.state.rendering_state.get_render_pos(&pos);
+            let render_pos = self.rendering_state.get_render_pos(&pos);
             let mouse_pos = glam::Vec2::new(mouse_position().0, mouse_position().1);
 
             let direction = mouse_pos - Vec2::from(render_pos);
