@@ -1,16 +1,16 @@
 use crate::client::core::Client;
 use game::ecs::{
-    components::{health::Health, snapshot_sync::SnapshotSync},
+    components::{health::Health, score::Score, snapshot_sync::SnapshotSync},
     network_id::NetworkId,
     systems::{input::input_system_for_player, physics::physics_system_for_player},
     transform::{Position, Velocity},
 };
-use protocol::{TPS, packets::snapshot::PacketSnapshot};
-
-pub const FIXED_DT: f32 = 1.0 / TPS as f32;
+use protocol::{config_parser::tps, packets::snapshot::PacketSnapshot};
 
 impl Client {
     pub fn snapshot_handler(&mut self, packet_snapshot: PacketSnapshot) {
+        let fixed_dt: f32 = 1.0 / tps() as f32;
+
         self.interp_timer = 0.0;
         for (id, new_state) in packet_snapshot.entities {
             let mut binding = self
@@ -38,7 +38,7 @@ impl Client {
                                 input_system_for_player(&mut vel, map);
                             }
                             if let Some(player) = self.player {
-                                physics_system_for_player(&self.state.world, player, FIXED_DT);
+                                physics_system_for_player(&self.state.world, player, fixed_dt);
                             }
                         }
                     }
@@ -57,12 +57,28 @@ impl Client {
                 .with::<&SnapshotSync>()
                 .into_iter()
                 .find(|(net_id, _)| **net_id == id)
-                .map(|(_, new_health)| new_health)
+                .map(|(_, health)| health)
             else {
                 continue;
             };
 
             prev_health.health = new_health;
+        }
+
+        for (id, new_score) in packet_snapshot.player_scores {
+            let Some(prev_score) = self
+                .state
+                .world
+                .query_mut::<(&NetworkId, &mut Score)>()
+                .with::<&SnapshotSync>()
+                .into_iter()
+                .find(|(net_id, _)| **net_id == id)
+                .map(|(_, score)| score)
+            else {
+                continue;
+            };
+
+            prev_score.0 = new_score;
         }
     }
 }

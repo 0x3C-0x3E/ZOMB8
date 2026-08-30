@@ -11,10 +11,13 @@ use game::ecs::{
 };
 use glam::Vec2;
 use hecs::Entity;
-use protocol::packets::{
-    despawn_entity::PacketDespawnEntity,
-    snapshot::EntityState,
-    spawn_entity::{EntityKind, PacketSpawnEntity},
+use protocol::{
+    network_id::ProtocolNetworkId,
+    packets::{
+        despawn_entity::PacketDespawnEntity,
+        snapshot::EntityState,
+        spawn_entity::{EntityKind, PacketSpawnEntity},
+    },
 };
 
 use crate::client::core::Client;
@@ -41,6 +44,7 @@ impl Client {
                 Position::from(state.pos),
                 None,
                 network_id,
+                ProtocolNetworkId(0),
             ),
         }
     }

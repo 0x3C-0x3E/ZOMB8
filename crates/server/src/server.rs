@@ -12,7 +12,7 @@ use hecs::{Entity, World};
 
 use game::{
     ecs::{
-        components::{health::Health, snapshot_sync::SnapshotSync},
+        components::{health::Health, score::Score, snapshot_sync::SnapshotSync},
         entities::{bullet::Bullet, player::Player, tile::Tile, zombie::Zombie},
         network_id::NetworkId,
         systems::input::input_system,
@@ -188,7 +188,13 @@ impl Server {
 
         let pos: Position = packet_shoot.pos.into();
 
-        let _ = Bullet::spawn(&mut self.state.world, pos, Some(packet_shoot.rotation), id);
+        let _ = Bullet::spawn(
+            &mut self.state.world,
+            pos,
+            Some(packet_shoot.rotation),
+            id,
+            packet_shoot.linked_player_id,
+        );
 
         let payload = PacketSpawnEntity::new(id, EntityKind::Bullet, pos.into());
         let packet = Packet::from_payload(payload)?;
@@ -224,6 +230,14 @@ impl Server {
             .map(|(id, health)| (*id, health.get()))
             .collect();
 
+        let player_scores: Vec<(NetworkId, u32)> = self
+            .state
+            .world
+            .query_mut::<(&NetworkId, &Score)>()
+            .into_iter()
+            .map(|(id, score)| (*id, score.get()))
+            .collect();
+
         for client in self.clients.keys() {
             let id = self.client_ids.get(client);
             if let Some(id) = id {
@@ -233,6 +247,7 @@ impl Server {
                     last_ack_seq,
                     entities.clone(),
                     entity_health.clone(),
+                    player_scores.clone(),
                 );
                 let packet = Packet::from_payload(payload).unwrap();
                 let _ = self.in_send.send((*client, packet)).await;

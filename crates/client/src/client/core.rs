@@ -3,7 +3,7 @@ use std::collections::VecDeque;
 use game::{
     ecs::{
         components::snapshot_sync::SnapshotSync,
-        entities::player::Player,
+        entities::{player::Player, tile::Tile},
         network_id::NetworkId,
         systems::input::{get_input_map, input_system},
         transform::{Position, RenderPosition, Velocity},
@@ -20,6 +20,7 @@ use protocol::{
         despawn_entity::PacketDespawnEntity,
         input::{InputMap, PacketInput},
         level_data::PacketLevelData,
+        request::{PacketRequest, RequestKind},
         set_player_id::PacketSetPlayerId,
         shoot::PacketShoot,
         snapshot::{EntityState, PacketSnapshot},
@@ -205,6 +206,22 @@ impl Client {
     pub fn try_recv(&mut self) {
         while let Ok(packet) = self.out_recv.try_recv() {
             let _ = self.handle_packet(packet);
+        }
+    }
+
+    pub async fn check_for_missing_critical_packets(&mut self) {
+        if self.client_id == ProtocolNetworkId(0) {
+            let payload = PacketRequest::new(RequestKind::PlayerId);
+            if let Ok(packet) = Packet::from_payload(payload) {
+                self.send(packet).await;
+            }
+        }
+
+        if self.state.world.query_mut::<&Tile>().into_iter().len() == 0 {
+            let payload = PacketRequest::new(RequestKind::LevelData);
+            if let Ok(packet) = Packet::from_payload(payload) {
+                self.send(packet).await;
+            }
         }
     }
 

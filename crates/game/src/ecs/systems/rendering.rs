@@ -2,6 +2,7 @@ use crate::{
     ecs::{
         components::{
             health::Health,
+            score::Score,
             sprite::{Rotation, Sprite},
             transform::Position,
         },
@@ -65,7 +66,11 @@ impl Default for RenderingState {
     }
 }
 
-pub fn rendering_system(state: &mut State, texture_manager: &TextureManager) {
+pub fn rendering_system(
+    state: &mut State,
+    player: Option<Entity>,
+    texture_manager: &TextureManager,
+) {
     let rd_state = &state.rendering_state;
     let camera = &rd_state.camera;
 
@@ -134,7 +139,20 @@ pub fn rendering_system(state: &mut State, texture_manager: &TextureManager) {
         }
     }
 
+    draw_ui(state, player);
+
     draw_mouse_cursor(state, texture_manager);
+}
+
+fn draw_ui(state: &mut State, player: Option<Entity>) {
+    let player = if let Some(player) = player {
+        player
+    } else {
+        return;
+    };
+
+    let score = state.world.get::<&Score>(player).unwrap();
+    draw_text(format!("Score: {0}", score.0), 10.0, 50.0, 30.0, BLACK);
 }
 
 fn draw_mouse_cursor(state: &mut State, texture_manager: &TextureManager) {

@@ -470,10 +470,12 @@ dependencies = [
 name = "protocol"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "bincode",
  "glam 0.30.10",
  "num_enum",
  "serde",
+ "toml",
 ]
 
 [[package]]
@@ -599,6 +601,7 @@ dependencies = [
  "rand",
  "serde",
  "tokio",
+ "toml",
 ]
 
 [[package]]

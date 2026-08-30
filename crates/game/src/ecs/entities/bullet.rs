@@ -17,12 +17,15 @@ use crate::ecs::{
 #[derive(Serialize, Deserialize)]
 pub struct Bullet;
 
+pub struct LinkedPlayerId(pub NetworkId);
+
 impl Bullet {
     pub fn spawn(
         world: &mut World,
         pos: Position,
         rotation: Option<f32>,
         network_id: NetworkId,
+        player_id: NetworkId,
     ) -> Entity {
         world.spawn((
             Bullet,
@@ -34,6 +37,7 @@ impl Bullet {
             Velocity::zero(),
             Moveable,
             network_id,
+            LinkedPlayerId(player_id),
             Sprite::new(
                 "bullet",
                 Rect {

@@ -2,7 +2,5 @@
 pub mod network_id;
 pub mod packet;
 
+pub mod config_parser;
 pub mod packets;
-
-pub const TPS: u32 = 20;
-pub const PORT: u16 = 6969;

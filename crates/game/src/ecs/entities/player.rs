@@ -8,6 +8,7 @@ use crate::ecs::{
         animation::{AnimController, PlayerAnimState},
         health::Health,
         moveable::{Collideable, CollisionMesh, Moveable},
+        score::Score,
         snapshot_sync::SnapshotSync,
         sprite::Sprite,
         transform::Position,
@@ -24,6 +25,7 @@ impl Player {
         world.spawn((
             Player,
             Health::new(100, 100),
+            Score(0),
             pos,
             RenderPosition::from_pos(pos),
             Velocity::zero(),

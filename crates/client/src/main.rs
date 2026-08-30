@@ -1,9 +1,7 @@
 #![allow(clippy::new_without_default)]
 
-use std::net::{Ipv4Addr, Ipv6Addr};
-
+use crate::client::core::Client;
 use crate::network_thread::client_network_loop;
-use crate::{client::core::Client, client::snapshot_handler::FIXED_DT};
 use game::ecs::systems::animation::{
     animation_playback_system, player_animation_state_system, zombie_animation_state_system,
 };
@@ -11,16 +9,15 @@ use game::ecs::systems::particle_movement::particle_movement_system;
 use game::ecs::systems::physics::physics_system_for_player;
 use game::{ecs::systems::rendering::rendering_system, game::texture_manager::TextureManager};
 use macroquad::prelude::*;
+use protocol::config_parser::{parse_config, tps};
 use protocol::packets::request::{PacketRequest, RequestKind};
 use protocol::{
-    TPS,
     network_id::ProtocolNetworkId,
     packet::Packet,
     packets::input::{InputMap, PacketInput},
 };
 
 mod client;
-mod config_parser;
 mod network_thread;
 
 fn window_conf() -> Conf {
@@ -36,6 +33,9 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf)]
 async fn main() -> anyhow::Result<()> {
+    parse_config().unwrap();
+    let fixed_dt: f32 = 1.0 / tps() as f32;
+
     set_default_filter_mode(FilterMode::Nearest);
 
     let texture_manager = TextureManager::load_game_textures().await;
@@ -76,20 +76,22 @@ async fn main() -> anyhow::Result<()> {
         client.try_recv();
         client.input_system().await;
 
+        client.check_for_missing_critical_packets().await;
+
         accumulator += get_frame_time();
-        while accumulator >= FIXED_DT {
+        while accumulator >= fixed_dt {
             client.set_local_prev_pos();
 
             if let Some(player) = client.player {
-                physics_system_for_player(&client.state.world, player, FIXED_DT);
+                physics_system_for_player(&client.state.world, player, fixed_dt);
             }
-            accumulator -= FIXED_DT;
+            accumulator -= fixed_dt;
         }
 
         client.interp_timer += get_frame_time();
-        let interp_alpha = (client.interp_timer / (1.0 / TPS as f32)).clamp(0.0, 1.0);
+        let interp_alpha = (client.interp_timer / (1.0 / tps() as f32)).clamp(0.0, 1.0);
 
-        client.set_local_render_pos(accumulator / FIXED_DT);
+        client.set_local_render_pos(accumulator / fixed_dt);
         client.set_net_render_pos(interp_alpha);
 
         particle_movement_system(&mut client.state.world);
@@ -104,7 +106,7 @@ async fn main() -> anyhow::Result<()> {
             client.state.rendering_state.set_camera(pos);
         }
 
-        rendering_system(&mut client.state, &texture_manager);
+        rendering_system(&mut client.state, client.player, &texture_manager);
         next_frame().await;
     }
 }

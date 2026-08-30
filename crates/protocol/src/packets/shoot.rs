@@ -8,7 +8,7 @@ use crate::{
 
 #[derive(Serialize, Deserialize)]
 pub struct PacketShoot {
-    pub id: ProtocolNetworkId,
+    pub linked_player_id: ProtocolNetworkId,
     pub pos: Vec2,
     pub rotation: f32,
 }
@@ -18,7 +18,11 @@ impl PacketPayload for PacketShoot {
 }
 
 impl PacketShoot {
-    pub fn new(id: ProtocolNetworkId, pos: Vec2, rotation: f32) -> Self {
-        Self { id, pos, rotation }
+    pub fn new(linked_player_id: ProtocolNetworkId, pos: Vec2, rotation: f32) -> Self {
+        Self {
+            linked_player_id,
+            pos,
+            rotation,
+        }
     }
 }

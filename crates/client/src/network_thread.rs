@@ -5,7 +5,7 @@ use std::{
 
 use macroquad::prelude::*;
 use protocol::{
-    PORT,
+    config_parser::{port, server_ip},
     packet::{MAX_DATAGRAM_SIZE, Packet},
     packets::ping::PacketPing,
 };
@@ -18,8 +18,6 @@ use tokio::{
     time::Instant,
 };
 
-use crate::config_parser::parse_config;
-
 pub async fn client_network_loop(
     out_send: Sender<Packet>,
     mut in_recv: Receiver<Packet>,
@@ -28,9 +26,7 @@ pub async fn client_network_loop(
     let addr = SocketAddrV4::new(Ipv4Addr::UNSPECIFIED, 0);
     let socket = UdpSocket::bind(addr).await?;
 
-    let config = parse_config()?;
-
-    let addr = SocketAddrV4::new(config.server_ip.parse()?, PORT);
+    let addr = SocketAddrV4::new(server_ip().parse()?, port());
     socket.connect(addr).await?;
 
     let mut last_sent = Instant::now();

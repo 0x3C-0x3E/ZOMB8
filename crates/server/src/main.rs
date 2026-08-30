@@ -4,7 +4,7 @@ use game::ecs::systems::{
     bullet_movement::bullet_movement_system, physics::physics_system,
     zombie_movement::zombie_movement_system,
 };
-use protocol::TPS;
+use protocol::config_parser::{parse_config, tps};
 
 use crate::server::Server;
 
@@ -15,6 +15,8 @@ mod wave;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    parse_config().unwrap();
+
     let mut server = Server::new().await?;
 
     loop {
@@ -43,13 +45,13 @@ async fn main() -> anyhow::Result<()> {
             let _ = server.despawn_entity(entity, id).await;
         }
 
-        let dt = 1.0 / TPS as f32;
+        let dt = 1.0 / tps() as f32;
         physics_system(&server.state.world, dt);
 
         server.send_snapshot().await;
 
         let _ = server.check_for_disconnects().await;
         server.tick += 1;
-        tokio::time::sleep(Duration::from_secs_f64(1.0 / TPS as f64)).await;
+        tokio::time::sleep(Duration::from_secs_f64(1.0 / tps() as f64)).await;
     }
 }
