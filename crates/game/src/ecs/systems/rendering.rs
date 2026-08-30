@@ -35,9 +35,7 @@ impl RenderingState {
                 scale: DEFAULT_SCALE,
             },
             texture_manager: TextureManager::load_game_textures().await,
-            font: load_ttf_font("assets/font/super-mario-bros-nes.ttf")
-                .await
-                .unwrap(),
+            font: load_ttf_font("assets/font/font.ttf").await.unwrap(),
         }
     }
 
@@ -148,42 +146,39 @@ fn draw_ui(state: &mut State, rd_state: &RenderingState, player: Option<Entity>)
     };
 
     let score = state.world.get::<&Score>(player).unwrap();
-    let params_bg = TextParams {
+    draw_fancy_text(rd_state, &format!("Score: {0}", score.0), 10.0, 50.0);
+
+    let health = state.world.get::<&Health>(player).unwrap();
+    draw_fancy_text(rd_state, &format!("Health: {0}", health.get()), 10.0, 70.0);
+
+    let text = format!("Wave {0}", 1);
+    let dimm = measure_text(text, Some(&rd_state.font), 40, 1.0);
+    draw_fancy_text(
+        rd_state,
+        &format!("Wave {0}", 1),
+        screen_width() / 2.0 - dimm.width / 2.0,
+        50.0,
+    );
+}
+
+fn draw_fancy_text(rd_state: &RenderingState, text: &str, x: f32, y: f32) {
+    let params = TextParams {
         font: Some(&rd_state.font),
-        font_size: 20,
+        font_size: 40,
         color: BLACK,
         ..Default::default()
     };
-    let mut params = params_bg.clone();
+    draw_text_ex(
+        text,
+        x + rd_state.camera.scale,
+        y + rd_state.camera.scale,
+        params.clone(),
+    );
+
+    let mut params = params;
     params.color = WHITE;
 
-    draw_text_ex(
-        format!("Score: {0}", score.0),
-        10.0,
-        50.0,
-        params_bg.clone(),
-    );
-    draw_text_ex(
-        format!("Score: {0}", score.0),
-        10.0 - rd_state.camera.scale,
-        50.0 - rd_state.camera.scale,
-        params.clone(),
-    );
-
-    let health = state.world.get::<&Health>(player).unwrap();
-
-    draw_text_ex(
-        format!("Health: {0}", health.get()),
-        10.0,
-        70.0,
-        params_bg.clone(),
-    );
-    draw_text_ex(
-        format!("Health: {0}", health.get()),
-        10.0 - rd_state.camera.scale,
-        70.0 - rd_state.camera.scale,
-        params.clone(),
-    );
+    draw_text_ex(text, x, y, params.clone());
 }
 
 fn draw_mouse_cursor(rd_state: &RenderingState) {
