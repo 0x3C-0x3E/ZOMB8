@@ -1,6 +1,6 @@
 use crate::{network_thread::server_network_loop, wave::WaveInfo};
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     fs::File,
     io::BufReader,
     net::SocketAddr,
@@ -15,6 +15,7 @@ use game::{
         components::{health::Health, score::Score, snapshot_sync::SnapshotSync},
         entities::{bullet::Bullet, player::Player, tile::Tile, zombie::Zombie},
         network_id::NetworkId,
+        systems::pathfinding::{GridPos, build_tile_grid},
         transform::{Position, Velocity},
     },
     game::state::State,
@@ -38,14 +39,18 @@ use crate::network_id_allocator::NetworkIdAllocator;
 
 pub struct ServerData {
     pub wave_info: WaveInfo,
-    pub zombie_paths: Vec<(NetworkId, Vec<(i32, i32)>)>,
+    pub level_constraints: (Vec2, Vec2),
+    pub tile_grid: HashSet<GridPos>,
+    pub zombie_paths: HashMap<Entity, Vec<GridPos>>,
 }
 
 impl ServerData {
-    pub fn new(wave_info: WaveInfo) -> Self {
+    pub fn new(wave_info: WaveInfo, world: &mut World) -> Self {
         Self {
             wave_info,
-            zombie_paths: Vec::new(),
+            level_constraints: Server::get_level_constraints(world),
+            tile_grid: build_tile_grid(world),
+            zombie_paths: HashMap::new(),
         }
     }
 }
@@ -81,10 +86,12 @@ impl Server {
         let mut state = State::new();
         Server::deserialize_world(&mut state.world, &mut allocator);
 
+        let server_data = ServerData::new(WaveInfo::new(), &mut state.world);
+
         Ok(Self {
             allocator,
             state,
-            server_data: ServerData::new(WaveInfo::new()),
+            server_data,
             tick: 0,
             clients,
             network_thread,

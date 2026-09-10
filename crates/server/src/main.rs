@@ -45,7 +45,12 @@ async fn main() -> anyhow::Result<()> {
             let _ = server.despawn_entity(entity, id).await;
         }
 
-        // zombie_pathfinding_system(&mut server.state.world);
+        zombie_pathfinding_system(
+            &mut server.state.world,
+            &server.server_data.tile_grid,
+            &server.server_data.level_constraints,
+            &mut server.server_data.zombie_paths,
+        );
 
         let dt = 1.0 / tps() as f32;
         physics_system(&server.state.world, dt);

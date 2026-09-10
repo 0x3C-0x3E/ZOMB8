@@ -1,6 +1,7 @@
 use std::collections::{HashMap, HashSet, VecDeque};
 
-use hecs::World;
+use glam::Vec2;
+use hecs::{Entity, World};
 
 use crate::ecs::{
     entities::{player::Player, tile::Tile, zombie::Zombie},
@@ -19,39 +20,62 @@ impl GridPos {
     }
 }
 
+impl From<Vec2> for GridPos {
+    fn from(value: Vec2) -> Self {
+        Self {
+            x: (value.x / 8.0).floor() as i32,
+            y: (value.y / 8.0).floor() as i32,
+        }
+    }
+}
+
 impl From<&Position> for GridPos {
     fn from(value: &Position) -> Self {
         Self {
-            x: value.x as i32,
-            y: value.y as i32,
+            x: (value.x / 8.0).floor() as i32,
+            y: (value.y / 8.0).floor() as i32,
+        }
+    }
+}
+
+impl From<Position> for GridPos {
+    fn from(value: Position) -> Self {
+        Self {
+            x: (value.x / 8.0).floor() as i32,
+            y: (value.y / 8.0).floor() as i32,
         }
     }
 }
 
 fn get_closest_player_pos(world: &World, pos: &Position) -> Option<Position> {
-    let mut closest: Option<Position> = None;
-    for player_pos in world.query::<&Position>().with::<&Player>().iter() {
-        if let Some(prev_closest) = closest {
-            if pos.vec2().distance_squared(prev_closest.vec2())
-                > pos.vec2().distance_squared(player_pos.vec2())
-            {
-                closest = Some(*player_pos);
-            }
-        } else {
-            closest = Some(*player_pos);
-        }
-    }
+    let pos = pos.vec2();
 
-    closest
+    world
+        .query::<&Position>()
+        .with::<&Player>()
+        .iter()
+        .min_by_key(|player_pos| pos.distance_squared(player_pos.vec2()) as i64)
+        .copied()
 }
 
-fn get_neighbor_pos(current: &GridPos) -> [GridPos; 4] {
-    [
-        GridPos::new(current.x - 8, current.y),
-        GridPos::new(current.x + 8, current.y),
-        GridPos::new(current.x, current.y - 8),
-        GridPos::new(current.x, current.y + 8),
-    ]
+fn outside(pos: &GridPos, constraints: &(GridPos, GridPos)) -> bool {
+    pos.x < constraints.0.x
+        || pos.x > constraints.1.x
+        || pos.y < constraints.0.y
+        || pos.y > constraints.1.y
+}
+
+fn get_neighbor_pos(current: &GridPos, constraints: &(GridPos, GridPos)) -> Option<[GridPos; 4]> {
+    if outside(current, constraints) {
+        None
+    } else {
+        Some([
+            GridPos::new(current.x - 1, current.y),
+            GridPos::new(current.x + 1, current.y),
+            GridPos::new(current.x, current.y - 1),
+            GridPos::new(current.x, current.y + 1),
+        ])
+    }
 }
 
 fn reconstruct_path(
@@ -70,9 +94,14 @@ fn reconstruct_path(
     path
 }
 
-fn bfs_path_finding(start: GridPos, target: GridPos, tiles: &HashSet<GridPos>) -> Vec<GridPos> {
+fn bfs_path_finding(
+    start: GridPos,
+    target: GridPos,
+    tiles: &HashSet<GridPos>,
+    level_constraints: (GridPos, GridPos),
+) -> Vec<GridPos> {
     let mut queue: VecDeque<GridPos> = VecDeque::from([start]);
-    let mut visited: HashSet<GridPos> = HashSet::new();
+    let mut visited: HashSet<GridPos> = HashSet::from([start]);
     let mut came_from: HashMap<GridPos, GridPos> = HashMap::new();
     if start == target {
         return Vec::new();
@@ -80,13 +109,16 @@ fn bfs_path_finding(start: GridPos, target: GridPos, tiles: &HashSet<GridPos>) -
 
     while let Some(current) = queue.pop_front() {
         if current == target {
+            println!("visited {}", visited.iter().len());
             return reconstruct_path(&came_from, start, target);
         }
-        let neighbors = get_neighbor_pos(&current);
-        for neighbor in neighbors {
-            if !tiles.contains(&neighbor) && visited.insert(neighbor) {
-                queue.push_back(neighbor);
-                came_from.insert(neighbor, current);
+        let neighbors = get_neighbor_pos(&current, &level_constraints);
+        if let Some(neighbors) = neighbors {
+            for neighbor in neighbors {
+                if !tiles.contains(&neighbor) && visited.insert(neighbor) {
+                    queue.push_back(neighbor);
+                    came_from.insert(neighbor, current);
+                }
             }
         }
     }
@@ -94,18 +126,45 @@ fn bfs_path_finding(start: GridPos, target: GridPos, tiles: &HashSet<GridPos>) -
     Vec::new()
 }
 
-pub fn zombie_pathfinding_system(world: &mut World) {
-    let tiles = build_tile_hash_set(world);
+pub fn target_did_not_update(
+    zombie_paths: &HashMap<Entity, Vec<GridPos>>,
+    e: Entity,
+    target: &GridPos,
+) -> bool {
+    if let Some(path) = zombie_paths.get(&e) {
+        if let Some(prev_target) = path.last() {
+            if target == prev_target {
+                return true;
+            }
+        }
+    }
 
-    for (z_pos, vel) in world
-        .query::<(&Position, &mut Velocity)>()
+    false
+}
+
+pub fn zombie_pathfinding_system(
+    world: &mut World,
+    tile_grid: &HashSet<GridPos>,
+    level_constraints: &(Vec2, Vec2),
+    zombie_paths: &mut HashMap<Entity, Vec<GridPos>>,
+) {
+    let level_constraints: (GridPos, GridPos) =
+        (level_constraints.0.into(), level_constraints.1.into());
+    for (e, z_pos, vel) in world
+        .query::<(Entity, &Position, &mut Velocity)>()
         .with::<&Zombie>()
         .iter()
     {
         if let Some(closest) = get_closest_player_pos(world, z_pos) {
-            let target: GridPos = (&closest).into();
+            let target: GridPos = closest.into();
+            if target_did_not_update(zombie_paths, e, &target) {
+                continue;
+            }
+
             let start: GridPos = z_pos.into();
-            let path = bfs_path_finding(start, target, &tiles);
+
+            let path = bfs_path_finding(start, target, &tile_grid, level_constraints);
+            zombie_paths.insert(e, path);
         } else {
             vel.x = 0.0;
             vel.y = 0.0;
@@ -113,7 +172,7 @@ pub fn zombie_pathfinding_system(world: &mut World) {
     }
 }
 
-fn build_tile_hash_set(world: &mut World) -> HashSet<GridPos> {
+pub fn build_tile_grid(world: &mut World) -> HashSet<GridPos> {
     world
         .query_mut::<&Position>()
         .with::<&Tile>()

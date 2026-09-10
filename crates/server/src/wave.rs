@@ -10,27 +10,6 @@ use game::ecs::{
 
 use crate::server::Server;
 
-fn get_level_constraints(world: &World) -> (Vec2, Vec2) {
-    let mut max = Vec2::ZERO;
-    let mut min = Vec2::ZERO;
-    for (_t, pos) in world.query::<(&Tile, &Position)>().iter() {
-        if pos.x > max.x {
-            max.x = pos.x;
-        } else if pos.x < min.x {
-            min.x = pos.x;
-        }
-
-        if pos.y > max.y {
-            max.y = pos.y;
-        } else if pos.y < min.y {
-            min.y = pos.y;
-        }
-    }
-
-    let max = Vec2::new(max.x + 16.0, max.y + 16.0);
-    (min, max)
-}
-
 fn is_occupied(world: &World, pos: &Position) -> bool {
     world
         .query::<&Position>()
@@ -65,7 +44,7 @@ impl Server {
     }
 
     async fn spawn_wave(&mut self) {
-        let level_constrains = get_level_constraints(&self.state.world);
+        let level_constrains = self.server_data.level_constraints;
 
         let payload = PacketWave::new(self.state.current_wave);
         let packet = Packet::from_payload(payload).unwrap();
@@ -96,5 +75,26 @@ impl Server {
                 return pos;
             }
         }
+    }
+
+    pub fn get_level_constraints(world: &World) -> (Vec2, Vec2) {
+        let mut max = Vec2::ZERO;
+        let mut min = Vec2::ZERO;
+        for (_t, pos) in world.query::<(&Tile, &Position)>().iter() {
+            if pos.x > max.x {
+                max.x = pos.x;
+            } else if pos.x < min.x {
+                min.x = pos.x;
+            }
+
+            if pos.y > max.y {
+                max.y = pos.y;
+            } else if pos.y < min.y {
+                min.y = pos.y;
+            }
+        }
+
+        let max = Vec2::new(max.x + 16.0, max.y + 16.0);
+        (min, max)
     }
 }
