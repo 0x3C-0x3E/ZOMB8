@@ -109,7 +109,6 @@ fn bfs_path_finding(
 
     while let Some(current) = queue.pop_front() {
         if current == target {
-            println!("visited {}", visited.iter().len());
             return reconstruct_path(&came_from, start, target);
         }
         let neighbors = get_neighbor_pos(&current, &level_constraints);

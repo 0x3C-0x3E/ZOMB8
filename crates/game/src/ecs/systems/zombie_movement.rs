@@ -11,26 +11,18 @@ use crate::ecs::{
     network_id::NetworkId,
 };
 
-fn get_closest_entity<E>(world: &World, pos: &Position) -> Option<Entity>
+pub fn get_closest_entity<E>(world: &World, pos: &Position) -> Option<Entity>
 where
     E: hecs::Query,
 {
-    let mut closest: Option<(Entity, Position)> = None;
-    for (e, b_pos) in world.query::<(Entity, &Position)>().with::<E>().iter() {
-        if let Some(prev_closest) = closest {
-            if pos.vec2().distance_squared(prev_closest.1.vec2())
-                > pos.vec2().distance_squared(b_pos.vec2())
-            {
-                closest = Some((e, *b_pos));
-            }
-        } else {
-            if pos.vec2().distance_squared(b_pos.vec2()) <= 128.0 {
-                closest = Some((e, *b_pos))
-            }
-        }
-    }
+    let pos = pos.vec2();
 
-    closest.map(|(e, _)| e)
+    world
+        .query::<(Entity, &Position)>()
+        .with::<E>()
+        .iter()
+        .min_by_key(|(_, e_pos)| pos.distance_squared(e_pos.vec2()) as i64)
+        .map(|(e, _)| e)
 }
 
 pub fn zombie_movement_system(world: &mut World) -> Vec<(Entity, NetworkId)> {
