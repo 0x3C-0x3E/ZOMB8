@@ -3,6 +3,7 @@ pub mod bullet_movement;
 pub mod collision;
 pub mod input;
 pub mod particle_movement;
+pub mod pathfinding;
 pub mod physics;
 pub mod rendering;
 pub mod zombie_movement;

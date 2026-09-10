@@ -1,3 +1,5 @@
+use std::hash::Hash;
+
 use glam::Vec2;
 use serde::{Deserialize, Serialize};
 

@@ -1,8 +1,8 @@
 use std::time::Duration;
 
 use game::ecs::systems::{
-    bullet_movement::bullet_movement_system, physics::physics_system,
-    zombie_movement::zombie_movement_system,
+    bullet_movement::bullet_movement_system, pathfinding::zombie_pathfinding_system,
+    physics::physics_system, zombie_movement::zombie_movement_system,
 };
 use protocol::config_parser::{parse_config, tps};
 
@@ -10,6 +10,7 @@ use crate::server::Server;
 
 mod network_id_allocator;
 mod network_thread;
+mod packet_handler;
 mod server;
 mod wave;
 
@@ -40,10 +41,11 @@ async fn main() -> anyhow::Result<()> {
 
         let mut remove = zombie_movement_system(&mut server.state.world);
         remove.extend(bullet_movement_system(&mut server.state.world));
-
         for (entity, id) in remove {
             let _ = server.despawn_entity(entity, id).await;
         }
+
+        zombie_pathfinding_system(&mut server.state.world);
 
         let dt = 1.0 / tps() as f32;
         physics_system(&server.state.world, dt);

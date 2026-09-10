@@ -2,12 +2,7 @@ use hecs::{Entity, World};
 use protocol::packets::spawn_entity::EntityKind;
 
 use crate::ecs::{
-    components::{
-        health::Health,
-        moveable::CollisionMesh,
-        score::Score,
-        transform::{Position, Velocity},
-    },
+    components::{health::Health, moveable::CollisionMesh, score::Score, transform::Position},
     entities::{
         bullet::{Bullet, LinkedPlayerId},
         player::Player,
@@ -15,23 +10,6 @@ use crate::ecs::{
     },
     network_id::NetworkId,
 };
-
-fn get_closest_player_pos(world: &World, pos: &Position) -> Option<Position> {
-    let mut closest: Option<Position> = None;
-    for player_pos in world.query::<&Position>().with::<&Player>().iter() {
-        if let Some(prev_closest) = closest {
-            if pos.vec2().distance_squared(prev_closest.vec2())
-                > pos.vec2().distance_squared(player_pos.vec2())
-            {
-                closest = Some(*player_pos);
-            }
-        } else {
-            closest = Some(*player_pos);
-        }
-    }
-
-    closest
-}
 
 fn get_closest_entity<E>(world: &World, pos: &Position) -> Option<Entity>
 where
@@ -57,15 +35,8 @@ where
 
 pub fn zombie_movement_system(world: &mut World) -> Vec<(Entity, NetworkId)> {
     let mut zombies_to_remove = Vec::new();
-    for (e, pos, vel, mesh, health, id) in world
-        .query::<(
-            Entity,
-            &Position,
-            &mut Velocity,
-            &CollisionMesh,
-            &mut Health,
-            &NetworkId,
-        )>()
+    for (e, pos, mesh, health, id) in world
+        .query::<(Entity, &Position, &CollisionMesh, &mut Health, &NetworkId)>()
         .with::<&Zombie>()
         .iter()
     {
@@ -98,16 +69,6 @@ pub fn zombie_movement_system(world: &mut World) -> Vec<(Entity, NetworkId)> {
             };
             let mut health = world.get::<&mut Health>(player).unwrap();
             health.health = health.health.saturating_sub(10);
-        }
-
-        if let Some(closest) = get_closest_player_pos(world, pos) {
-            let diff = (closest.vec2() - pos.vec2()).normalize_or_zero();
-
-            vel.x = diff.x * 30.0;
-            vel.y = diff.y * 20.0;
-        } else {
-            vel.x = 0.0;
-            vel.y = 0.0;
         }
     }
 
