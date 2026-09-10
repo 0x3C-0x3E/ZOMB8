@@ -1,4 +1,4 @@
-use hecs::World;
+use hecs::{Entity, World};
 use macroquad::prelude::*;
 
 use crate::ecs::{
@@ -7,7 +7,10 @@ use crate::ecs::{
         sprite::Sprite,
         transform::Velocity,
     },
-    entities::{player::Player, zombie::Zombie},
+    entities::{
+        player::Player,
+        zombie::{Zombie, ZombieSpawnTimer},
+    },
 };
 
 pub fn player_animation_state_system(world: &mut World) {
@@ -26,21 +29,29 @@ pub fn player_animation_state_system(world: &mut World) {
         {
             controller.state = Box::new(new_state);
             controller.tick = 0.0;
-            sprite.set_id(controller.state.get_id_name());
+            sprite.set_y(controller.state.get_y_pos());
         }
     }
 }
 
 pub fn zombie_animation_state_system(world: &mut World) {
-    for controller in world.query_mut::<&mut AnimController>().with::<&Zombie>() {
-        controller.state = Box::new(ZombieAnimState::Run);
+    for (e, controller) in world
+        .query::<(Entity, &mut AnimController)>()
+        .with::<&Zombie>()
+        .iter()
+    {
+        if world.get::<&ZombieSpawnTimer>(e).is_ok() {
+            controller.state = Box::new(ZombieAnimState::Spawn);
+        } else {
+            controller.state = Box::new(ZombieAnimState::Run);
+        }
     }
 }
 
 pub fn animation_playback_system(world: &mut World) {
     for (controller, sprite) in world.query_mut::<(&mut AnimController, &mut Sprite)>() {
         controller.tick += 1.0 * get_frame_time().min(1.0 / 30.0);
-        if controller.tick >= 0.09 {
+        if controller.tick >= 0.1 {
             controller.tick = 0.0;
             controller.frame += 1;
             if controller.frame > controller.state.get_max_frame() {

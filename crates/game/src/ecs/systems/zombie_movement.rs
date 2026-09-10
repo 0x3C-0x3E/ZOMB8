@@ -8,7 +8,7 @@ use crate::ecs::{
     entities::{
         bullet::{Bullet, LinkedPlayerId},
         player::Player,
-        zombie::Zombie,
+        zombie::{Zombie, ZombieSpawnTimer},
     },
     network_id::NetworkId,
     systems::pathfinding::GridPos,
@@ -81,6 +81,10 @@ pub fn zombie_movement_system(
         .with::<&Zombie>()
         .iter()
     {
+        if world.get::<&ZombieSpawnTimer>(e).is_ok() {
+            continue;
+        }
+
         if let Some(path) = zombie_paths.get_mut(&e)
             && let Some(next_pos) = path.front()
         {

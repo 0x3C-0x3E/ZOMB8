@@ -19,6 +19,8 @@ use crate::ecs::{
 #[derive(Serialize, Deserialize)]
 pub struct Zombie;
 
+pub struct ZombieSpawnTimer(pub f32);
+
 impl Zombie {
     pub fn spawn(
         world: &mut World,
@@ -28,6 +30,7 @@ impl Zombie {
     ) -> Entity {
         world.spawn((
             Zombie,
+            ZombieSpawnTimer(4.0),
             Health::new(max_health.unwrap_or(50), max_health.unwrap_or(50)),
             pos,
             RenderPosition::from_pos(pos),

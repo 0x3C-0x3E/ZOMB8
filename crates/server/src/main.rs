@@ -4,9 +4,11 @@ use game::ecs::systems::{
     bullet_movement::bullet_movement_system,
     pathfinding::zombie_pathfinding_system,
     physics::physics_system,
+    timers::zombie_update_timers,
     zombie_movement::{zombie_collision_system, zombie_movement_system},
 };
 use protocol::config_parser::{parse_config, tps};
+use tokio::time::Instant;
 
 use crate::server::Server;
 
@@ -22,7 +24,11 @@ async fn main() -> anyhow::Result<()> {
 
     let mut server = Server::new().await?;
 
+    let dt = 1.0 / tps() as f32;
+
     loop {
+        let tick_begin = Instant::now();
+
         if server.network_thread.is_finished() {
             match server.network_thread.await {
                 Ok(res) => panic!("network thread exited with {:?}", res),
@@ -54,7 +60,7 @@ async fn main() -> anyhow::Result<()> {
             &mut server.server_data.zombie_paths,
         );
 
-        let dt = 1.0 / tps() as f32;
+        zombie_update_timers(&mut server.state.world, dt);
 
         zombie_movement_system(
             &mut server.state.world,
@@ -69,6 +75,6 @@ async fn main() -> anyhow::Result<()> {
 
         let _ = server.check_for_disconnects().await;
         server.tick += 1;
-        tokio::time::sleep(Duration::from_secs_f64(1.0 / tps() as f64)).await;
+        tokio::time::sleep_until(tick_begin + Duration::from_secs_f64(1.0 / tps() as f64)).await;
     }
 }

@@ -9,6 +9,7 @@ use game::ecs::systems::particle_movement::particle_movement_system;
 use game::ecs::systems::physics::physics_system_for_player;
 use game::ecs::systems::rendering::RenderingState;
 use game::ecs::systems::rendering::rendering_system;
+use game::ecs::systems::timers::zombie_update_timers;
 use macroquad::prelude::*;
 use protocol::config_parser::{parse_config, tps};
 use protocol::packets::request::{PacketRequest, RequestKind};
@@ -95,6 +96,8 @@ async fn main() -> anyhow::Result<()> {
         client.set_net_render_pos(interp_alpha);
 
         particle_movement_system(&mut client.state.world);
+
+        zombie_update_timers(&mut client.state.world, get_frame_time());
 
         player_animation_state_system(&mut client.state.world);
         zombie_animation_state_system(&mut client.state.world);

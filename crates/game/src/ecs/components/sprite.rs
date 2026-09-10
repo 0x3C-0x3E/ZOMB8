@@ -49,7 +49,7 @@ impl Sprite {
         }
     }
 
-    pub fn set_id(&mut self, id: &str) {
-        self.id = id.to_string();
+    pub fn set_y(&mut self, y: u32) {
+        self.rect.y = y as f32;
     }
 }
