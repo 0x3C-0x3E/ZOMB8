@@ -9,9 +9,11 @@ use protocol::{config_parser::tps, packets::snapshot::PacketSnapshot};
 
 impl Client {
     pub fn snapshot_handler(&mut self, packet_snapshot: PacketSnapshot) {
+        print!("hi");
         let fixed_dt: f32 = 1.0 / tps() as f32;
 
         self.interp_timer = 0.0;
+        println!("{:?}", packet_snapshot.entities);
         for (id, new_state) in packet_snapshot.entities {
             let mut binding = self
                 .state

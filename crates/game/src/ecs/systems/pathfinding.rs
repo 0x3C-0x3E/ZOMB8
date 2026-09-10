@@ -74,6 +74,9 @@ fn bfs_path_finding(start: GridPos, target: GridPos, tiles: &HashSet<GridPos>) -
     let mut queue: VecDeque<GridPos> = VecDeque::from([start]);
     let mut visited: HashSet<GridPos> = HashSet::new();
     let mut came_from: HashMap<GridPos, GridPos> = HashMap::new();
+    if start == target {
+        return Vec::new();
+    }
 
     while let Some(current) = queue.pop_front() {
         if current == target {
@@ -81,9 +84,9 @@ fn bfs_path_finding(start: GridPos, target: GridPos, tiles: &HashSet<GridPos>) -
         }
         let neighbors = get_neighbor_pos(&current);
         for neighbor in neighbors {
-            if !tiles.contains(&neighbor) && !visited.contains(&neighbor) {
-                visited.insert(neighbor);
+            if !tiles.contains(&neighbor) && visited.insert(neighbor) {
                 queue.push_back(neighbor);
+                came_from.insert(neighbor, current);
             }
         }
     }

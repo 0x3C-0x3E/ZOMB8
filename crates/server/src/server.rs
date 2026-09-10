@@ -197,6 +197,8 @@ impl Server {
 
     pub async fn create_new_player(&mut self, sender_addr: SocketAddr) -> anyhow::Result<()> {
         let client_id = self.allocator.allocate();
+        println!("{:?}", client_id);
+
         let client_player_pos = Position::new(8.0, 20.0);
         let _ = Player::spawn(&mut self.state.world, client_player_pos, client_id);
 
@@ -277,20 +279,20 @@ impl Server {
             .map(|(id, score)| (*id, score.get()))
             .collect();
 
-        for client in self.clients.keys() {
-            let id = self.client_ids.get(client);
-            if let Some(id) = id {
-                let last_ack_seq = self.client_input_seq.get(id).copied().unwrap_or(0);
-                let payload = PacketSnapshot::new(
-                    self.tick,
-                    last_ack_seq,
-                    entities.clone(),
-                    entity_health.clone(),
-                    player_scores.clone(),
-                );
-                let packet = Packet::from_payload(payload).unwrap();
-                let _ = self.in_send.send((*client, packet)).await;
-            }
+        println!("{:?}", self.client_ids);
+        for (client, id) in self.client_ids.iter() {
+            println!("sending snapshot");
+            let last_ack_seq = self.client_input_seq.get(id).copied().unwrap_or(0);
+            let payload = PacketSnapshot::new(
+                self.tick,
+                last_ack_seq,
+                entities.clone(),
+                entity_health.clone(),
+                player_scores.clone(),
+            );
+            let packet = Packet::from_payload(payload).unwrap();
+            let _ = self.in_send.send((*client, packet)).await;
+            println!("send snapshot");
         }
     }
 
