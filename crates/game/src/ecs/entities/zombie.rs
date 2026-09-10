@@ -45,7 +45,7 @@ impl Zombie {
                 "zombie",
                 Rect {
                     x: 0.0,
-                    y: 0.0,
+                    y: 8.0,
                     w: 8.0,
                     h: 8.0,
                 },

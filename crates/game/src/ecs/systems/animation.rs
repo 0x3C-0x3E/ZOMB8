@@ -4,7 +4,7 @@ use macroquad::prelude::*;
 use crate::ecs::{
     components::{
         animation::{AnimController, PlayerAnimState, ZombieAnimState},
-        sprite::Sprite,
+        sprite::{self, Sprite},
         transform::Velocity,
     },
     entities::{
@@ -35,15 +35,24 @@ pub fn player_animation_state_system(world: &mut World) {
 }
 
 pub fn zombie_animation_state_system(world: &mut World) {
-    for (e, controller) in world
-        .query::<(Entity, &mut AnimController)>()
+    for (e, controller, sprite) in world
+        .query::<(Entity, &mut AnimController, &mut Sprite)>()
         .with::<&Zombie>()
         .iter()
     {
-        if world.get::<&ZombieSpawnTimer>(e).is_ok() {
-            controller.state = Box::new(ZombieAnimState::Spawn);
+        let new_state = if world.get::<&ZombieSpawnTimer>(e).is_ok() {
+            ZombieAnimState::Spawn
         } else {
-            controller.state = Box::new(ZombieAnimState::Run);
+            ZombieAnimState::Run
+        };
+
+        if let Some(current) = controller.state.as_any().downcast_ref::<ZombieAnimState>()
+            && *current != new_state
+        {
+            controller.state = Box::new(new_state);
+            controller.tick = 0.0;
+            sprite.set_y(controller.state.get_y_pos());
+            println!("{}", sprite.rect.y);
         }
     }
 }
