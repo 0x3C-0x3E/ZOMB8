@@ -1,6 +1,5 @@
 use std::collections::{HashMap, VecDeque};
 
-use glam::Vec2;
 use hecs::{Entity, World};
 use protocol::packets::spawn_entity::EntityKind;
 
@@ -90,10 +89,9 @@ pub fn zombie_movement_system(
             let dist = to_target.length();
             let dir = to_target.normalize_or_zero();
 
-            let step = 30.0 * dt; // or however your speed/dt work here
+            let step = 30.0 * dt;
 
             if dist <= step {
-                // snap exactly onto the waypoint, then pop and re-aim next frame
                 pos.x = next_pos.x;
                 pos.y = next_pos.y;
                 path.pop_front();

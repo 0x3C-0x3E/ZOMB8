@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{BinaryHeap, HashMap, HashSet, VecDeque};
 
 use glam::Vec2;
 use hecs::{Entity, World};
@@ -94,29 +94,75 @@ fn reconstruct_path(
     path
 }
 
+#[derive(Copy, Clone, PartialEq, Eq)]
+struct QueueNode {
+    pub cost: u32,
+    pub pos: GridPos,
+}
+
+impl QueueNode {
+    fn new(cost: u32, pos: GridPos) -> Self {
+        Self { cost, pos }
+    }
+}
+
+impl PartialOrd for QueueNode {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for QueueNode {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        other.cost.cmp(&self.cost)
+    }
+}
+
+fn get_manhatten_distance(start: &GridPos, target: &GridPos) -> u32 {
+    (start.x - target.x).unsigned_abs() + (start.y - target.y).unsigned_abs()
+}
+
 fn bfs_path_finding(
     start: GridPos,
     target: GridPos,
     tiles: &HashSet<GridPos>,
     level_constraints: (GridPos, GridPos),
 ) -> VecDeque<GridPos> {
-    let mut queue: VecDeque<GridPos> = VecDeque::from([start]);
-    let mut visited: HashSet<GridPos> = HashSet::from([start]);
+    let mut open: BinaryHeap<QueueNode> = BinaryHeap::from([QueueNode::new(
+        get_manhatten_distance(&start, &target),
+        start,
+    )]);
+
     let mut came_from: HashMap<GridPos, GridPos> = HashMap::new();
+
+    let mut g_score = HashMap::from([(start, 0u32)]);
+
     if start == target {
         return VecDeque::new();
     }
 
-    while let Some(current) = queue.pop_front() {
-        if current == target {
+    while let Some(current) = open.pop() {
+        if current.pos == target {
             return reconstruct_path(&came_from, start, target);
         }
-        let neighbors = get_neighbor_pos(&current, &level_constraints);
+
+        let current_g = g_score[&current.pos];
+
+        let neighbors = get_neighbor_pos(&current.pos, &level_constraints);
         if let Some(neighbors) = neighbors {
             for neighbor in neighbors {
-                if !tiles.contains(&neighbor) && visited.insert(neighbor) {
-                    queue.push_back(neighbor);
-                    came_from.insert(neighbor, current);
+                if tiles.contains(&neighbor) {
+                    continue;
+                }
+
+                let tentative_g = current_g + 1;
+
+                if tentative_g < *g_score.get(&neighbor).unwrap_or(&u32::MAX) {
+                    came_from.insert(neighbor, current.pos);
+                    g_score.insert(neighbor, tentative_g);
+                    let h = get_manhatten_distance(&neighbor, &target);
+
+                    open.push(QueueNode::new(tentative_g + h, neighbor));
                 }
             }
         }
@@ -160,11 +206,10 @@ pub fn zombie_pathfinding_system(
                 continue;
             }
 
-            println!("recalc path");
-
             let start: GridPos = z_pos.into();
 
-            let path = bfs_path_finding(start, target, &tile_grid, level_constraints);
+            let mut path = bfs_path_finding(start, target, &tile_grid, level_constraints);
+            path.pop_front();
             zombie_paths.insert(e, path);
         } else {
             vel.x = 0.0;
