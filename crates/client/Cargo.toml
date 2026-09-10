@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 protocol = { path = "../protocol"}
-game = { path = "../game"}
+game = { path = "../game", features = ["client"]}
 
 macroquad = "0.4.16"
 glam = { version = "0.30", features = ["serde"] }

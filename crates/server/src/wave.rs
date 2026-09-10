@@ -72,17 +72,17 @@ impl Server {
 
         let _ = self.send_to_all(&packet).await;
 
-        for _ in 0..self.server_state.wave_info.zomie_count {
+        for _ in 0..self.server_data.wave_info.zomie_count {
             let _ = self
                 .spawn_zombie(
                     self.choose_position(&level_constrains),
-                    self.server_state.wave_info.max_health,
+                    self.server_data.wave_info.max_health,
                 )
                 .await;
         }
 
-        self.server_state.wave_info.max_health += 10;
-        self.server_state.wave_info.zomie_count += 2;
+        self.server_data.wave_info.max_health += 10;
+        self.server_data.wave_info.zomie_count += 2;
     }
 
     fn choose_position(&self, level_constrains: &(Vec2, Vec2)) -> Position {

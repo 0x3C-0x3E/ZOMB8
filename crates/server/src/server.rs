@@ -36,12 +36,12 @@ use tokio::{sync::mpsc::Receiver, sync::mpsc::Sender, task::JoinHandle};
 
 use crate::network_id_allocator::NetworkIdAllocator;
 
-pub struct ServerState {
+pub struct ServerData {
     pub wave_info: WaveInfo,
     pub zombie_paths: Vec<(NetworkId, Vec<(i32, i32)>)>,
 }
 
-impl ServerState {
+impl ServerData {
     pub fn new(wave_info: WaveInfo) -> Self {
         Self {
             wave_info,
@@ -54,7 +54,7 @@ pub struct Server {
     pub allocator: NetworkIdAllocator,
     pub state: State,
 
-    pub server_state: ServerState,
+    pub server_data: ServerData,
 
     pub tick: u64,
 
@@ -84,7 +84,7 @@ impl Server {
         Ok(Self {
             allocator,
             state,
-            server_state: ServerState::new(WaveInfo::new()),
+            server_data: ServerData::new(WaveInfo::new()),
             tick: 0,
             clients,
             network_thread,

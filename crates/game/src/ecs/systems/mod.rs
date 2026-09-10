@@ -5,5 +5,6 @@ pub mod input;
 pub mod particle_movement;
 pub mod pathfinding;
 pub mod physics;
+#[cfg(feature = "client")]
 pub mod rendering;
 pub mod zombie_movement;
