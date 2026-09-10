@@ -2,6 +2,8 @@ pub mod bullet_movement;
 pub mod collision;
 pub mod input;
 pub mod physics;
+
+#[cfg(feature = "server")]
 pub mod zombie_movement;
 
 #[cfg(feature = "client")]

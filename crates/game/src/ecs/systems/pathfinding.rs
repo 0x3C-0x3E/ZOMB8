@@ -82,15 +82,15 @@ fn reconstruct_path(
     came_from: &HashMap<GridPos, GridPos>,
     start: GridPos,
     target: GridPos,
-) -> Vec<GridPos> {
-    let mut path = Vec::new();
+) -> VecDeque<GridPos> {
+    let mut path = VecDeque::new();
     let mut current = target;
-    path.push(current);
+    path.push_back(current);
     while current != start {
         current = came_from[&current];
-        path.push(current);
+        path.push_back(current);
     }
-    path.reverse();
+    path.make_contiguous().reverse();
     path
 }
 
@@ -99,12 +99,12 @@ fn bfs_path_finding(
     target: GridPos,
     tiles: &HashSet<GridPos>,
     level_constraints: (GridPos, GridPos),
-) -> Vec<GridPos> {
+) -> VecDeque<GridPos> {
     let mut queue: VecDeque<GridPos> = VecDeque::from([start]);
     let mut visited: HashSet<GridPos> = HashSet::from([start]);
     let mut came_from: HashMap<GridPos, GridPos> = HashMap::new();
     if start == target {
-        return Vec::new();
+        return VecDeque::new();
     }
 
     while let Some(current) = queue.pop_front() {
@@ -122,16 +122,16 @@ fn bfs_path_finding(
         }
     }
 
-    Vec::new()
+    VecDeque::new()
 }
 
 pub fn target_did_not_update(
-    zombie_paths: &HashMap<Entity, Vec<GridPos>>,
+    zombie_paths: &HashMap<Entity, VecDeque<GridPos>>,
     e: Entity,
     target: &GridPos,
 ) -> bool {
     if let Some(path) = zombie_paths.get(&e) {
-        if let Some(prev_target) = path.last() {
+        if let Some(prev_target) = path.back() {
             if target == prev_target {
                 return true;
             }
@@ -145,7 +145,7 @@ pub fn zombie_pathfinding_system(
     world: &mut World,
     tile_grid: &HashSet<GridPos>,
     level_constraints: &(Vec2, Vec2),
-    zombie_paths: &mut HashMap<Entity, Vec<GridPos>>,
+    zombie_paths: &mut HashMap<Entity, VecDeque<GridPos>>,
 ) {
     let level_constraints: (GridPos, GridPos) =
         (level_constraints.0.into(), level_constraints.1.into());
@@ -159,6 +159,8 @@ pub fn zombie_pathfinding_system(
             if target_did_not_update(zombie_paths, e, &target) {
                 continue;
             }
+
+            println!("recalc path");
 
             let start: GridPos = z_pos.into();
 

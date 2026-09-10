@@ -28,7 +28,7 @@ pub struct WaveInfo {
 impl WaveInfo {
     pub fn new() -> Self {
         Self {
-            zomie_count: 5,
+            zomie_count: 1,
             max_health: 50,
         }
     }

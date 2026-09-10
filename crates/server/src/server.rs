@@ -1,6 +1,6 @@
 use crate::{network_thread::server_network_loop, wave::WaveInfo};
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{HashMap, HashSet, VecDeque},
     fs::File,
     io::BufReader,
     net::SocketAddr,
@@ -41,7 +41,7 @@ pub struct ServerData {
     pub wave_info: WaveInfo,
     pub level_constraints: (Vec2, Vec2),
     pub tile_grid: HashSet<GridPos>,
-    pub zombie_paths: HashMap<Entity, Vec<GridPos>>,
+    pub zombie_paths: HashMap<Entity, VecDeque<GridPos>>,
 }
 
 impl ServerData {

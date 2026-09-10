@@ -1,8 +1,10 @@
 use std::time::Duration;
 
 use game::ecs::systems::{
-    bullet_movement::bullet_movement_system, pathfinding::zombie_pathfinding_system,
-    physics::physics_system, zombie_movement::zombie_movement_system,
+    bullet_movement::bullet_movement_system,
+    pathfinding::zombie_pathfinding_system,
+    physics::physics_system,
+    zombie_movement::{zombie_collision_system, zombie_movement_system},
 };
 use protocol::config_parser::{parse_config, tps};
 
@@ -39,7 +41,7 @@ async fn main() -> anyhow::Result<()> {
 
         server.spawn_wave_system().await;
 
-        let mut remove = zombie_movement_system(&mut server.state.world);
+        let mut remove = zombie_collision_system(&mut server.state.world);
         remove.extend(bullet_movement_system(&mut server.state.world));
         for (entity, id) in remove {
             let _ = server.despawn_entity(entity, id).await;
@@ -53,6 +55,13 @@ async fn main() -> anyhow::Result<()> {
         );
 
         let dt = 1.0 / tps() as f32;
+
+        zombie_movement_system(
+            &mut server.state.world,
+            &mut server.server_data.zombie_paths,
+            dt,
+        );
+
         physics_system(&server.state.world, dt);
 
         server.check_player_health().await;
