@@ -275,7 +275,6 @@ impl Client {
                 if self.last_snapshots.len() > 5 {
                     self.last_snapshots.pop_front();
                 }
-                println!("recv snapshot");
                 self.snapshot_handler(packet_snapshot);
             }
             PacketKind::LevelData => {
