@@ -6,10 +6,7 @@ use game::ecs::{
     systems::{input::input_system_for_player, physics::physics_system_for_player},
     transform::{Position, Velocity},
 };
-use protocol::{
-    config_parser::tps,
-    packets::snapshot::{PacketSnapshot, TimerKind},
-};
+use protocol::{config_parser::tps, packets::snapshot::PacketSnapshot};
 
 impl Client {
     pub fn snapshot_handler(&mut self, packet_snapshot: PacketSnapshot) {

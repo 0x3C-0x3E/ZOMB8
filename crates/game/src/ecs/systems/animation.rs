@@ -4,7 +4,7 @@ use macroquad::prelude::*;
 use crate::ecs::{
     components::{
         animation::{AnimController, PlayerAnimState, ZombieAnimState},
-        sprite::{self, Sprite},
+        sprite::Sprite,
         transform::Velocity,
     },
     entities::{
