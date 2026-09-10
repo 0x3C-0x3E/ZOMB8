@@ -7,6 +7,11 @@ use crate::{
     packets::spawn_entity::EntityKind,
 };
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
+pub enum TimerKind {
+    ZombieSpawnTimer,
+}
+
 #[derive(Serialize, Deserialize, Clone)]
 pub struct PacketSnapshot {
     pub tick: u64,
@@ -14,6 +19,7 @@ pub struct PacketSnapshot {
     pub entities: Vec<(ProtocolNetworkId, EntityState)>,
     pub entity_health: Vec<(ProtocolNetworkId, (u32, u32))>,
     pub player_scores: Vec<(ProtocolNetworkId, u32)>,
+    pub timers: Vec<(ProtocolNetworkId, TimerKind, f32)>,
 }
 
 impl PacketPayload for PacketSnapshot {
@@ -27,6 +33,7 @@ impl PacketSnapshot {
         entities: Vec<(ProtocolNetworkId, EntityState)>,
         entity_health: Vec<(ProtocolNetworkId, (u32, u32))>,
         player_scores: Vec<(ProtocolNetworkId, u32)>,
+        timers: Vec<(ProtocolNetworkId, TimerKind, f32)>,
     ) -> Self {
         Self {
             tick,
@@ -34,6 +41,7 @@ impl PacketSnapshot {
             entities,
             entity_health,
             player_scores,
+            timers,
         }
     }
 }

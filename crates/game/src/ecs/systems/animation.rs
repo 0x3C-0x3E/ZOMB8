@@ -52,7 +52,6 @@ pub fn zombie_animation_state_system(world: &mut World) {
             controller.state = Box::new(new_state);
             controller.tick = 0.0;
             sprite.set_y(controller.state.get_y_pos());
-            println!("{}", sprite.rect.y);
         }
     }
 }

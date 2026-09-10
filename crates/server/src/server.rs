@@ -13,7 +13,12 @@ use hecs::{Entity, World};
 use game::{
     ecs::{
         components::{health::Health, score::Score, snapshot_sync::SnapshotSync},
-        entities::{bullet::Bullet, player::Player, tile::Tile, zombie::Zombie},
+        entities::{
+            bullet::Bullet,
+            player::Player,
+            tile::Tile,
+            zombie::{Zombie, ZombieSpawnTimer},
+        },
         network_id::NetworkId,
         systems::pathfinding::{GridPos, build_tile_grid},
         transform::{Position, Velocity},
@@ -26,7 +31,7 @@ use protocol::{
         despawn_entity::PacketDespawnEntity,
         level_data::PacketLevelData,
         shoot::PacketShoot,
-        snapshot::{EntityState, PacketSnapshot},
+        snapshot::{EntityState, PacketSnapshot, TimerKind},
         spawn_entity::{
             EntityKind::{self},
             PacketSpawnEntity,
@@ -285,6 +290,14 @@ impl Server {
             .map(|(id, score)| (*id, score.get()))
             .collect();
 
+        let timers: Vec<(NetworkId, TimerKind, f32)> = self
+            .state
+            .world
+            .query_mut::<(&NetworkId, &ZombieSpawnTimer)>()
+            .into_iter()
+            .map(|(id, t)| (*id, TimerKind::ZombieSpawnTimer, t.0))
+            .collect();
+
         for (client, id) in self.client_ids.iter() {
             let last_ack_seq = self.client_input_seq.get(id).copied().unwrap_or(0);
             let payload = PacketSnapshot::new(
@@ -293,6 +306,7 @@ impl Server {
                 entities.clone(),
                 entity_health.clone(),
                 player_scores.clone(),
+                timers.clone(),
             );
             let packet = Packet::from_payload(payload).unwrap();
             let _ = self.in_send.send((*client, packet)).await;
