@@ -109,7 +109,11 @@ async fn main() -> anyhow::Result<()> {
             client.rendering_state.camera.set_camera(pos);
         }
 
-        rendering_system(&mut client.state, client.player, &client.rendering_state);
+        rendering_system(
+            &mut client.state,
+            client.player,
+            &mut client.rendering_state,
+        );
         next_frame().await;
     }
 }

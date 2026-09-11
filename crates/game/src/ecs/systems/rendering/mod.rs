@@ -1,4 +1,5 @@
 use crate::ecs::systems::rendering::camera::Camera;
+use crate::ecs::systems::rendering::shader::AvailableShaders;
 use crate::ecs::systems::rendering::ui::draw_mouse_cursor;
 use crate::ecs::systems::rendering::ui::draw_ui;
 use crate::{
@@ -16,12 +17,16 @@ use crate::{
 use hecs::Entity;
 use macroquad::prelude::*;
 
+use shader::ShaderState;
+
 mod camera;
+mod shader;
 mod ui;
 
 pub struct RenderingState {
     pub camera: Camera,
     pub texture_manager: TextureManager,
+    pub shader_materials: ShaderState,
     pub font: Font,
 }
 
@@ -34,14 +39,20 @@ impl RenderingState {
                 pos: (0.0, 0.0).into(),
                 scale: DEFAULT_SCALE,
             },
+            shader_materials: ShaderState::load().expect("could not load shaders"),
             texture_manager: TextureManager::load_game_textures().await,
             font: load_ttf_font("assets/font/font.ttf").await.unwrap(),
         }
     }
 }
 
-pub fn rendering_system(state: &mut State, player: Option<Entity>, rd_state: &RenderingState) {
+pub fn rendering_system(state: &mut State, player: Option<Entity>, rd_state: &mut RenderingState) {
     let camera = &rd_state.camera;
+
+    let sh_state = &mut rd_state.shader_materials;
+
+    sh_state.check_screen_changed();
+    sh_state.set_camera();
 
     clear_background(Color::from_hex(0x727272));
 
@@ -109,6 +120,23 @@ pub fn rendering_system(state: &mut State, player: Option<Entity>, rd_state: &Re
         }
     }
 
+    set_default_camera();
+
+    sh_state.set_shader(AvailableShaders::CrtMaterial);
+
+    draw_texture_ex(
+        &sh_state.render_target.texture,
+        0.0,
+        0.0,
+        WHITE,
+        DrawTextureParams {
+            dest_size: Some(vec2(screen_width(), screen_height())),
+            flip_y: true,
+            ..Default::default()
+        },
+    );
+
+    gl_use_default_material();
     draw_ui(state, rd_state, player);
 
     draw_mouse_cursor(rd_state);
