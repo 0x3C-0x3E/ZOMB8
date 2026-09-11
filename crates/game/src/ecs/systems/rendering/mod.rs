@@ -120,14 +120,20 @@ pub fn rendering_system(state: &mut State, player: Option<Entity>, rd_state: &mu
         }
     }
 
+    drop(sh_state);
+
+    draw_ui(state, rd_state, player);
+    draw_mouse_cursor(rd_state);
+
+    let sh_state = &mut rd_state.shader_materials;
     set_default_camera();
 
     sh_state.set_shader(AvailableShaders::CrtMaterial);
 
     draw_texture_ex(
         &sh_state.render_target.texture,
-        0.0,
-        0.0,
+        0.0 + rand::gen_range(-5.0, 5.0),
+        0.0 + rand::gen_range(-5.0, 5.0),
         WHITE,
         DrawTextureParams {
             dest_size: Some(vec2(screen_width(), screen_height())),
@@ -137,7 +143,4 @@ pub fn rendering_system(state: &mut State, player: Option<Entity>, rd_state: &mu
     );
 
     gl_use_default_material();
-    draw_ui(state, rd_state, player);
-
-    draw_mouse_cursor(rd_state);
 }

@@ -64,6 +64,7 @@ impl ShaderState {
                 uniforms: vec![
                     UniformDesc::new("screen_size", UniformType::Float2),
                     UniformDesc::new("time", UniformType::Float1),
+                    UniformDesc::new("strength", UniformType::Float1),
                 ],
                 ..Default::default()
             },
@@ -90,7 +91,6 @@ impl ShaderState {
                 self.render_target.texture.height(),
             )
         {
-            println!("update camera");
             self.update_render_target();
         }
     }
@@ -133,5 +133,6 @@ impl ShaderState {
         self.crt_material
             .set_uniform("screen_size", (screen_width(), screen_height()));
         self.crt_material.set_uniform("time", get_time() as f32);
+        self.crt_material.set_uniform("strength", 0.03_f32);
     }
 }
