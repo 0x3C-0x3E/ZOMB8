@@ -7,6 +7,8 @@ use std::{
     time::{Duration, Instant},
 };
 
+use futures::future;
+
 use glam::Vec2;
 use hecs::{Entity, World};
 
@@ -122,9 +124,12 @@ impl Server {
     }
 
     pub async fn send_to_all(&mut self, packet: &Packet) {
-        for client in self.clients.keys() {
-            let _ = self.in_send.send((*client, packet.clone())).await;
-        }
+        future::join_all(
+            self.clients
+                .keys()
+                .map(|client| self.in_send.send((*client, packet.clone()))),
+        )
+        .await;
     }
 
     pub async fn send_to(

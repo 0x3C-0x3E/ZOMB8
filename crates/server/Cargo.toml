@@ -10,6 +10,7 @@ game = { path = "../game", features = ["server"]}
 glam = { version = "0.30", features = ["serde"] }
 
 tokio = { version = "1", features = ["full"] }
+futures = "0.3"
 anyhow = "1.0.104"
 
 serde = { version = "1", features = ["derive"] }
