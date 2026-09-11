@@ -20,11 +20,13 @@ where
     E: hecs::Query,
 {
     let pos = pos.vec2();
+    let max_distance_squared = 144.0 * 2.0;
 
     world
         .query::<(Entity, &Position)>()
         .with::<E>()
         .iter()
+        .filter(|(_, e_pos)| pos.distance_squared(e_pos.vec2()) <= max_distance_squared)
         .min_by_key(|(_, e_pos)| pos.distance_squared(e_pos.vec2()) as i64)
         .map(|(e, _)| e)
 }

@@ -1,11 +1,12 @@
 use crate::client::core::Client;
 use game::ecs::{
     components::{health::Health, score::Score, snapshot_sync::SnapshotSync},
-    entities::zombie::ZombieSpawnTimer,
+    entities::zombie::{Zombie, ZombieSpawnTimer},
     network_id::NetworkId,
     systems::{input::input_system_for_player, physics::physics_system_for_player},
     transform::{Position, Velocity},
 };
+use hecs::Entity;
 use protocol::{config_parser::tps, packets::snapshot::PacketSnapshot};
 
 impl Client {
@@ -81,6 +82,34 @@ impl Client {
             };
 
             prev_score.0 = new_score;
+        }
+
+        let mut timers_to_remove = Vec::new();
+
+        for (e, id, timer) in self
+            .state
+            .world
+            .query_mut::<(Entity, &NetworkId, &mut ZombieSpawnTimer)>()
+            .with::<&Zombie>()
+        {
+            if let Some(new_time) = packet_snapshot
+                .timers
+                .iter()
+                .find(|(pid, _, _)| pid == id)
+                .map(|(_, _, new_time)| new_time)
+            {
+                timer.0 = *new_time;
+                if *new_time == 0.0 {
+                    timers_to_remove.push(e);
+                }
+            } else {
+                timers_to_remove.push(e);
+            }
+        }
+
+        for e in timers_to_remove {
+            println!("removed timer");
+            let _ = self.state.world.remove_one::<ZombieSpawnTimer>(e);
         }
 
         for (id, _kind, new_time) in packet_snapshot.timers {
