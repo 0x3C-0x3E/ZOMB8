@@ -3,10 +3,12 @@ use std::net::SocketAddr;
 
 use game::ecs::{entities::player::Player, network_id::NetworkId, systems::input::input_system};
 use protocol::{
+    config_parser::game_version,
     packet::Packet,
     packets::{
         input::PacketInput, ping::PacketPing, request::PacketRequest,
-        set_player_id::PacketSetPlayerId, shoot::PacketShoot, wave::PacketWave,
+        set_player_id::PacketSetPlayerId, shoot::PacketShoot, version::PacketVersion,
+        wave::PacketWave,
     },
 };
 
@@ -76,7 +78,13 @@ impl Server {
                         let payload = PacketWave::new(self.state.current_wave);
                         let packet = Packet::from_payload(payload)?;
 
-                        let _ = self.send_to_all(&packet).await;
+                        let _ = self.send_to(&packet, sender_addr).await;
+                    }
+                    RequestKind::Version => {
+                        let payload = PacketVersion::new(game_version());
+                        let packet = Packet::from_payload(payload)?;
+
+                        let _ = self.send_to(&packet, sender_addr).await;
                     }
                 }
             }

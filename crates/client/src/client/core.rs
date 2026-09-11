@@ -17,6 +17,7 @@ use glam::Vec2;
 use hecs::Entity;
 use macroquad::input::{MouseButton, is_mouse_button_pressed, mouse_position};
 use protocol::{
+    config_parser::game_version,
     network_id::ProtocolNetworkId,
     packet::Packet,
     packets::{
@@ -28,6 +29,7 @@ use protocol::{
         shoot::PacketShoot,
         snapshot::{EntityState, PacketSnapshot},
         spawn_entity::{EntityKind, PacketSpawnEntity},
+        version::PacketVersion,
         wave::PacketWave,
     },
 };
@@ -55,6 +57,8 @@ pub struct Client {
 
     pub last_snapshots: VecDeque<PacketSnapshot>,
     pub interp_timer: f32,
+
+    pub verified: bool,
 }
 
 impl Client {
@@ -83,6 +87,7 @@ impl Client {
 
             last_snapshots: VecDeque::with_capacity(5),
             interp_timer: 0.0,
+            verified: false,
         }
     }
 
@@ -239,11 +244,30 @@ impl Client {
                 self.send(packet).await;
             }
         }
+
+        if !self.verified {
+            let payload = PacketRequest::new(RequestKind::Version);
+            if let Ok(packet) = Packet::from_payload(payload) {
+                self.send(packet).await;
+            }
+        }
     }
 
     pub fn handle_packet(&mut self, packet: Packet) -> anyhow::Result<()> {
         use protocol::packet::PacketKind;
         match packet.kind {
+            PacketKind::Version => {
+                let packet_version: PacketVersion = bincode::deserialize(&packet.payload)?;
+                if packet_version.version_string == game_version() {
+                    self.verified = true;
+                } else {
+                    panic!(
+                        "version strings do not match. server: `{}`, client: `{}`",
+                        packet_version.version_string,
+                        game_version()
+                    );
+                }
+            }
             PacketKind::SpawnEntity => {
                 let packet_spawn_entity: PacketSpawnEntity = bincode::deserialize(&packet.payload)?;
                 self.spawn_network_entity(packet_spawn_entity);

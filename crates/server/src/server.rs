@@ -159,8 +159,6 @@ impl Server {
 
         for addr in disconnected_clients {
             if let Some(id) = self.client_ids.remove(&addr) {
-                println!("client {:?} got disconnected", id.0);
-
                 let payload = PacketDespawnEntity::new(id);
                 let packet = Packet::from_payload(payload)?;
                 let _ = self.send_to_all(&packet).await;

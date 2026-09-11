@@ -7,6 +7,7 @@ pub enum RequestKind {
     PlayerId,
     LevelData,
     Ping,
+    Version,
     Wave,
 }
 

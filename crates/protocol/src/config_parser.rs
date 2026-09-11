@@ -9,6 +9,7 @@ pub struct Config {
     pub server_ip: String,
     pub tps: u32,
     pub port: u16,
+    pub version: String,
 }
 
 pub fn parse_config() -> anyhow::Result<()> {
@@ -32,4 +33,8 @@ pub fn tps() -> u32 {
 
 pub fn port() -> u16 {
     CONFIG.get().unwrap().port
+}
+
+pub fn game_version() -> String {
+    CONFIG.get().unwrap().version.clone()
 }

@@ -7,4 +7,5 @@ pub mod set_player_id;
 pub mod shoot;
 pub mod snapshot;
 pub mod spawn_entity;
+pub mod version;
 pub mod wave;
