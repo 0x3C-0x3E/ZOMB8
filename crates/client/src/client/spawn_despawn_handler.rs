@@ -74,12 +74,15 @@ impl Client {
             use protocol::packets::spawn_entity::EntityKind;
             match kind {
                 EntityKind::Player => {
+                    self.rendering_state.shake_state.set_shake(0.4, 4.0);
                     self.spawn_particles(e, ParticleKind::DeathPlayer);
                 }
                 EntityKind::Zombie => {
+                    self.rendering_state.shake_state.set_shake(0.2, 3.0);
                     self.spawn_particles(e, ParticleKind::DeathZombie);
                 }
                 EntityKind::Bullet => {
+                    self.rendering_state.shake_state.set_shake(0.1, 2.0);
                     self.spawn_particles(e, ParticleKind::BulletCollision);
                 }
                 _ => {}
