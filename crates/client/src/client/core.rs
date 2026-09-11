@@ -118,7 +118,7 @@ impl Client {
             && let Some((pos, _)) = self.get_player_state()
         {
             let pos = *pos;
-            let render_pos = self.rendering_state.get_render_pos(&pos);
+            let render_pos = self.rendering_state.camera.get_render_pos(&pos);
             let mouse_pos = glam::Vec2::new(mouse_position().0, mouse_position().1);
 
             let direction = mouse_pos - Vec2::from(render_pos);

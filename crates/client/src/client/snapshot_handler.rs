@@ -108,7 +108,6 @@ impl Client {
         }
 
         for e in timers_to_remove {
-            println!("removed timer");
             let _ = self.state.world.remove_one::<ZombieSpawnTimer>(e);
         }
 

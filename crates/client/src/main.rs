@@ -106,7 +106,7 @@ async fn main() -> anyhow::Result<()> {
 
         if let Some((pos, _)) = client.get_player_state() {
             let pos = *pos;
-            client.rendering_state.set_camera(pos);
+            client.rendering_state.camera.set_camera(pos);
         }
 
         rendering_system(&mut client.state, client.player, &client.rendering_state);
