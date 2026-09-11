@@ -27,7 +27,7 @@ impl Client {
             if let Some((pos, vel)) = found {
                 *pos = new_state.pos.into();
                 *vel = new_state.vel.into();
-                if id == self.client_id {
+                if id == self.player_id {
                     drop(binding);
                     self.last_maps
                         .retain(|(seq, _)| *seq > packet_snapshot.last_ack_seq);

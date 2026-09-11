@@ -38,7 +38,7 @@ use tokio::sync::{
 
 pub struct Client {
     pub state: State,
-    pub client_id: NetworkId,
+    pub player_id: NetworkId,
 
     pub player: Option<Entity>,
     pub prev_pos: Position,
@@ -66,7 +66,7 @@ impl Client {
     ) -> Self {
         Self {
             state: State::new(),
-            client_id: ProtocolNetworkId(0),
+            player_id: ProtocolNetworkId(0),
 
             rendering_state,
 
@@ -87,7 +87,7 @@ impl Client {
     }
 
     pub fn set_client_id(&mut self, id: NetworkId) {
-        self.client_id = id;
+        self.player_id = id;
     }
 
     pub fn get_player_state(&mut self) -> Option<(&mut Position, &mut Velocity)> {
@@ -107,7 +107,7 @@ impl Client {
         let input_map = get_input_map();
         let _ = self.check_for_new_input(&input_map);
 
-        input_system(&mut self.state, self.client_id, &input_map);
+        input_system(&mut self.state, self.player_id, &input_map);
 
         if is_mouse_button_pressed(MouseButton::Left)
             && let Some((pos, _)) = self.get_player_state()
@@ -119,7 +119,7 @@ impl Client {
             let direction = mouse_pos - Vec2::from(render_pos);
             let angle = direction.y.atan2(direction.x).to_degrees();
 
-            let payload = PacketShoot::new(self.client_id, pos.vec2(), angle);
+            let payload = PacketShoot::new(self.player_id, pos.vec2(), angle);
             if let Ok(packet) = Packet::from_payload(payload) {
                 self.send(packet).await;
             }
@@ -142,7 +142,7 @@ impl Client {
             self.input_seq += 1;
             self.last_maps.push((self.input_seq, current_map.clone()));
 
-            let payload = PacketInput::new(self.client_id, self.input_seq, current_map.clone());
+            let payload = PacketInput::new(self.player_id, self.input_seq, current_map.clone());
             let packet = Packet::from_payload(payload)?;
 
             self.input_send.send_replace(packet);
@@ -175,7 +175,7 @@ impl Client {
             .query_mut::<(&mut RenderPosition, &NetworkId, &Position)>()
             .with::<&SnapshotSync>()
         {
-            if *id == self.client_id {
+            if *id == self.player_id {
                 continue;
             }
             let Some(sn_before) = sn_before else {
@@ -219,7 +219,7 @@ impl Client {
     }
 
     pub async fn check_for_missing_critical_packets(&mut self) {
-        if self.client_id == ProtocolNetworkId(0) {
+        if self.player_id == ProtocolNetworkId(0) {
             let payload = PacketRequest::new(RequestKind::PlayerId);
             if let Ok(packet) = Packet::from_payload(payload) {
                 self.send(packet).await;
@@ -263,7 +263,7 @@ impl Client {
                     .query_mut::<(Entity, &NetworkId)>()
                     .with::<&Player>()
                     .into_iter()
-                    .find(|(_, n)| **n == self.client_id)
+                    .find(|(_, n)| **n == self.player_id)
                     .map(|(e, _)| e)
                     .expect("client player does not exist");
 

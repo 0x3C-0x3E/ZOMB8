@@ -13,7 +13,7 @@ pub enum Axis {
 }
 
 fn colliding(p1: &Position, p2: &Position) -> bool {
-    p1.x < p2.x + 8.0 && p1.x + 8.0 > p2.x && p1.y < p2.y + 8.0 && p1.y + 8.0 > p2.y
+    p1.x < p2.x + 7.9 && p1.x + 7.9 > p2.x && p1.y < p2.y + 7.9 && p1.y + 7.9 > p2.y
 }
 
 pub fn resolve_collision_system(world: &World, axis: Axis) {

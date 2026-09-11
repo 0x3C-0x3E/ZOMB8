@@ -26,7 +26,7 @@ fn window_conf() -> Conf {
     Conf {
         window_title: "ZOMB8".to_owned(),
         window_width: 800.0 as i32,
-        window_height: 600.0 as i32,
+        window_height: 800.0 as i32,
         window_resizable: true,
         sample_count: 1,
         ..Default::default()
