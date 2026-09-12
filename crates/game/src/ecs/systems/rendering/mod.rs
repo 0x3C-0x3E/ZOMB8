@@ -169,7 +169,7 @@ pub fn rendering_system(state: &mut State, player: Option<Entity>, rd_state: &mu
     let final_target = rd_state.shader_state.run_pipeline(
         &[
             AvailableShaders::CrtMaterial,
-            // AvailableShaders::BloodMaterial,
+            AvailableShaders::BloodMaterial,
         ],
         pos,
     );

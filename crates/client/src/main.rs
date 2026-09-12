@@ -19,6 +19,7 @@ use protocol::{
     packets::input::{InputMap, PacketInput},
 };
 
+mod audio_handler;
 mod client;
 mod network_thread;
 

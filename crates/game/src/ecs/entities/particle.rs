@@ -30,18 +30,21 @@ pub enum ParticleKind {
 impl ParticleKind {
     pub fn get_sprite_rect(&self) -> Rect {
         match self {
-            Self::DeathZombie => Rect::new(16., 0., 8., 8.),
-            Self::DeathPlayer => Rect::new(16., 0., 8., 8.),
-            Self::BulletCollision => Rect::new(
-                24.,
-                if rand::rand().is_multiple_of(2) {
-                    8.0
-                } else {
-                    0.0
-                },
-                8.,
-                8.,
+            Self::DeathZombie => Rect::new(
+                16.,
+                (rand::gen_range(0., 4.) as f32).floor() * 8.0,
+                8.0,
+                8.0,
             ),
+            Self::DeathPlayer => Rect::new(
+                16.,
+                (rand::gen_range(0., 4.) as f32).floor() * 8.0,
+                8.0,
+                8.0,
+            ),
+            Self::BulletCollision => {
+                Rect::new(24., (rand::gen_range(0., 4.0) as f32).floor() * 8.0, 8., 8.)
+            }
             Self::BulletTrail => Rect::new(
                 32.,
                 if rand::rand().is_multiple_of(2) {

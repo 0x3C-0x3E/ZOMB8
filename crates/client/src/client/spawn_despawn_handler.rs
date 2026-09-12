@@ -89,6 +89,9 @@ impl Client {
                     self.rendering_state.shake_state.set_shake(0.1, 2.0);
                     self.spawn_particles(e, ParticleKind::BulletCollision);
                 }
+                EntityKind::HealthPack => {
+                    self.spawn_particles(e, ParticleKind::BulletCollision);
+                }
                 _ => {}
             }
 

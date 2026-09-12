@@ -15,7 +15,10 @@ use game::{
 };
 use glam::Vec2;
 use hecs::Entity;
-use macroquad::input::{MouseButton, is_mouse_button_pressed, mouse_position};
+use macroquad::{
+    audio::play_sound_once,
+    input::{MouseButton, is_mouse_button_pressed, mouse_position},
+};
 use protocol::{
     config_parser::game_version,
     network_id::ProtocolNetworkId,
