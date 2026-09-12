@@ -88,16 +88,11 @@ impl RenderingState {
     }
 }
 
-pub fn rendering_system(state: &mut State, player: Option<Entity>, rd_state: &mut RenderingState) {
+fn entity_rendering(state: &mut State, rd_state: &mut RenderingState) {
+    // clear_background(Color::from_hex(0x727272));
+    clear_background(Color::from_hex(0x00_00_00));
+
     let camera = &rd_state.camera;
-
-    let sh_state = &mut rd_state.shader_materials;
-
-    sh_state.check_screen_changed();
-    sh_state.set_camera();
-
-    clear_background(Color::from_hex(0x727272));
-
     for (e, pos, sprite) in state.world.query::<(Entity, &Position, &Sprite)>().iter() {
         let mut render_pos = *pos;
         if let Ok(rpos) = state.world.get::<&RenderPosition>(e) {
@@ -161,29 +156,34 @@ pub fn rendering_system(state: &mut State, player: Option<Entity>, rd_state: &mu
             );
         }
     }
+}
+
+pub fn rendering_system(state: &mut State, player: Option<Entity>, rd_state: &mut RenderingState) {
+    {
+        let sh_state = &mut rd_state.shader_materials;
+
+        sh_state.check_screen_changed();
+        sh_state.set_camera();
+    }
+
+    entity_rendering(state, rd_state);
 
     draw_ui(state, rd_state, player);
     draw_mouse_cursor(rd_state);
 
-    let sh_state = &mut rd_state.shader_materials;
-    set_default_camera();
+    {
+        let sh_state = &mut rd_state.shader_materials;
 
-    sh_state.set_shader(AvailableShaders::CrtMaterial);
+        rd_state.shake_state.update();
 
-    rd_state.shake_state.update();
-    let pos = rd_state.shake_state.get_pos();
+        sh_state.set_shader(AvailableShaders::CrtMaterial);
+        sh_state.render_layer(rd_state.shake_state.get_pos());
 
-    draw_texture_ex(
-        &sh_state.render_target.texture,
-        pos.0,
-        pos.1,
-        WHITE,
-        DrawTextureParams {
-            dest_size: Some(vec2(screen_width(), screen_height())),
-            flip_y: true,
-            ..Default::default()
-        },
-    );
+        sh_state.set_shader(AvailableShaders::BloodMaterial);
+        sh_state.render_layer((0.0, 0.0));
 
-    gl_use_default_material();
+        sh_state.unset_camera();
+        sh_state.set_shader(AvailableShaders::None);
+        sh_state.render_layer((0.0, 0.0));
+    }
 }

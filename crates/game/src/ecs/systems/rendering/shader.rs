@@ -19,17 +19,20 @@ void main() {
 ";
 
 const GAMEOVER_FRAG_SHADER: &str = include_str!("gameover.glsl");
-
 const CRT_FRAG_SHADER: &str = include_str!("crt.glsl");
+const BLOOD_FRAG_SHADER: &str = include_str!("blood.glsl");
 
 pub enum AvailableShaders {
+    None,
     GameoverMaterial,
     CrtMaterial,
+    BloodMaterial,
 }
 
 pub struct ShaderState {
     pub gameover_material: Material,
     pub crt_material: Material,
+    pub blood_material: Material,
 
     pub render_target: RenderTarget,
     pub render_camera: Camera2D,
@@ -71,6 +74,17 @@ impl ShaderState {
         )
         .unwrap();
 
+        let blood_material = load_material(
+            ShaderSource::Glsl {
+                vertex: DEFAULT_VERTEX_SHADER,
+                fragment: BLOOD_FRAG_SHADER,
+            },
+            MaterialParams {
+                ..Default::default()
+            },
+        )
+        .unwrap();
+
         let mut render_camera =
             Camera2D::from_display_rect(Rect::new(0.0, 0.0, screen_width(), screen_height()));
 
@@ -80,6 +94,7 @@ impl ShaderState {
             render_target,
             gameover_material,
             crt_material,
+            blood_material,
             render_camera,
         })
     }
@@ -106,8 +121,15 @@ impl ShaderState {
         set_camera(&self.render_camera);
     }
 
+    pub fn unset_camera(&self) {
+        set_default_camera();
+    }
+
     pub fn set_shader(&mut self, shader_kind: AvailableShaders) {
         match shader_kind {
+            AvailableShaders::None => {
+                gl_use_default_material();
+            }
             AvailableShaders::GameoverMaterial => {
                 self.update_gameover_material();
                 gl_use_material(&self.gameover_material);
@@ -116,7 +138,24 @@ impl ShaderState {
                 self.update_crt_material();
                 gl_use_material(&self.crt_material)
             }
+            AvailableShaders::BloodMaterial => {
+                gl_use_material(&self.blood_material);
+            }
         }
+    }
+
+    pub fn render_layer(&self, pos: (f32, f32)) {
+        draw_texture_ex(
+            &self.render_target.texture,
+            pos.0,
+            pos.1,
+            WHITE,
+            DrawTextureParams {
+                dest_size: Some(vec2(screen_width(), screen_height())),
+                flip_y: true,
+                ..Default::default()
+            },
+        );
     }
 
     pub fn update_gameover_material(&mut self) {
