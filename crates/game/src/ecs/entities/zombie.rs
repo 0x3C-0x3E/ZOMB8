@@ -1,3 +1,4 @@
+use glam::Vec2;
 use hecs::{Entity, World};
 use macroquad::math::Rect;
 use protocol::packets::spawn_entity::EntityKind;
@@ -33,11 +34,11 @@ impl Zombie {
             ZombieSpawnTimer(4.0),
             Health::new(max_health.unwrap_or(50), max_health.unwrap_or(50)),
             pos,
-            RenderPosition::from_pos(pos),
+            RenderPosition::from(pos),
             SnapshotSync(EntityKind::Zombie),
             network_id,
             EntityKind::Zombie,
-            Velocity::zero(),
+            Velocity(Vec2::ZERO),
             Moveable,
             Collideable,
             CollisionMesh::default(),

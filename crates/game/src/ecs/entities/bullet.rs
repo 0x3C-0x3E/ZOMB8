@@ -1,3 +1,4 @@
+use glam::Vec2;
 use hecs::{Entity, World};
 use macroquad::math::Rect;
 use protocol::packets::spawn_entity::EntityKind;
@@ -30,11 +31,11 @@ impl Bullet {
         world.spawn((
             Bullet,
             pos,
-            RenderPosition::from_pos(pos),
+            RenderPosition::from(pos),
             SnapshotSync(EntityKind::Bullet),
             EntityKind::Bullet,
             CollisionMesh::default(),
-            Velocity::zero(),
+            Velocity(Vec2::ZERO),
             Moveable,
             network_id,
             LinkedPlayerId(player_id),

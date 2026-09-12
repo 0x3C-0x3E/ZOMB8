@@ -1,3 +1,4 @@
+use glam::Vec2;
 use hecs::{Entity, World};
 use macroquad::math::Rect;
 use protocol::packets::spawn_entity::EntityKind;
@@ -19,7 +20,7 @@ impl HealthPack {
         world.spawn((
             HealthPack,
             pos,
-            Velocity::zero(),
+            Velocity(Vec2::ZERO),
             network_id,
             SnapshotSync(EntityKind::HealthPack),
             EntityKind::HealthPack,
