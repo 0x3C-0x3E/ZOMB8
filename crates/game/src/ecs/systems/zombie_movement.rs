@@ -1,5 +1,6 @@
 use std::collections::{HashMap, VecDeque};
 
+use glam::Vec2;
 use hecs::{Entity, World};
 use protocol::packets::spawn_entity::EntityKind;
 
@@ -19,15 +20,14 @@ pub fn get_closest_entity<E>(world: &World, pos: &Position) -> Option<Entity>
 where
     E: hecs::Query,
 {
-    let pos = pos.vec2();
     let max_distance_squared = 144.0 * 2.0;
 
     world
         .query::<(Entity, &Position)>()
         .with::<E>()
         .iter()
-        .filter(|(_, e_pos)| pos.distance_squared(e_pos.vec2()) <= max_distance_squared)
-        .min_by_key(|(_, e_pos)| pos.distance_squared(e_pos.vec2()) as i64)
+        .filter(|(_, e_pos)| pos.distance_squared(e_pos.0) <= max_distance_squared)
+        .min_by_key(|(_, e_pos)| pos.distance_squared(e_pos.0) as i64)
         .map(|(e, _)| e)
 }
 
@@ -90,8 +90,8 @@ pub fn zombie_movement_system(
         if let Some(path) = zombie_paths.get_mut(&e)
             && let Some(next_pos) = path.front()
         {
-            let next_pos = Position::new(next_pos.x as f32 * 8.0, next_pos.y as f32 * 8.0);
-            let to_target = next_pos.vec2() - pos.vec2();
+            let next_pos = Position(Vec2::new(next_pos.x as f32 * 8.0, next_pos.y as f32 * 8.0));
+            let to_target = next_pos.0 - pos.0;
             let dist = to_target.length();
             let dir = to_target.normalize_or_zero();
 

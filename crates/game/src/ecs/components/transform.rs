@@ -21,6 +21,13 @@ impl DerefMut for Position {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct RenderPosition(pub Vec2);
 
+impl RenderPosition {
+    pub fn render_pos_lerp(&mut self, last: &Position, current: &Position, alpha: f32) {
+        self.x = last.x + (current.x - last.x) * alpha;
+        self.y = last.y + (current.y - last.y) * alpha;
+    }
+}
+
 impl Deref for RenderPosition {
     type Target = Vec2;
     fn deref(&self) -> &Self::Target {
@@ -38,11 +45,6 @@ impl From<Position> for RenderPosition {
     fn from(p: Position) -> Self {
         RenderPosition(p.0)
     }
-}
-
-pub fn render_pos_lerp(pos: &mut RenderPosition, last: &Vec2, current: &Vec2, alpha: f32) {
-    pos.x = last.x + (current.x - last.x) * alpha;
-    pos.y = last.y + (current.y - last.y) * alpha;
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -76,5 +78,23 @@ impl From<Vec2> for RenderPosition {
 impl From<Vec2> for Velocity {
     fn from(v: Vec2) -> Self {
         Velocity(v)
+    }
+}
+
+impl Position {
+    pub fn vec2(&self) -> Vec2 {
+        self.0
+    }
+}
+
+impl RenderPosition {
+    pub fn vec2(&self) -> Vec2 {
+        self.0
+    }
+}
+
+impl Velocity {
+    pub fn vec2(&self) -> Vec2 {
+        self.0
     }
 }

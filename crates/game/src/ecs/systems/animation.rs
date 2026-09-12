@@ -18,7 +18,7 @@ pub fn player_animation_state_system(world: &mut World) {
         .query_mut::<(&Velocity, &mut AnimController, &mut Sprite)>()
         .with::<&Player>()
     {
-        let new_state = if vel.vec2().length() < 0.1 {
+        let new_state = if vel.length() < 0.1 {
             PlayerAnimState::Idle
         } else {
             PlayerAnimState::Run
