@@ -67,7 +67,7 @@ pub struct RenderingState {
     pub camera: Camera,
     pub shake_state: ShakeState,
     pub texture_manager: TextureManager,
-    pub shader_materials: ShaderState,
+    pub shader_state: ShaderState,
     pub font: Font,
 }
 
@@ -81,7 +81,7 @@ impl RenderingState {
                 scale: DEFAULT_SCALE,
             },
             shake_state: ShakeState::new(),
-            shader_materials: ShaderState::load().expect("could not load shaders"),
+            shader_state: ShaderState::load().expect("could not load shaders"),
             texture_manager: TextureManager::load_game_textures().await,
             font: load_ttf_font("assets/font/font.ttf").await.unwrap(),
         }
@@ -89,8 +89,8 @@ impl RenderingState {
 }
 
 fn entity_rendering(state: &mut State, rd_state: &mut RenderingState) {
-    // clear_background(Color::from_hex(0x727272));
-    clear_background(Color::from_hex(0x00_00_00));
+    clear_background(Color::from_hex(0x727272));
+    // clear_background(Color::from_hex(0x00_00_00));
 
     let camera = &rd_state.camera;
     for (e, pos, sprite) in state.world.query::<(Entity, &Position, &Sprite)>().iter() {
@@ -159,31 +159,20 @@ fn entity_rendering(state: &mut State, rd_state: &mut RenderingState) {
 }
 
 pub fn rendering_system(state: &mut State, player: Option<Entity>, rd_state: &mut RenderingState) {
-    {
-        let sh_state = &mut rd_state.shader_materials;
+    rd_state.shader_state.check_screen_changed();
 
-        sh_state.check_screen_changed();
-        sh_state.set_camera();
-    }
-
+    rd_state.shader_state.begin_scene();
     entity_rendering(state, rd_state);
 
     draw_ui(state, rd_state, player);
     draw_mouse_cursor(rd_state);
 
-    {
-        let sh_state = &mut rd_state.shader_materials;
+    let final_target = rd_state.shader_state.run_pipeline(&[
+        AvailableShaders::CrtMaterial,
+        AvailableShaders::BloodMaterial,
+    ]);
 
-        rd_state.shake_state.update();
-
-        sh_state.set_shader(AvailableShaders::CrtMaterial);
-        sh_state.render_layer(rd_state.shake_state.get_pos());
-
-        sh_state.set_shader(AvailableShaders::BloodMaterial);
-        sh_state.render_layer((0.0, 0.0));
-
-        sh_state.unset_camera();
-        sh_state.set_shader(AvailableShaders::None);
-        sh_state.render_layer((0.0, 0.0));
-    }
+    rd_state
+        .shader_state
+        .present(final_target, rd_state.shake_state.get_pos());
 }

@@ -22,6 +22,7 @@ const GAMEOVER_FRAG_SHADER: &str = include_str!("gameover.glsl");
 const CRT_FRAG_SHADER: &str = include_str!("crt.glsl");
 const BLOOD_FRAG_SHADER: &str = include_str!("blood.glsl");
 
+#[derive(Clone, Copy)]
 pub enum AvailableShaders {
     None,
     GameoverMaterial,
@@ -34,13 +35,14 @@ pub struct ShaderState {
     pub crt_material: Material,
     pub blood_material: Material,
 
-    pub render_target: RenderTarget,
-    pub render_camera: Camera2D,
+    pub targets: [RenderTarget; 2],
+    pub cameras: [Camera2D; 2],
 }
 
 impl ShaderState {
     pub fn load() -> Option<Self> {
-        let render_target = render_target(screen_width() as u32, screen_height() as u32);
+        let (w, h) = (screen_width() as u32, screen_height() as u32);
+        let targets = [render_target(w, h), render_target(w, h)];
 
         let gameover_material = load_material(
             ShaderSource::Glsl {
@@ -85,68 +87,103 @@ impl ShaderState {
         )
         .unwrap();
 
-        let mut render_camera =
-            Camera2D::from_display_rect(Rect::new(0.0, 0.0, screen_width(), screen_height()));
-
-        render_camera.render_target = Some(render_target.clone());
+        let cameras = [0, 1].map(|i| {
+            let mut cam =
+                Camera2D::from_display_rect(Rect::new(0.0, 0.0, screen_width(), screen_height()));
+            cam.render_target = Some(targets[i].clone());
+            cam
+        });
 
         Some(Self {
-            render_target,
+            targets,
+            cameras,
+
             gameover_material,
             crt_material,
             blood_material,
-            render_camera,
         })
     }
 
     pub fn check_screen_changed(&mut self) {
         if (screen_width(), screen_height())
             != (
-                self.render_target.texture.width(),
-                self.render_target.texture.height(),
+                self.targets[0].texture.width(),
+                self.targets[0].texture.height(),
             )
         {
-            self.update_render_target();
+            self.update_render_targets();
         }
     }
 
-    pub fn update_render_target(&mut self) {
-        self.render_target = render_target(screen_width() as u32, screen_height() as u32);
-        self.render_camera =
-            Camera2D::from_display_rect(Rect::new(0.0, 0.0, screen_width(), screen_height()));
-        self.render_camera.render_target = Some(self.render_target.clone());
+    pub fn update_render_targets(&mut self) {
+        let (w, h) = (screen_width() as u32, screen_height() as u32);
+        self.targets = [render_target(w, h), render_target(w, h)];
+        for i in 0..2 {
+            let mut cam =
+                Camera2D::from_display_rect(Rect::new(0.0, 0.0, screen_width(), screen_height()));
+            cam.render_target = Some(self.targets[i].clone());
+            self.cameras[i] = cam;
+        }
     }
 
-    pub fn set_camera(&self) {
-        set_camera(&self.render_camera);
-    }
-
-    pub fn unset_camera(&self) {
-        set_default_camera();
-    }
-
-    pub fn set_shader(&mut self, shader_kind: AvailableShaders) {
-        match shader_kind {
-            AvailableShaders::None => {
-                gl_use_default_material();
-            }
+    fn material_for(&mut self, shader: &AvailableShaders) -> Option<&Material> {
+        match shader {
+            AvailableShaders::None => None,
             AvailableShaders::GameoverMaterial => {
                 self.update_gameover_material();
-                gl_use_material(&self.gameover_material);
+                Some(&self.gameover_material)
             }
             AvailableShaders::CrtMaterial => {
                 self.update_crt_material();
-                gl_use_material(&self.crt_material)
+                Some(&self.crt_material)
             }
-            AvailableShaders::BloodMaterial => {
-                gl_use_material(&self.blood_material);
-            }
+            AvailableShaders::BloodMaterial => Some(&self.blood_material),
         }
     }
 
-    pub fn render_layer(&self, pos: (f32, f32)) {
+    pub fn begin_scene(&self) {
+        set_camera(&self.cameras[0]);
+        clear_background(BLANK);
+        gl_use_default_material();
+    }
+
+    pub fn run_pipeline(&mut self, passes: &[AvailableShaders]) -> usize {
+        let mut src = 0;
+        let mut dst = 1;
+
+        for pass in passes {
+            set_camera(&self.cameras[dst]);
+            let material = self.material_for(pass);
+
+            match material {
+                Some(m) => gl_use_material(m),
+                None => gl_use_default_material(),
+            }
+            let src_tex = self.targets[src].texture.clone();
+            draw_texture_ex(
+                &src_tex,
+                0.0,
+                0.0,
+                WHITE,
+                DrawTextureParams {
+                    dest_size: Some(vec2(screen_width(), screen_height())),
+                    flip_y: true,
+                    ..Default::default()
+                },
+            );
+
+            std::mem::swap(&mut src, &mut dst);
+        }
+
+        gl_use_default_material();
+        src
+    }
+
+    pub fn present(&self, target_index: usize, pos: (f32, f32)) {
+        set_default_camera();
+        gl_use_default_material();
         draw_texture_ex(
-            &self.render_target.texture,
+            &self.targets[target_index].texture,
             pos.0,
             pos.1,
             WHITE,
