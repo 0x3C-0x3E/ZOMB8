@@ -91,9 +91,9 @@ fn entity_rendering(state: &mut State, rd_state: &mut RenderingState) {
 
     let camera = &rd_state.camera;
     for (e, pos, sprite) in state.world.query::<(Entity, &Position, &Sprite)>().iter() {
-        let mut render_pos = *pos;
+        let mut render_pos = pos.0;
         if let Ok(rpos) = state.world.get::<&RenderPosition>(e) {
-            render_pos = rpos.to_pos();
+            render_pos = rpos.0;
         }
 
         let mut rotation: f32 = 0.0;

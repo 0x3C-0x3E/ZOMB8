@@ -63,7 +63,7 @@ impl Particle {
             TimeAlive(0.0),
             TimeToLive(rand::gen_range(0.2, 1.0)),
             pos,
-            Velocity::from(
+            Velocity(
                 Vec2::from_angle(rand::gen_range(0.0, 2.0 * PI)) * rand::gen_range(15.0, 50.0),
             ),
             Rotation(rand::gen_range(0.0, 360.0)),

@@ -49,21 +49,19 @@ impl From<Position> for GridPos {
 
 impl From<GridPos> for Position {
     fn from(value: GridPos) -> Self {
-        Self {
+        Self(Vec2 {
             x: (value.x as f32) * 8.0,
             y: (value.y as f32) * 8.0,
-        }
+        })
     }
 }
 
 fn get_closest_player_pos(world: &World, pos: &Position) -> Option<Position> {
-    let pos = pos.vec2();
-
     world
         .query::<&Position>()
         .with::<&Player>()
         .iter()
-        .min_by_key(|player_pos| pos.distance_squared(player_pos.vec2()) as i64)
+        .min_by_key(|player_pos| pos.distance_squared(player_pos.0) as i64)
         .copied()
 }
 

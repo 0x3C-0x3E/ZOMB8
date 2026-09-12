@@ -116,11 +116,11 @@ impl Server {
 
         let mut reader = BufReader::new(file);
 
-        let tiles: Vec<Position> =
+        let tiles: Vec<Vec2> =
             bincode::deserialize_from(&mut reader).expect("deserialization error on world.bin");
 
         for pos in tiles {
-            let _ = Tile::spawn(world, pos, allocator.allocate());
+            let _ = Tile::spawn(world, pos.into(), allocator.allocate());
         }
     }
 
@@ -214,11 +214,11 @@ impl Server {
     pub async fn create_new_player(&mut self, sender_addr: SocketAddr) -> anyhow::Result<()> {
         let client_id = self.allocator.allocate();
 
-        let client_player_pos = Position::new(8.0, 20.0);
+        let client_player_pos = Position(Vec2::new(8.0, 20.0));
         let _ = Player::spawn(&mut self.state.world, client_player_pos, client_id);
 
         let payload =
-            PacketSpawnEntity::new(client_id, EntityKind::Player, client_player_pos.into());
+            PacketSpawnEntity::new(client_id, EntityKind::Player, client_player_pos.vec2());
         let packet = Packet::from_payload(payload)?;
         let _ = self.send_to_all(&packet).await;
 
@@ -231,7 +231,7 @@ impl Server {
         let id = self.allocator.allocate();
         let _ = Zombie::spawn(&mut self.state.world, pos, id, Some(max_health));
 
-        let _ = self.spawn_entity(id, EntityKind::Zombie, pos.into());
+        let _ = self.spawn_entity(id, EntityKind::Zombie, pos.vec2());
 
         Ok(())
     }
@@ -240,7 +240,7 @@ impl Server {
         let id = self.allocator.allocate();
         let _ = HealthPack::spawn(&mut self.state.world, pos, id);
 
-        let _ = self.spawn_entity(id, EntityKind::HealthPack, pos.into());
+        let _ = self.spawn_entity(id, EntityKind::HealthPack, pos.vec2());
 
         Ok(())
     }
@@ -257,7 +257,7 @@ impl Server {
             packet_shoot.linked_player_id,
         );
 
-        let _ = self.spawn_entity(id, EntityKind::Bullet, pos.into()).await;
+        let _ = self.spawn_entity(id, EntityKind::Bullet, pos.vec2()).await;
 
         Ok(())
     }
@@ -290,7 +290,7 @@ impl Server {
             .query_mut::<(&NetworkId, &Position, &Velocity, &SnapshotSync)>()
             .with::<&SnapshotSync>()
             .into_iter()
-            .map(|(n, pos, vel, kind)| (*n, EntityState::new(kind.0, (*pos).into(), (*vel).into())))
+            .map(|(n, pos, vel, kind)| (*n, EntityState::new(kind.0, pos.vec2(), vel.vec2())))
             .collect();
 
         let entity_health: Vec<(NetworkId, (u32, u32))> = self

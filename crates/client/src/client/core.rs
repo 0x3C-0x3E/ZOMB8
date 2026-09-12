@@ -83,7 +83,7 @@ impl Client {
             last_sent_map: None,
 
             player: None,
-            prev_pos: Position::zero(),
+            prev_pos: Position(Vec2::ZERO),
 
             last_snapshots: VecDeque::with_capacity(5),
             interp_timer: 0.0,
@@ -165,7 +165,7 @@ impl Client {
                 .query_one::<(&mut RenderPosition, &Position)>(player)
                 .get()
         {
-            render_pos.lerp(&self.prev_pos.vec2(), &pos.vec2(), alpha);
+            render_pos.render_pos_lerp(&self.prev_pos, &pos, alpha);
         }
     }
 
@@ -184,12 +184,12 @@ impl Client {
                 continue;
             }
             let Some(sn_before) = sn_before else {
-                render_pos.set(pos);
+                *render_pos = pos.vec2().into();
                 continue;
             };
 
             let Some(sn_after) = sn_after else {
-                render_pos.set(pos);
+                *render_pos = pos.vec2().into();
                 continue;
             };
 
@@ -199,7 +199,7 @@ impl Client {
                 .find(|(eid, _)| eid == id)
                 .map(|(_, state)| state.pos)
             else {
-                render_pos.set(pos);
+                *render_pos = pos.vec2().into();
                 continue;
             };
 
@@ -209,11 +209,11 @@ impl Client {
                 .find(|(eid, _)| eid == id)
                 .map(|(_, state)| state.pos)
             else {
-                render_pos.set(pos);
+                *render_pos = pos.vec2().into();
                 continue;
             };
 
-            render_pos.lerp(&pos_before, &pos_after, alpha);
+            render_pos.render_pos_lerp(&Position(pos_before), &Position(pos_after), alpha);
         }
     }
 

@@ -22,11 +22,10 @@ pub fn bullet_movement_system(world: &mut World) -> Vec<(Entity, NetworkId)> {
         )>()
         .with::<&Bullet>()
     {
-        let mut vec_vel = Vec2::from_angle(rotation.0.to_radians());
-        vec_vel *= 140.0;
-        vel.update_vec2(vec_vel);
+        *vel = Velocity(Vec2::from_angle(rotation.0.to_radians()));
+        vel.0 *= 150.0;
 
-        if pos.vec2().distance_squared(Vec2::ZERO) > 500.0_f32.powi(2)
+        if pos.distance_squared(Vec2::ZERO) > 500.0_f32.powi(2)
             || mesh.any_of_kind(EntityKind::Tile)
             || mesh.any_of_kind(EntityKind::Zombie)
         {

@@ -1,3 +1,5 @@
+use ::glam::Vec2;
+
 use macroquad::prelude::*;
 use protocol::packets::input::InputMap;
 
@@ -40,8 +42,8 @@ pub fn input_system_for_player(vel: &mut Velocity, input_map: &InputMap) {
     }
 
     dir = dir.normalize_or_zero();
-    vel.x = dir.x * 100.0;
-    vel.y = dir.y * 100.0;
+    dir *= 100.0;
+    *vel = Velocity(dir);
 }
 
 pub fn input_system(state: &mut State, player_id: NetworkId, input_map: &InputMap) {

@@ -1,3 +1,4 @@
+use glam::Vec2;
 use hecs::{Entity, World};
 use macroquad::math::Rect;
 use protocol::packets::spawn_entity::EntityKind;
@@ -27,8 +28,8 @@ impl Player {
             Health::new(100, 100),
             Score(0),
             pos,
-            RenderPosition::from_pos(pos),
-            Velocity::zero(),
+            RenderPosition::from(pos),
+            Velocity(Vec2::ZERO),
             SnapshotSync(EntityKind::Player),
             EntityKind::Player,
             network_id,
