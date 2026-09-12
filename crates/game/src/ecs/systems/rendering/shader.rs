@@ -147,7 +147,7 @@ impl ShaderState {
         gl_use_default_material();
     }
 
-    pub fn run_pipeline(&mut self, passes: &[AvailableShaders]) -> usize {
+    pub fn run_pipeline(&mut self, passes: &[AvailableShaders], offset_pos: (f32, f32)) -> usize {
         let mut src = 0;
         let mut dst = 1;
 
@@ -162,8 +162,8 @@ impl ShaderState {
             let src_tex = self.targets[src].texture.clone();
             draw_texture_ex(
                 &src_tex,
-                0.0,
-                0.0,
+                offset_pos.0,
+                offset_pos.1,
                 WHITE,
                 DrawTextureParams {
                     dest_size: Some(vec2(screen_width(), screen_height())),
@@ -179,13 +179,13 @@ impl ShaderState {
         src
     }
 
-    pub fn present(&self, target_index: usize, pos: (f32, f32)) {
+    pub fn present(&self, target_index: usize) {
         set_default_camera();
         gl_use_default_material();
         draw_texture_ex(
             &self.targets[target_index].texture,
-            pos.0,
-            pos.1,
+            0.0,
+            0.0,
             WHITE,
             DrawTextureParams {
                 dest_size: Some(vec2(screen_width(), screen_height())),

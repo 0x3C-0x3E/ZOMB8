@@ -164,12 +164,15 @@ pub fn rendering_system(state: &mut State, player: Option<Entity>, rd_state: &mu
     draw_ui(state, rd_state, player);
     draw_mouse_cursor(rd_state);
 
-    let final_target = rd_state.shader_state.run_pipeline(&[
-        // AvailableShaders::CrtMaterial,
-        AvailableShaders::BloodMaterial,
-    ]);
-
     let pos = rd_state.shake_state.update_and_get_pos();
 
-    rd_state.shader_state.present(final_target, pos);
+    let final_target = rd_state.shader_state.run_pipeline(
+        &[
+            // AvailableShaders::CrtMaterial,
+            AvailableShaders::BloodMaterial,
+        ],
+        pos,
+    );
+
+    rd_state.shader_state.present(final_target);
 }
