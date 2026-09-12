@@ -5,6 +5,8 @@ pub mod physics;
 pub mod timers;
 
 #[cfg(feature = "server")]
+pub mod healthpack_update;
+#[cfg(feature = "server")]
 pub mod zombie_movement;
 
 #[cfg(feature = "client")]

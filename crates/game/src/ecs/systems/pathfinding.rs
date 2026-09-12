@@ -47,6 +47,15 @@ impl From<Position> for GridPos {
     }
 }
 
+impl From<GridPos> for Position {
+    fn from(value: GridPos) -> Self {
+        Self {
+            x: (value.x as f32) * 8.0,
+            y: (value.y as f32) * 8.0,
+        }
+    }
+}
+
 fn get_closest_player_pos(world: &World, pos: &Position) -> Option<Position> {
     let pos = pos.vec2();
 
@@ -126,7 +135,7 @@ fn bfs_path_finding(
     start: GridPos,
     target: GridPos,
     tiles: &HashSet<GridPos>,
-    level_constraints: (GridPos, GridPos),
+    level_constraints: &(GridPos, GridPos),
 ) -> VecDeque<GridPos> {
     let mut open: BinaryHeap<QueueNode> = BinaryHeap::from([QueueNode::new(
         get_manhatten_distance(&start, &target),
@@ -190,11 +199,9 @@ pub fn target_did_not_update(
 pub fn zombie_pathfinding_system(
     world: &mut World,
     tile_grid: &HashSet<GridPos>,
-    level_constraints: &(Vec2, Vec2),
+    level_constraints: &(GridPos, GridPos),
     zombie_paths: &mut HashMap<Entity, VecDeque<GridPos>>,
 ) {
-    let level_constraints: (GridPos, GridPos) =
-        (level_constraints.0.into(), level_constraints.1.into());
     for (e, z_pos, vel) in world
         .query::<(Entity, &Position, &mut Velocity)>()
         .with::<&Zombie>()

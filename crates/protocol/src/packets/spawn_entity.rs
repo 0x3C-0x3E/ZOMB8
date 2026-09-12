@@ -12,6 +12,7 @@ pub enum EntityKind {
     Player,
     Zombie,
     Bullet,
+    HealthPack,
 }
 
 #[derive(Serialize, Deserialize)]

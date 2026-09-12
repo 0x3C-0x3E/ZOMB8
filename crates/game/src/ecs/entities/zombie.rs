@@ -35,12 +35,12 @@ impl Zombie {
             pos,
             RenderPosition::from_pos(pos),
             SnapshotSync(EntityKind::Zombie),
+            network_id,
             EntityKind::Zombie,
             Velocity::zero(),
             Moveable,
             Collideable,
             CollisionMesh::default(),
-            network_id,
             Sprite::new(
                 "zombie",
                 Rect {

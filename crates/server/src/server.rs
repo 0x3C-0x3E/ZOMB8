@@ -17,6 +17,7 @@ use game::{
         components::{health::Health, score::Score, snapshot_sync::SnapshotSync},
         entities::{
             bullet::Bullet,
+            health_pack::HealthPack,
             player::Player,
             tile::Tile,
             zombie::{Zombie, ZombieSpawnTimer},
@@ -46,7 +47,7 @@ use crate::network_id_allocator::NetworkIdAllocator;
 
 pub struct ServerData {
     pub wave_info: WaveInfo,
-    pub level_constraints: (Vec2, Vec2),
+    pub level_constraints: (GridPos, GridPos),
     pub tile_grid: HashSet<GridPos>,
     pub zombie_paths: HashMap<Entity, VecDeque<GridPos>>,
 }
@@ -228,19 +229,24 @@ impl Server {
 
     pub async fn spawn_zombie(&mut self, pos: Position, max_health: u32) -> anyhow::Result<()> {
         let id = self.allocator.allocate();
-
         let _ = Zombie::spawn(&mut self.state.world, pos, id, Some(max_health));
 
-        let payload = PacketSpawnEntity::new(id, EntityKind::Zombie, pos.into());
-        let packet = Packet::from_payload(payload)?;
-        let _ = self.send_to_all(&packet).await;
+        let _ = self.spawn_entity(id, EntityKind::Zombie, pos.into());
+
+        Ok(())
+    }
+
+    pub async fn spawn_health_pack(&mut self, pos: Position) -> anyhow::Result<()> {
+        let id = self.allocator.allocate();
+        let _ = HealthPack::spawn(&mut self.state.world, pos, id);
+
+        let _ = self.spawn_entity(id, EntityKind::HealthPack, pos.into());
 
         Ok(())
     }
 
     pub async fn spawn_bullet(&mut self, packet_shoot: PacketShoot) -> anyhow::Result<()> {
         let id = self.allocator.allocate();
-
         let pos: Position = packet_shoot.pos.into();
 
         let _ = Bullet::spawn(
@@ -251,10 +257,20 @@ impl Server {
             packet_shoot.linked_player_id,
         );
 
-        let payload = PacketSpawnEntity::new(id, EntityKind::Bullet, pos.into());
+        let _ = self.spawn_entity(id, EntityKind::Bullet, pos.into()).await;
+
+        Ok(())
+    }
+
+    pub async fn spawn_entity(
+        &mut self,
+        id: NetworkId,
+        kind: EntityKind,
+        pos: Vec2,
+    ) -> anyhow::Result<()> {
+        let payload = PacketSpawnEntity::new(id, kind, pos.into());
         let packet = Packet::from_payload(payload)?;
         let _ = self.send_to_all(&packet).await;
-
         Ok(())
     }
 

@@ -1,21 +1,21 @@
-use glam::Vec2;
 use hecs::World;
 use protocol::{packet::Packet, packets::wave::PacketWave};
 use rand::random_range;
 
 use game::ecs::{
     entities::{tile::Tile, zombie::Zombie},
+    systems::pathfinding::GridPos,
     transform::Position,
 };
 
 use crate::server::Server;
 
-fn is_occupied(world: &World, pos: &Position) -> bool {
+fn is_occupied(world: &World, pos: &GridPos) -> bool {
     world
         .query::<&Position>()
         .with::<&Tile>()
         .into_iter()
-        .find(|t_pos| *t_pos == pos)
+        .find(|t_pos| Into::<GridPos>::into(*t_pos) == *pos)
         .is_some()
 }
 
@@ -54,21 +54,25 @@ impl Server {
         for _ in 0..self.server_data.wave_info.zomie_count {
             let _ = self
                 .spawn_zombie(
-                    self.choose_position(&level_constrains),
+                    self.choose_position(&level_constrains).into(),
                     self.server_data.wave_info.max_health,
                 )
                 .await;
         }
 
+        let _ = self
+            .spawn_health_pack(self.choose_position(&level_constrains).into())
+            .await;
+
         self.server_data.wave_info.max_health += 10;
         self.server_data.wave_info.zomie_count += 2;
     }
 
-    fn choose_position(&self, level_constrains: &(Vec2, Vec2)) -> Position {
+    fn choose_position(&self, cons: &(GridPos, GridPos)) -> GridPos {
         loop {
-            let pos = Position {
-                x: random_range(level_constrains.0.x..(level_constrains.1.x - 32.0)),
-                y: random_range(level_constrains.0.y..(level_constrains.1.y - 32.0)),
+            let pos = GridPos {
+                x: random_range(cons.0.x..cons.1.x),
+                y: random_range(cons.0.y..cons.1.y),
             };
 
             if !is_occupied(&self.state.world, &pos) {
@@ -77,24 +81,27 @@ impl Server {
         }
     }
 
-    pub fn get_level_constraints(world: &World) -> (Vec2, Vec2) {
-        let mut max = Vec2::ZERO;
-        let mut min = Vec2::ZERO;
-        for (_t, pos) in world.query::<(&Tile, &Position)>().iter() {
-            if pos.x > max.x {
-                max.x = pos.x;
-            } else if pos.x < min.x {
-                min.x = pos.x;
-            }
+    pub fn get_level_constraints(world: &World) -> (GridPos, GridPos) {
+        let min: Option<GridPos> = world
+            .query::<&Position>()
+            .with::<&Tile>()
+            .iter()
+            .min_by_key(|p| {
+                let pos: GridPos = (*p).into();
+                pos
+            })
+            .map(|p| p.into());
 
-            if pos.y > max.y {
-                max.y = pos.y;
-            } else if pos.y < min.y {
-                min.y = pos.y;
-            }
-        }
+        let max: Option<GridPos> = world
+            .query::<&Position>()
+            .with::<&Tile>()
+            .iter()
+            .max_by_key(|p| {
+                let pos: GridPos = (*p).into();
+                pos
+            })
+            .map(|p| p.into());
 
-        let max = Vec2::new(max.x + 16.0, max.y + 16.0);
-        (min, max)
+        (min.unwrap(), max.unwrap())
     }
 }

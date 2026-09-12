@@ -2,6 +2,7 @@ use std::time::Duration;
 
 use game::ecs::systems::{
     bullet_movement::bullet_movement_system,
+    healthpack_update::health_pack_update_system,
     pathfinding::zombie_pathfinding_system,
     physics::physics_system,
     timers::zombie_update_timers,
@@ -49,6 +50,7 @@ async fn main() -> anyhow::Result<()> {
 
         let mut remove = zombie_collision_system(&mut server.state.world);
         remove.extend(bullet_movement_system(&mut server.state.world));
+        remove.extend(health_pack_update_system(&mut server.state.world));
         for (entity, id) in remove {
             let _ = server.despawn_entity(entity, id).await;
         }

@@ -1,6 +1,7 @@
 use game::ecs::{
     entities::{
         bullet::Bullet,
+        health_pack::HealthPack,
         particle::{Particle, ParticleKind},
         player::Player,
         tile::Tile,
@@ -49,6 +50,9 @@ impl Client {
                 network_id,
                 ProtocolNetworkId(0),
             ),
+            EntityKind::HealthPack => {
+                HealthPack::spawn(&mut self.state.world, Position::from(state.pos), network_id)
+            }
         }
     }
 
