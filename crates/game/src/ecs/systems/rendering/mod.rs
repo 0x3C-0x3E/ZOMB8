@@ -44,14 +44,11 @@ impl ShakeState {
         self.active = true;
     }
 
-    pub fn update(&mut self) {
+    pub fn update_and_get_pos(&mut self) -> (f32, f32) {
         self.timer -= get_frame_time();
         if self.timer <= 0.0 {
             self.active = false;
         }
-    }
-
-    pub fn get_pos(&self) -> (f32, f32) {
         if !self.active {
             (0.0, 0.0)
         } else {
@@ -168,11 +165,11 @@ pub fn rendering_system(state: &mut State, player: Option<Entity>, rd_state: &mu
     draw_mouse_cursor(rd_state);
 
     let final_target = rd_state.shader_state.run_pipeline(&[
-        AvailableShaders::CrtMaterial,
+        // AvailableShaders::CrtMaterial,
         AvailableShaders::BloodMaterial,
     ]);
 
-    rd_state
-        .shader_state
-        .present(final_target, rd_state.shake_state.get_pos());
+    let pos = rd_state.shake_state.update_and_get_pos();
+
+    rd_state.shader_state.present(final_target, pos);
 }
