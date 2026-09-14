@@ -14,7 +14,7 @@ use game::{
         },
         transform::{Position, RenderPosition, Velocity},
     },
-    game::{audio_manager::AudioManager, state::State},
+    game::{audio_manager::AudioHandler, state::State},
 };
 use glam::Vec2;
 use hecs::Entity;
@@ -49,7 +49,7 @@ pub struct Client {
     pub prev_pos: Position,
 
     pub rendering_state: RenderingState,
-    pub audio_manager: AudioManager,
+    pub audio_handler: AudioHandler,
 
     pub out_recv: Receiver<Packet>,
     pub in_send: Sender<Packet>,
@@ -73,14 +73,14 @@ impl Client {
     ) -> Self {
         let state = State::new();
         let rendering_state = RenderingState::new().await;
-        let audio_manager = AudioManager::load_sounds().await;
+        let audio_manager = AudioHandler::load_sounds().await;
 
         Self {
             state,
             player_id: ProtocolNetworkId(0),
 
             rendering_state,
-            audio_manager,
+            audio_handler: audio_manager,
 
             out_recv,
             in_send,
@@ -136,6 +136,8 @@ impl Client {
             if let Ok(packet) = Packet::from_payload(payload) {
                 self.send(packet).await;
             }
+
+            self.audio_handler.play_sound_once("shoot");
         }
     }
 
