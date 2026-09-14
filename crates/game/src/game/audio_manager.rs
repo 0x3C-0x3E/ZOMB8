@@ -6,25 +6,32 @@ use kira::{
 };
 use macroquad::rand;
 
+#[derive(Hash, PartialEq, Eq)]
+pub enum SoundKind {
+    Explosion,
+    Shoot,
+    HealthPack,
+}
+
 pub struct AudioHandler {
     pub manager: AudioManager,
-    pub sounds: HashMap<String, StaticSoundData>,
+    pub sounds: HashMap<SoundKind, StaticSoundData>,
 }
 
 impl AudioHandler {
     pub async fn load_sounds() -> Self {
         let explosion = (
-            "explosion".to_owned(),
+            SoundKind::Explosion,
             StaticSoundData::from_file("assets/sfx/explosion.wav").unwrap(),
         );
 
         let shoot = (
-            "shoot".to_owned(),
+            SoundKind::Shoot,
             StaticSoundData::from_file("assets/sfx/shoot.wav").unwrap(),
         );
 
         let health_box = (
-            "health_box".to_owned(),
+            SoundKind::HealthPack,
             StaticSoundData::from_file("assets/sfx/health_box.wav").unwrap(),
         );
 
@@ -34,10 +41,10 @@ impl AudioHandler {
         }
     }
 
-    pub fn play_sound_once(&mut self, id: &str) {
+    pub fn play_sound_once(&mut self, id: SoundKind) {
         let sound = self
             .sounds
-            .get(id)
+            .get(&id)
             .unwrap()
             .clone()
             .playback_rate(Semitones(rand::gen_range(-2.0, 2.0)));

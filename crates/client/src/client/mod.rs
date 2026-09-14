@@ -14,7 +14,10 @@ use game::{
         },
         transform::{Position, RenderPosition, Velocity},
     },
-    game::{audio_manager::AudioHandler, state::State},
+    game::{
+        audio_manager::{AudioHandler, SoundKind},
+        state::State,
+    },
 };
 use glam::Vec2;
 use hecs::Entity;
@@ -137,7 +140,7 @@ impl Client {
                 self.send(packet).await;
             }
 
-            self.audio_handler.play_sound_once("shoot");
+            self.audio_handler.play_sound_once(SoundKind::Shoot);
         }
     }
 

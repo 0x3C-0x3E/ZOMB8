@@ -1,14 +1,17 @@
-use game::ecs::{
-    entities::{
-        bullet::Bullet,
-        health_pack::HealthPack,
-        particle::{Particle, ParticleKind},
-        player::Player,
-        tile::Tile,
-        zombie::Zombie,
+use game::{
+    ecs::{
+        entities::{
+            bullet::Bullet,
+            health_pack::HealthPack,
+            particle::{Particle, ParticleKind},
+            player::Player,
+            tile::Tile,
+            zombie::Zombie,
+        },
+        network_id::NetworkId,
+        transform::Position,
     },
-    network_id::NetworkId,
-    transform::Position,
+    game::audio_manager::SoundKind,
 };
 use glam::Vec2;
 use hecs::Entity;
@@ -80,10 +83,12 @@ impl Client {
                 EntityKind::Player => {
                     self.rendering_state.shake_state.set_shake(0.4, 4.0);
                     self.spawn_particles(e, ParticleKind::DeathPlayer);
+                    self.audio_handler.play_sound_once(SoundKind::Explosion);
                 }
                 EntityKind::Zombie => {
                     self.rendering_state.shake_state.set_shake(0.2, 3.0);
                     self.spawn_particles(e, ParticleKind::DeathZombie);
+                    self.audio_handler.play_sound_once(SoundKind::Explosion);
                 }
                 EntityKind::Bullet => {
                     self.rendering_state.shake_state.set_shake(0.1, 2.0);
@@ -91,6 +96,7 @@ impl Client {
                 }
                 EntityKind::HealthPack => {
                     self.spawn_particles(e, ParticleKind::BulletCollision);
+                    self.audio_handler.play_sound_once(SoundKind::HealthPack);
                 }
                 _ => {}
             }
