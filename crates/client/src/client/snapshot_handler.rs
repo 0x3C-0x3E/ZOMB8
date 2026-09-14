@@ -52,17 +52,21 @@ impl Client {
         }
 
         for (id, new_health) in packet_snapshot.entity_health {
-            let Some(prev_health) = self
+            let Some((is_this_player, prev_health)) = self
                 .state
                 .world
                 .query_mut::<(&NetworkId, &mut Health)>()
                 .with::<&SnapshotSync>()
                 .into_iter()
                 .find(|(net_id, _)| **net_id == id)
-                .map(|(_, health)| health)
+                .map(|(net_id, prev_health)| (*net_id == self.player_id, prev_health))
             else {
                 continue;
             };
+
+            if is_this_player && prev_health.health > new_health.0 {
+                self.rendering_state.shader_state.set_blood_material();
+            }
 
             prev_health.health = new_health.0;
             prev_health.max = new_health.1;

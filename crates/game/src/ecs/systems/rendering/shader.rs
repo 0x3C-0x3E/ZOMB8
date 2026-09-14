@@ -35,6 +35,9 @@ pub struct ShaderState {
     pub crt_material: Material,
     pub blood_material: Material,
 
+    pub blood_material_timer: f32,
+    pub blood_material_is_active: bool,
+
     pub targets: [RenderTarget; 2],
     pub cameras: [Camera2D; 2],
 }
@@ -101,6 +104,9 @@ impl ShaderState {
             gameover_material,
             crt_material,
             blood_material,
+
+            blood_material_timer: 0.0,
+            blood_material_is_active: false,
         })
     }
 
@@ -137,7 +143,13 @@ impl ShaderState {
                 self.update_crt_material();
                 Some(&self.crt_material)
             }
-            AvailableShaders::BloodMaterial => Some(&self.blood_material),
+            AvailableShaders::BloodMaterial => {
+                if self.update_blood_material() {
+                    Some(&self.blood_material)
+                } else {
+                    None
+                }
+            }
         }
     }
 
@@ -210,5 +222,22 @@ impl ShaderState {
             .set_uniform("screen_size", (screen_width(), screen_height()));
         self.crt_material.set_uniform("time", get_time() as f32);
         self.crt_material.set_uniform("strength", 0.03_f32);
+    }
+
+    pub fn update_blood_material(&mut self) -> bool {
+        if self.blood_material_timer > 0.0 {
+            self.blood_material_timer -= get_frame_time();
+        }
+
+        if self.blood_material_timer > 0.0 {
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn set_blood_material(&mut self) {
+        self.blood_material_timer = 0.05;
+        self.blood_material_is_active = true;
     }
 }

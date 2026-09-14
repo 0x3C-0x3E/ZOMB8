@@ -175,13 +175,16 @@ pub fn rendering_system(state: &mut State, player: Option<Entity>, rd_state: &mu
 
     let pos = rd_state.shake_state.update_and_get_pos();
 
-    let final_target = rd_state.shader_state.run_pipeline(
-        &[
+    let passes = if rd_state.shader_state.blood_material_is_active {
+        vec![
             AvailableShaders::CrtMaterial,
-            // AvailableShaders::BloodMaterial,
-        ],
-        pos,
-    );
+            AvailableShaders::BloodMaterial,
+        ]
+    } else {
+        vec![AvailableShaders::CrtMaterial]
+    };
+
+    let final_target = rd_state.shader_state.run_pipeline(&passes, pos);
 
     rd_state.shader_state.present(final_target);
 }
