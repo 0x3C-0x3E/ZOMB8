@@ -11,14 +11,11 @@ use game::{
         },
         transform::{Position, RenderPosition, Velocity},
     },
-    game::state::State,
+    game::{audio_manager::AudioManager, state::State},
 };
 use glam::Vec2;
 use hecs::Entity;
-use macroquad::{
-    audio::play_sound_once,
-    input::{MouseButton, is_mouse_button_pressed, mouse_position},
-};
+use macroquad::input::{MouseButton, is_mouse_button_pressed, mouse_position};
 use protocol::{
     config_parser::game_version,
     network_id::ProtocolNetworkId,
@@ -49,6 +46,7 @@ pub struct Client {
     pub prev_pos: Position,
 
     pub rendering_state: RenderingState,
+    pub audio_manager: AudioManager,
 
     pub out_recv: Receiver<Packet>,
     pub in_send: Sender<Packet>,
@@ -65,17 +63,21 @@ pub struct Client {
 }
 
 impl Client {
-    pub fn new(
+    pub async fn new(
         out_recv: Receiver<Packet>,
         in_send: Sender<Packet>,
         input_send: watch::Sender<Packet>,
-        rendering_state: RenderingState,
     ) -> Self {
+        let state = State::new();
+        let rendering_state = RenderingState::new().await;
+        let audio_manager = AudioManager::load_sounds().await;
+
         Self {
-            state: State::new(),
+            state,
             player_id: ProtocolNetworkId(0),
 
             rendering_state,
+            audio_manager,
 
             out_recv,
             in_send,

@@ -7,7 +7,6 @@ use game::ecs::systems::animation::{
 };
 use game::ecs::systems::particle_movement::particle_movement_system;
 use game::ecs::systems::physics::physics_system_for_player;
-use game::ecs::systems::rendering::RenderingState;
 use game::ecs::systems::rendering::rendering_system;
 use game::ecs::systems::timers::zombie_update_timers;
 use macroquad::prelude::*;
@@ -19,7 +18,6 @@ use protocol::{
     packets::input::{InputMap, PacketInput},
 };
 
-mod audio_handler;
 mod client;
 mod network_thread;
 
@@ -40,8 +38,6 @@ async fn main() -> anyhow::Result<()> {
     set_default_filter_mode(FilterMode::Nearest);
     let fixed_dt: f32 = 1.0 / tps() as f32;
 
-    let rendering_state = RenderingState::new().await;
-
     let (out_send, out_recv) = tokio::sync::mpsc::channel::<Packet>(100);
     let (in_send, in_recv) = tokio::sync::mpsc::channel::<Packet>(100);
 
@@ -49,7 +45,7 @@ async fn main() -> anyhow::Result<()> {
         PacketInput::new(ProtocolNetworkId(0), 0, InputMap::zero()),
     )?);
 
-    let mut client = Client::new(out_recv, in_send, input_send, rendering_state);
+    let mut client = Client::new(out_recv, in_send, input_send).await;
 
     let network_thread = std::thread::spawn(move || -> anyhow::Result<()> {
         let rt = tokio::runtime::Runtime::new().unwrap();
