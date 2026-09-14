@@ -131,27 +131,35 @@ fn entity_rendering(state: &mut State, rd_state: &mut RenderingState) {
             WHITE,
             params,
         );
+    }
+}
 
-        if let Ok(health) = state.world.get::<&Health>(e) {
-            if health.health == health.max {
-                continue;
-            }
-
-            draw_rectangle(
-                ((render_pos.x - camera.pos.x) * camera.scale) as i32 as f32,
-                ((render_pos.y - camera.pos.y - 4.0) * camera.scale) as i32 as f32,
-                8.0 * camera.scale,
-                2.0 * camera.scale,
-                Color::from_hex(0x291e31),
-            );
-            draw_rectangle(
-                ((render_pos.x - camera.pos.x) * camera.scale) as i32 as f32,
-                ((render_pos.y - camera.pos.y - 4.0) * camera.scale) as i32 as f32,
-                8.0 * camera.scale * (health.get() as f32 / health.get_max() as f32),
-                2.0 * camera.scale,
-                Color::from_hex(0xea4a6e),
-            );
+fn healthbar_rendering(state: &mut State, rd_state: &mut RenderingState) {
+    let camera = &rd_state.camera;
+    for (e, pos, health) in state.world.query::<(Entity, &Position, &Health)>().iter() {
+        if health.health == health.max {
+            continue;
         }
+
+        let mut render_pos = pos.0;
+        if let Ok(rpos) = state.world.get::<&RenderPosition>(e) {
+            render_pos = rpos.0;
+        }
+
+        draw_rectangle(
+            ((render_pos.x - camera.pos.x) * camera.scale) as i32 as f32,
+            ((render_pos.y - camera.pos.y - 4.0) * camera.scale) as i32 as f32,
+            8.0 * camera.scale,
+            2.0 * camera.scale,
+            Color::from_hex(0x291e31),
+        );
+        draw_rectangle(
+            ((render_pos.x - camera.pos.x) * camera.scale) as i32 as f32,
+            ((render_pos.y - camera.pos.y - 4.0) * camera.scale) as i32 as f32,
+            8.0 * camera.scale * (health.get() as f32 / health.get_max() as f32),
+            2.0 * camera.scale,
+            Color::from_hex(0xea4a6e),
+        );
     }
 }
 
@@ -160,6 +168,7 @@ pub fn rendering_system(state: &mut State, player: Option<Entity>, rd_state: &mu
 
     rd_state.shader_state.begin_scene();
     entity_rendering(state, rd_state);
+    healthbar_rendering(state, rd_state);
 
     draw_ui(state, rd_state, player);
     draw_mouse_cursor(rd_state);
