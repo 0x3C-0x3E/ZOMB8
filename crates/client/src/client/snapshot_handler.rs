@@ -1,10 +1,13 @@
 use crate::client::Client;
-use game::ecs::{
-    components::{health::Health, score::Score, snapshot_sync::SnapshotSync},
-    entities::zombie::{Zombie, ZombieSpawnTimer},
-    network_id::NetworkId,
-    systems::{input::input_system_for_player, physics::physics_system_for_player},
-    transform::{Position, Velocity},
+use game::{
+    ecs::{
+        components::{health::Health, score::Score, snapshot_sync::SnapshotSync},
+        entities::zombie::{Zombie, ZombieSpawnTimer},
+        network_id::NetworkId,
+        systems::{input::input_system_for_player, physics::physics_system_for_player},
+        transform::{Position, Velocity},
+    },
+    game::audio_manager::SoundKind,
 };
 use hecs::Entity;
 use protocol::{config_parser::tps, packets::snapshot::PacketSnapshot};
@@ -66,6 +69,7 @@ impl Client {
 
             if is_this_player && prev_health.health > new_health.0 {
                 self.rendering_state.shader_state.set_blood_material();
+                self.audio_handler.play_sound_once(SoundKind::Hit);
             }
 
             prev_health.health = new_health.0;

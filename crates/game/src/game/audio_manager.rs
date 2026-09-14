@@ -11,6 +11,7 @@ pub enum SoundKind {
     Explosion,
     Shoot,
     HealthPack,
+    Hit,
 }
 
 pub struct AudioHandler {
@@ -35,9 +36,14 @@ impl AudioHandler {
             StaticSoundData::from_file("assets/sfx/health_box.wav").unwrap(),
         );
 
+        let hit = (
+            SoundKind::Hit,
+            StaticSoundData::from_file("assets/sfx/hit.wav").unwrap(),
+        );
+
         Self {
             manager: AudioManager::<DefaultBackend>::new(AudioManagerSettings::default()).unwrap(),
-            sounds: HashMap::from([explosion, shoot, health_box]),
+            sounds: HashMap::from([explosion, shoot, health_box, hit]),
         }
     }
 
