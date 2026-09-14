@@ -21,7 +21,7 @@ use protocol::{
     },
 };
 
-use crate::client::core::Client;
+use crate::client::Client;
 
 impl Client {
     pub fn spawn_network_entity_from_state(

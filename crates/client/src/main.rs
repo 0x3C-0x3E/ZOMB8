@@ -1,6 +1,6 @@
 #![allow(clippy::new_without_default)]
 
-use crate::client::core::Client;
+use crate::client::Client;
 use crate::network_thread::client_network_loop;
 use game::ecs::systems::animation::{
     animation_playback_system, player_animation_state_system, zombie_animation_state_system,
