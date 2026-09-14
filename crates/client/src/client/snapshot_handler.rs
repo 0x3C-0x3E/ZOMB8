@@ -69,7 +69,7 @@ impl Client {
 
             if is_this_player && prev_health.health > new_health.0 {
                 self.rendering_state.shader_state.set_blood_material();
-                self.audio_handler.play_sound_once(SoundKind::Hit);
+                self.audio_handler.try_play_sound(SoundKind::Hit);
             }
 
             prev_health.health = new_health.0;

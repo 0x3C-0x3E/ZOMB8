@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use kira::{
     AudioManager, AudioManagerSettings, DefaultBackend, Semitones,
-    sound::static_sound::StaticSoundData,
+    sound::static_sound::{StaticSoundData, StaticSoundHandle},
 };
 use macroquad::rand;
 
@@ -17,6 +17,7 @@ pub enum SoundKind {
 pub struct AudioHandler {
     pub manager: AudioManager,
     pub sounds: HashMap<SoundKind, StaticSoundData>,
+    pub playing: HashMap<SoundKind, StaticSoundHandle>,
 }
 
 impl AudioHandler {
@@ -44,17 +45,38 @@ impl AudioHandler {
         Self {
             manager: AudioManager::<DefaultBackend>::new(AudioManagerSettings::default()).unwrap(),
             sounds: HashMap::from([explosion, shoot, health_box, hit]),
+            playing: HashMap::new(),
         }
     }
 
+    pub fn get_varied_sound(sound: StaticSoundData) -> StaticSoundData {
+        sound.playback_rate(Semitones(rand::gen_range(-2.0, 2.0)))
+    }
+
     pub fn play_sound_once(&mut self, id: SoundKind) {
-        let sound = self
-            .sounds
-            .get(&id)
-            .unwrap()
-            .clone()
-            .playback_rate(Semitones(rand::gen_range(-2.0, 2.0)));
+        let sound = self.sounds.get(&id).unwrap().clone();
+
+        let sound = AudioHandler::get_varied_sound(sound);
 
         let _ = self.manager.play(sound);
+    }
+
+    pub fn try_play_sound(&mut self, id: SoundKind) {
+        if let Some(handle) = self.playing.get(&id) {
+            if matches!(
+                handle.state(),
+                kira::sound::PlaybackState::Playing
+                    | kira::sound::PlaybackState::Resuming
+                    | kira::sound::PlaybackState::WaitingToResume
+            ) {
+                return;
+            }
+        }
+
+        let sound = self.sounds.get(&id).unwrap().clone();
+        let sound = AudioHandler::get_varied_sound(sound);
+        let handle = self.manager.play(sound).unwrap();
+
+        self.playing.insert(id, handle);
     }
 }
