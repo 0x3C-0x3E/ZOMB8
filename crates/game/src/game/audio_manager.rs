@@ -1,8 +1,11 @@
 use std::collections::HashMap;
 
 use kira::{
-    AudioManager, AudioManagerSettings, DefaultBackend, Semitones,
-    sound::static_sound::{StaticSoundData, StaticSoundHandle},
+    AudioManager, AudioManagerSettings, Decibels, DefaultBackend, Easing, Mapping, Semitones,
+    Value,
+    effect::reverb::ReverbBuilder,
+    modulator::tweener::{TweenerBuilder, TweenerHandle},
+    sound::static_sound::{StaticSoundData, StaticSoundHandle, StaticSoundSettings},
 };
 use macroquad::rand;
 
@@ -16,6 +19,7 @@ pub enum SoundKind {
 
 pub struct AudioHandler {
     pub manager: AudioManager,
+    pub tweener: TweenerHandle,
     pub sounds: HashMap<SoundKind, StaticSoundData>,
     pub playing: HashMap<SoundKind, StaticSoundHandle>,
 }
@@ -42,21 +46,38 @@ impl AudioHandler {
             StaticSoundData::from_file("assets/sfx/hit.wav").unwrap(),
         );
 
+        let mut manager =
+            AudioManager::<DefaultBackend>::new(AudioManagerSettings::default()).unwrap();
+
+        let tweener = manager
+            .add_modulator(TweenerBuilder { initial_value: 0.7 })
+            .unwrap();
+
         Self {
-            manager: AudioManager::<DefaultBackend>::new(AudioManagerSettings::default()).unwrap(),
+            manager,
+            tweener,
             sounds: HashMap::from([explosion, shoot, health_box, hit]),
             playing: HashMap::new(),
         }
     }
 
-    pub fn get_varied_sound(sound: StaticSoundData) -> StaticSoundData {
-        sound.playback_rate(Semitones(rand::gen_range(-2.0, 2.0)))
+    pub fn get_processed_sound(&self, sound: StaticSoundData) -> StaticSoundData {
+        sound
+            .playback_rate(Semitones(rand::gen_range(-2.0, 2.0)))
+            .volume(Value::from_modulator(
+                self.tweener.id(),
+                Mapping {
+                    input_range: (0.0, 1.0),
+                    output_range: (Decibels::SILENCE, Decibels::IDENTITY),
+                    easing: Easing::Linear,
+                },
+            ))
     }
 
     pub fn play_sound_once(&mut self, id: SoundKind) {
         let sound = self.sounds.get(&id).unwrap().clone();
 
-        let sound = AudioHandler::get_varied_sound(sound);
+        let sound = self.get_processed_sound(sound);
 
         let _ = self.manager.play(sound);
     }
@@ -74,7 +95,7 @@ impl AudioHandler {
         }
 
         let sound = self.sounds.get(&id).unwrap().clone();
-        let sound = AudioHandler::get_varied_sound(sound);
+        let sound = self.get_processed_sound(sound);
         let handle = self.manager.play(sound).unwrap();
 
         self.playing.insert(id, handle);
