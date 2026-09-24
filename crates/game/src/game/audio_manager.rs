@@ -3,9 +3,8 @@ use std::collections::HashMap;
 use kira::{
     AudioManager, AudioManagerSettings, Decibels, DefaultBackend, Easing, Mapping, Semitones,
     Value,
-    effect::reverb::ReverbBuilder,
     modulator::tweener::{TweenerBuilder, TweenerHandle},
-    sound::static_sound::{StaticSoundData, StaticSoundHandle, StaticSoundSettings},
+    sound::static_sound::{StaticSoundData, StaticSoundHandle},
 };
 use macroquad::rand;
 

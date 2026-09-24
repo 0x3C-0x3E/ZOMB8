@@ -4,6 +4,7 @@ use protocol::packets::spawn_entity::EntityKind;
 
 use crate::ecs::components::{
     moveable::{Collideable, CollisionMesh, Moveable},
+    sprite::Sprite,
     transform::Position,
 };
 
@@ -12,35 +13,27 @@ pub enum Axis {
     Y,
 }
 
-fn colliding(p1: &Position, p2: &Position) -> bool {
-    p1.x < p2.x + 8.0 && p1.x + 8.0 > p2.x && p1.y < p2.y + 8.0 && p1.y + 8.0 > p2.y
-}
-
-#[allow(unused)]
-fn colliding_small(p1: &Position, p2: &Position) -> bool {
-    p1.x < p2.x + 8.0 && p1.x + 8.0 > p2.x && p1.y < p2.y + 8.0 && p1.y + 8.0 > p2.y
+fn colliding(p1: &Rect, p2: &Rect) -> bool {
+    p1.x < p2.x + p2.w && p1.x + p1.w > p2.x && p1.y < p2.y + p2.h && p1.y + p1.h > p2.y
 }
 
 pub fn resolve_collision_system(world: &World, axis: Axis) {
     for _ in 0..3 {
         let mut collisions: Vec<(Entity, Entity)> = Vec::new();
 
-        for (e1, p1) in world
-            .query::<(Entity, &Position)>()
+        for (e1, p1, m1) in world
+            .query::<(Entity, &Position, &CollisionMesh)>()
             .with::<&Moveable>()
-            .with::<&CollisionMesh>()
             .iter()
         {
-            for (e2, p2) in world
-                .query::<(Entity, &Position)>()
-                .with::<&CollisionMesh>()
-                .iter()
-            {
+            let r1 = Rect::new(p1.x + m1.rect.x, p1.y + m1.rect.y, m1.rect.w, m1.rect.h);
+            for (e2, p2, m2) in world.query::<(Entity, &Position, &CollisionMesh)>().iter() {
                 if e1 == e2 {
                     continue;
                 }
+                let r2 = Rect::new(p2.x + m2.rect.x, p2.y + m2.rect.y, m2.rect.w, m2.rect.h);
 
-                if colliding(p1, p2) && !collisions.contains(&(e2, e1)) {
+                if colliding(&r1, &r2) && !collisions.contains(&(e2, e1)) {
                     collisions.push((e1, e2));
                 }
             }

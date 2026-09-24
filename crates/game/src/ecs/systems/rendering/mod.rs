@@ -1,3 +1,4 @@
+use crate::ecs::components::moveable::CollisionMesh;
 use crate::ecs::systems::rendering::camera::Camera;
 use crate::ecs::systems::rendering::shader::AvailableShaders;
 use crate::ecs::systems::rendering::ui::draw_mouse_cursor;
@@ -163,12 +164,28 @@ fn healthbar_rendering(state: &mut State, rd_state: &mut RenderingState) {
     }
 }
 
+pub fn draw_debug(state: &mut State, rd_state: &mut RenderingState) {
+    let camera = &rd_state.camera;
+    for (pos, m) in state.world.query_mut::<(&Position, &CollisionMesh)>() {
+        draw_rectangle_lines(
+            ((pos.x - camera.pos.x + m.rect.x) * camera.scale) as i32 as f32,
+            ((pos.y - camera.pos.y + m.rect.y) * camera.scale) as i32 as f32,
+            m.rect.w * camera.scale,
+            m.rect.h * camera.scale,
+            2.0,
+            RED,
+        );
+    }
+}
+
 pub fn rendering_system(state: &mut State, player: Option<Entity>, rd_state: &mut RenderingState) {
     rd_state.shader_state.check_screen_changed();
 
     rd_state.shader_state.begin_scene();
     entity_rendering(state, rd_state);
     healthbar_rendering(state, rd_state);
+
+    draw_debug(state, rd_state);
 
     draw_ui(state, rd_state, player);
     draw_mouse_cursor(rd_state);

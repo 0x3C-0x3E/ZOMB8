@@ -24,7 +24,7 @@ impl HealthPack {
             network_id,
             SnapshotSync(EntityKind::HealthPack),
             EntityKind::HealthPack,
-            CollisionMesh::default(),
+            CollisionMesh::from_rect(Rect::new(0.0, 0.0, 8.0, 8.0)),
             Sprite::new("spritesheet", Rect::new(64.0, 16.0, 8.0, 8.0)),
         ))
     }

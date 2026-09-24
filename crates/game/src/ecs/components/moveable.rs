@@ -1,3 +1,4 @@
+use macroquad::math::Rect;
 use protocol::packets::spawn_entity::EntityKind;
 
 pub struct Moveable;
@@ -10,15 +11,29 @@ pub struct CollisionMesh {
     pub bottom: Option<EntityKind>,
     pub left: Option<EntityKind>,
     pub right: Option<EntityKind>,
+
+    pub rect: Rect,
 }
 
 impl CollisionMesh {
+    pub fn from_rect(rect: Rect) -> Self {
+        Self {
+            top: None,
+            bottom: None,
+            left: None,
+            right: None,
+
+            rect,
+        }
+    }
+
     pub fn invert(other: &CollisionMesh, other_kind: EntityKind) -> Self {
         Self {
             top: other.bottom.map(|_| other_kind),
             bottom: other.top.map(|_| other_kind),
             left: other.right.map(|_| other_kind),
             right: other.left.map(|_| other_kind),
+            rect: other.rect,
         }
     }
 

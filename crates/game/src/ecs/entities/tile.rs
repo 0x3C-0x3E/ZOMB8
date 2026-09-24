@@ -23,7 +23,7 @@ impl Tile {
             pos,
             network_id,
             Collideable,
-            CollisionMesh::default(),
+            CollisionMesh::from_rect(Rect::new(0.0, 0.0, 8.0, 8.0)),
             Sprite::new(
                 "tileset",
                 Rect {
