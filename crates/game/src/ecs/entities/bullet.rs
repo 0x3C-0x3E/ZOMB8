@@ -34,7 +34,7 @@ impl Bullet {
             RenderPosition::from(pos),
             SnapshotSync(EntityKind::Bullet),
             EntityKind::Bullet,
-            CollisionMesh::from_rect(Rect::new(1.0, 1.0, 7.0, 7.0)),
+            CollisionMesh::from_rect(Rect::new(1.0, 1.0, 6.0, 6.0)),
             Velocity(Vec2::ZERO),
             Moveable,
             network_id,

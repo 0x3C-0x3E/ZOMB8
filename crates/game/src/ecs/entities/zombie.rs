@@ -41,7 +41,7 @@ impl Zombie {
             Velocity(Vec2::ZERO),
             Moveable,
             Collideable,
-            CollisionMesh::from_rect(Rect::new(1.0, 1.0, 7.0, 7.0)),
+            CollisionMesh::from_rect(Rect::new(0.5, 0.5, 7.0, 7.0)),
             Sprite::new(
                 "zombie",
                 Rect {

@@ -168,6 +168,14 @@ pub fn draw_debug(state: &mut State, rd_state: &mut RenderingState) {
     let camera = &rd_state.camera;
     for (pos, m) in state.world.query_mut::<(&Position, &CollisionMesh)>() {
         draw_rectangle_lines(
+            ((pos.x - camera.pos.x) * camera.scale) as i32 as f32,
+            ((pos.y - camera.pos.y) * camera.scale) as i32 as f32,
+            8.0 * camera.scale,
+            8.0 * camera.scale,
+            2.0,
+            BLUE,
+        );
+        draw_rectangle_lines(
             ((pos.x - camera.pos.x + m.rect.x) * camera.scale) as i32 as f32,
             ((pos.y - camera.pos.y + m.rect.y) * camera.scale) as i32 as f32,
             m.rect.w * camera.scale,
@@ -184,8 +192,6 @@ pub fn rendering_system(state: &mut State, player: Option<Entity>, rd_state: &mu
     rd_state.shader_state.begin_scene();
     entity_rendering(state, rd_state);
     healthbar_rendering(state, rd_state);
-
-    draw_debug(state, rd_state);
 
     draw_ui(state, rd_state, player);
     draw_mouse_cursor(rd_state);
@@ -204,4 +210,5 @@ pub fn rendering_system(state: &mut State, player: Option<Entity>, rd_state: &mu
     let final_target = rd_state.shader_state.run_pipeline(&passes, pos);
 
     rd_state.shader_state.present(final_target);
+    draw_debug(state, rd_state);
 }
