@@ -31,7 +31,7 @@ impl Zombie {
     ) -> Entity {
         world.spawn((
             Zombie,
-            ZombieSpawnTimer(4.0),
+            ZombieSpawnTimer(2.5),
             Health::new(max_health.unwrap_or(50), max_health.unwrap_or(50)),
             pos,
             RenderPosition::from(pos),
