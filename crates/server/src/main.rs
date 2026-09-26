@@ -5,7 +5,7 @@ use game::ecs::systems::{
     healthpack_update::health_pack_update_system,
     pathfinding::zombie_pathfinding_system,
     physics::physics_system,
-    timers::zombie_update_timers,
+    timers::{players_update_shoot_timers, zombie_update_timers},
     zombie_movement::{zombie_collision_system, zombie_movement_system},
 };
 use protocol::config_parser::{parse_config, tps};

@@ -6,7 +6,10 @@ use std::collections::VecDeque;
 use game::{
     ecs::{
         components::snapshot_sync::SnapshotSync,
-        entities::{player::Player, tile::Tile},
+        entities::{
+            player::{Player, PlayerShootTimer},
+            tile::Tile,
+        },
         network_id::NetworkId,
         systems::{
             input::{get_input_map, input_system},
@@ -21,7 +24,9 @@ use game::{
 };
 use glam::Vec2;
 use hecs::Entity;
-use macroquad::input::{MouseButton, is_mouse_button_pressed, mouse_position};
+use macroquad::input::{
+    MouseButton, is_mouse_button_down, is_mouse_button_pressed, mouse_position,
+};
 use protocol::{
     config_parser::game_version,
     network_id::ProtocolNetworkId,
@@ -119,14 +124,26 @@ impl Client {
         let _ = self.in_send.send(packet).await;
     }
 
+    fn is_allowed_to_shoot(&mut self) -> bool {
+        if let Some(player) = self.player {
+            let timer = self.state.world.get::<&PlayerShootTimer>(player).unwrap();
+            if timer.0 == 0.0 { true } else { false }
+        } else {
+            false
+        }
+    }
+
     pub async fn input_system(&mut self) {
         let input_map = get_input_map();
         let _ = self.check_for_new_input(&input_map);
 
         input_system(&mut self.state, self.player_id, &input_map);
 
-        if is_mouse_button_pressed(MouseButton::Left)
+        let is_allowed = self.is_allowed_to_shoot();
+
+        if is_mouse_button_down(MouseButton::Left)
             && let Some((pos, _)) = self.get_player_state()
+            && is_allowed
         {
             let pos = *pos;
             let render_pos = self.rendering_state.camera.get_render_pos(&pos);
@@ -141,6 +158,14 @@ impl Client {
             }
 
             self.audio_handler.play_sound_once(SoundKind::Shoot);
+            if let Some(player) = self.player {
+                let mut timer = self
+                    .state
+                    .world
+                    .get::<&mut PlayerShootTimer>(player)
+                    .unwrap();
+                timer.0 = 0.5;
+            }
         }
     }
 

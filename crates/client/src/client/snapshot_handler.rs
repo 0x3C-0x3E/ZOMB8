@@ -2,7 +2,10 @@ use crate::client::Client;
 use game::{
     ecs::{
         components::{health::Health, score::Score, snapshot_sync::SnapshotSync},
-        entities::zombie::{Zombie, ZombieSpawnTimer},
+        entities::{
+            player::PlayerShootTimer,
+            zombie::{Zombie, ZombieSpawnTimer},
+        },
         network_id::NetworkId,
         systems::{input::input_system_for_player, physics::physics_system_for_player},
         transform::{Position, Velocity},
@@ -10,7 +13,10 @@ use game::{
     game::audio_manager::SoundKind,
 };
 use hecs::Entity;
-use protocol::{config_parser::tps, packets::snapshot::PacketSnapshot};
+use protocol::{
+    config_parser::tps,
+    packets::snapshot::{PacketSnapshot, TimerKind},
+};
 
 impl Client {
     pub fn snapshot_handler(&mut self, packet_snapshot: PacketSnapshot) {
@@ -119,21 +125,23 @@ impl Client {
             let _ = self.state.world.remove_one::<ZombieSpawnTimer>(e);
         }
 
-        for (id, _kind, new_time) in packet_snapshot.timers {
-            // TODO: use kind
-            let Some(timer) = self
-                .state
-                .world
-                .query_mut::<(&NetworkId, &mut ZombieSpawnTimer)>()
-                .with::<&SnapshotSync>()
-                .into_iter()
-                .find(|(net_id, _)| **net_id == id)
-                .map(|(_, timer)| timer)
-            else {
-                continue;
-            };
-
-            timer.0 = new_time;
+        for (id, kind, new_time) in packet_snapshot.timers {
+            match kind {
+                TimerKind::ZombieSpawnTimer => {
+                    let Some(timer) = self
+                        .state
+                        .world
+                        .query_mut::<(&NetworkId, &mut ZombieSpawnTimer)>()
+                        .with::<&SnapshotSync>()
+                        .into_iter()
+                        .find(|(net_id, _)| **net_id == id)
+                        .map(|(_, timer)| timer)
+                    else {
+                        continue;
+                    };
+                    timer.0 = new_time;
+                }
+            }
         }
     }
 }

@@ -4,7 +4,6 @@ use protocol::packets::spawn_entity::EntityKind;
 
 use crate::ecs::components::{
     moveable::{Collideable, CollisionMesh, Moveable},
-    sprite::Sprite,
     transform::Position,
 };
 

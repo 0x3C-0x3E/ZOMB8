@@ -21,10 +21,13 @@ use crate::ecs::{
 #[derive(Serialize, Deserialize)]
 pub struct Player;
 
+pub struct PlayerShootTimer(pub f32);
+
 impl Player {
     pub fn spawn(world: &mut World, pos: Position, network_id: NetworkId) -> Entity {
         world.spawn((
             Player,
+            PlayerShootTimer(0.0),
             Health::new(100, 100),
             Score(0),
             pos,

@@ -210,5 +210,4 @@ pub fn rendering_system(state: &mut State, player: Option<Entity>, rd_state: &mu
     let final_target = rd_state.shader_state.run_pipeline(&passes, pos);
 
     rd_state.shader_state.present(final_target);
-    draw_debug(state, rd_state);
 }
