@@ -2,10 +2,7 @@ use crate::client::Client;
 use game::{
     ecs::{
         components::{health::Health, score::Score, snapshot_sync::SnapshotSync},
-        entities::{
-            player::PlayerShootTimer,
-            zombie::{Zombie, ZombieSpawnTimer},
-        },
+        entities::zombie::{Zombie, ZombieSpawnTimer},
         network_id::NetworkId,
         systems::{input::input_system_for_player, physics::physics_system_for_player},
         transform::{Position, Velocity},

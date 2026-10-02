@@ -18,7 +18,7 @@ use game::{
         entities::{
             bullet::Bullet,
             health_pack::HealthPack,
-            player::{Player, PlayerShootTimer},
+            player::Player,
             tile::Tile,
             zombie::{Zombie, ZombieSpawnTimer},
         },
